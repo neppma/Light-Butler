@@ -119,6 +119,8 @@ On a Raspberry Pi the red button **⏻** at the top right shuts the lighting com
 2. Confirm with **Shut down**. The light and the lasers go off at once.
 3. Wait about 30 seconds until the green LED on the Pi stops blinking, then disconnect the power.
 
+On a Mac and on Windows the same button only quits the Light-Butler (button **Quit**), the computer stays on. Start it again with the Light-Butler icon.
+
 ## The main page
 
 The main page is for operating only. It is divided into grey sections. From top to bottom:

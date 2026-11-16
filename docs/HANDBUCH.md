@@ -119,6 +119,8 @@ Am Raspberry Pi fährt der rote Knopf **⏻** oben rechts den Licht-Rechner saub
 2. Mit **Herunterfahren** bestätigen. Das Licht und die Laser gehen sofort aus.
 3. Etwa 30 Sekunden warten, bis die grüne LED am Pi nicht mehr blinkt, dann den Strom trennen.
 
+Am Mac und unter Windows beendet derselbe Knopf nur den Light-Butler (Knopf **Beenden**), der Rechner bleibt an. Neu starten über das Light-Butler-Symbol.
+
 ## Die Hauptseite
 
 Die Hauptseite ist nur zum Bedienen da. Sie ist in grau hinterlegte Bereiche gegliedert. Von oben nach unten:

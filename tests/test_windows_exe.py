@@ -172,4 +172,31 @@ check(all("StopRunning" in t and "PrepareToInstall" in t and "usUninstall" in t 
 check("DelData" in iss and "MB_DEFBUTTON2" in iss and 'TN ""Light-Butler""' in iss, "Daten nur auf Nachfrage loeschen (Standard Nein), alte Aufgabe abmelden")
 _run = iss.split("[Run]")[1].split("[Code]")[0] + mi.split("[Run]")[1].split("[Code]")[0]
 check("IconFilename" not in _run, "IconFilename nur bei Verknuepfungen")
+
+# Beenden aus dem Panel (16.11.2026): show.py endet mit 0 -> den mitgestarteten Helfer auch beenden
+base4 = tempfile.mkdtemp(prefix="s2l_exe_")
+os.makedirs(os.path.join(base4, "lichtshow"))
+os.makedirs(os.path.join(base4, "helfer", "helper"))
+open(os.path.join(base4, "lichtshow", "show.py"), "w").write("# Attrappe\n")
+open(os.path.join(base4, "helfer", "helper", "helper.py"), "w").write("# Attrappe\n")
+lbe.base_dir = lambda: base4
+
+
+class FakeProc:
+    stopped = False
+
+    def terminate(self):
+        FakeProc.stopped = True
+
+
+os.environ.pop("LB_HELPER_STARTED", None)
+try:
+    lbe.main([], run=lambda p, run_name: None, popen=lambda c, **k: FakeProc())
+    check(FakeProc.stopped, "Ende mit Code 0: Helfer wird mit beendet")
+finally:
+    sys.argv = old_argv
+    os.chdir(cwd)
+    os.environ.pop("LB_HELPER_STARTED", None)
+    os.environ.pop("LB_RESTART_EXIT", None)
+    shutil.rmtree(base4, ignore_errors=True)
 finish("test_windows_exe")

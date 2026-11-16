@@ -979,11 +979,14 @@ function pwDraw(){const box=document.getElementById('pwdev');if(!box||document.g
  const L=pwDevs(),sig=L.map(d=>d.id+d.label).join();if(sig===PWSIG)return;PWSIG=sig;
  box.innerHTML=L.length?'<div class="pwl">'+tr('pw_devs')+'</div>'+L.map(d=>'<button data-id="'+esc(d.id)+'">'+esc(d.label)+' '+tr('pw_dev_off')+'</button>').join(''):'';
  box.querySelectorAll('button').forEach(x=>x.onclick=()=>c({home:{id:x.dataset.id,on:false}}))}
-function powerOff(){PWSIG=null;document.getElementById('pwdlg').style.display='flex';pwDraw()}
+function pwQuit(){return S.power_mode==='quit'}   // Mac/Windows: Knopf beendet nur den Light-Butler
+function pwTx(el,k){el.dataset.tx=k;el.textContent=tr(k)}
+function powerOff(){PWSIG=null;pwTx(document.getElementById('pwtxt'),pwQuit()?'pw_q_quit':'pw_q');
+ pwTx(document.querySelector('#pwdlg .pwgo'),pwQuit()?'pw_go_quit':'pw_go');document.getElementById('pwdlg').style.display='flex';pwDraw()}
 function pwClose(){document.getElementById('pwdlg').style.display='none'}
 async function pwGo(){pwClose();await c({poweroff:'JA'});if(!S.powering_off)return;
  const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;background:#000e;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:19px;line-height:1.5;z-index:99';
- ov.innerHTML=tr('pw_done');document.body.appendChild(ov)}
+ ov.textContent=tr(pwQuit()?'pw_done_quit':'pw_done');document.body.appendChild(ov)}
 function drawStrobe(){const sb=document.getElementById('b_strobe');if(!sb)return;sb.innerHTML=tr('strobe_hdr')+' '+tr('strobe_ok')+': '+(S.strobe?tr('yes'):tr('no'));sb.classList.toggle('on',!!S.strobe)}
 function bpmMul(f){const base=S.bpm_manual?S.bpm:S.beat_bpm;if(!(base>0))return;c({bpm:Math.round(base*f*10)/10})}
 function bpmAdd(d){const base=S.bpm_manual?S.bpm:S.beat_bpm;if(!(base>0))return;c({bpm:Math.round(base)+d})}   // -1 / +1 auf ganze BPM

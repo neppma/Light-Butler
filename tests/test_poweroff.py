@@ -26,6 +26,7 @@ def fake(allowed):
 
 rig, sh = build(seed=14)
 Clock(sh).run(2)
+sh.power_mode = "pi"                     # Verhalten am Pi (die Tests laufen auch am Mac und unter Windows)
 
 # Simulator / Trockenlauf: gesperrt
 sh._run_cmd = fake(True)
@@ -63,7 +64,7 @@ check(all(c[0] == "sudo" for c in calls) and len(calls) == 2, "keine anderen Bef
 page = webpanel.make_page()
 check('id="powerbtn" onclick="powerOff()"' in page and 'data-tx="pw_q"' in page and 'onclick="pwGo()"' in page and "c({poweroff:'JA'})" in page,
       "Knopf oben rechts mit Rueckfrage im eigenen Fenster")
-check("function powerOff(){PWSIG=null;document.getElementById('pwdlg').style.display='flex';pwDraw()}" in page,
+check("document.getElementById('pwdlg').style.display='flex';pwDraw()}" in page and "pwGo" not in page.split("function powerOff(")[1].split("}")[0],
       "der Knopf oeffnet nur das Fenster, heruntergefahren wird erst mit Herunterfahren")
 check("const PW_OFF=['nanoleaf','effektband1','effektband2','derby_bar','musik','nebelmaschine'];" in page,
       "Ausschalt-Knoepfe nur fuer Nanoleaf, Effektband 1 und 2, Derby, Musik und den Strom der Nebelmaschine")
@@ -79,4 +80,23 @@ body = open(script).read()
 check('NOPASSWD: /usr/sbin/poweroff"' in body and "visudo -cf" in body and "NOPASSWD: ALL" not in body,
       "Freigabe nur fuer /usr/sbin/poweroff, vorher mit visudo geprueft")
 
+
+# Mac/Windows (16.11.2026): der Knopf beendet nur den Light-Butler (nie den Rechner), auch im Simulator
+rig2, sh2 = build(seed=15)
+Clock(sh2).run(2)
+calls.clear()
+sh2._run_cmd = fake(True)
+sh2.power_mode = "quit"
+check(sh2.snapshot()["power_mode"] == "quit", "Status: Knopf beendet das Programm")
+sh2.command({"poweroff": "ja bitte"})
+check(not sh2.powering_off, "ohne genaue Bestaetigung passiert nichts")
+sh2.command({"poweroff": "JA"})
+check(sh2.snapshot()["mode"] == "blackout" and sh2.powering_off and not sh2.quit_requested, "Licht sofort aus")
+time.sleep(2.0)
+check(sh2.quit_requested and not calls, "danach Programm-Ende, kein Befehl an den Rechner")
+src = open(os.path.join(ROOT, "pi", "show.py"), encoding="utf-8").read()
+check("if show.restart_requested or show.quit_requested:" in src and 'self.power_mode = "pi" if sys.platform.startswith("linux") else "quit"' in src,
+      "Hauptschleife endet, nur Linux (Pi) faehrt herunter")
+check({"pw_q_quit", "pw_go_quit", "pw_done_quit"} <= {r[0] for r in texts.catalog()} and "pwQuit()" in webpanel.make_page(),
+      "Panel: eigene Rueckfrage zum Beenden")
 finish("test_poweroff")

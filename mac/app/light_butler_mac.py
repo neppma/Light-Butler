@@ -150,6 +150,10 @@ class App:
             if code == lbe.RESTART_CODE:
                 self.status.config(text="startet neu ...")
                 self.start_show()
+            elif code == 0:                                   # Knopf im Panel: Light-Butler beendet -> ganze App beenden
+                self.show = None
+                self.quit()
+                return
             else:
                 self.status.config(text="beendet (Code %s), siehe ~/Library/Logs/Light-Butler/show.log" % code)
                 self.show = None

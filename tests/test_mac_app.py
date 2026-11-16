@@ -69,4 +69,5 @@ check("tk::mac::Quit" in src_app and "SIGTERM" in src_app, "Beenden im Dock: Lic
 wf = open(os.path.join(ROOT, ".github", "workflows", "mac-dmg.yml"), encoding="utf-8").read()
 check("mac/app/build_app.py" in wf and "gh release upload" in wf and "Light-Butler.dmg" in wf and "types: [published]" in wf,
       "GitHub baut die DMG und haengt sie an das Release")
+check("elif code == 0:" in src_app and "self.quit()" in src_app.split("elif code == 0:")[1][:200], "Beenden aus dem Panel: ganze App beendet")
 finish("test_mac_app")

@@ -178,6 +178,8 @@ class Show:
         self.frames = FrameStats()                          # Bildtakt fuer die Seite Zustand (nur Messung, wirkt nicht aufs Licht)
         self.restart_requested = False                      # Neustart aus dem Panel (nach Aenderungen an den Fixtures)
         self.allow_poweroff = False                         # Herunterfahren aus dem Panel: nur im echten Betrieb am Pi
+        self.power_mode = "pi" if sys.platform.startswith("linux") else "quit"   # Mac/Windows: Knopf beendet das Programm
+        self.quit_requested = False                         # Beenden aus dem Panel (Mac/Windows, 16.11.2026)
         self.home = None                                    # HomeMatic-CCU (Bereich "Haus"), None = nicht verfuegbar
         self.home_quiet_t = self.home_music_t = None        # Automatik Wohnzimmerlicht: seit wann Stille bzw. Musik
         self.home_lit = False                               # Automatik hat das Wohnzimmerlicht bei Stille hochgedimmt
@@ -2814,7 +2816,7 @@ class Show:
                 "link_on": bool(self.cfg["link_on"] > 0.5),
                 "lang": "en" if self.cfg["ui_lang"] > 0.5 else "de", "texts_rev": self.texts.rev,
                 "ui_hints": bool(self.cfg["ui_hints"] > 0.5),
-                "powering_off": self.powering_off, "poweroff_ok": self.allow_poweroff, "safety_open": self.safety_open,
+                "powering_off": self.powering_off, "poweroff_ok": self.allow_poweroff, "power_mode": self.power_mode, "safety_open": self.safety_open,
                 "home": self.home.status() if self.home is not None else None,
                 "power_for": self._power_for(),
                 "power_off": self._power_off() if self.home is not None else [],
@@ -2976,6 +2978,16 @@ class Show:
     def _poweroff(self):
         """Pi sauber herunterfahren: Licht sofort aus, dann poweroff. Braucht die Freigabe aus install_poweroff.sh
         (admin darf nur diesen Befehl ohne Passwort). Im Simulator/Trockenlauf gesperrt."""
+        if self.power_mode == "quit":                          # Mac/Windows: nur den Light-Butler beenden, nie den Rechner
+            self.override = "blackout"
+            self.powering_off = True
+            self.note = "Der Light-Butler wird beendet"
+
+            def stop_later():
+                time.sleep(1.5)                                # Antwort ans Panel noch abschicken
+                self.quit_requested = True
+            threading.Thread(target=stop_later, daemon=True).start()
+            return
         if not self.allow_poweroff:
             raise ValueError("Herunterfahren geht nur am Pi im echten Betrieb (nicht im Simulator)")
         try:
@@ -3702,7 +3714,7 @@ def main():
                 print("\r" + show.status, end="", flush=True)
             nxt += 0.025
             time.sleep(max(0.0, nxt - time.perf_counter()))
-            if show.restart_requested:
+            if show.restart_requested or show.quit_requested:
                 break
     except KeyboardInterrupt:
         print("\nEnde, Blackout.")
@@ -3712,6 +3724,8 @@ def main():
         src.stop()
         out.stop()
         show.close()
+    if show.quit_requested:                                     # Knopf im Panel (Mac/Windows): Ende mit Code 0, kein Neustart
+        print("Beendet aus dem Panel, Blackout.", flush=True)
     if show.restart_requested:                                  # Neustart ohne den Dienst zu beenden (Aenderungen an den Fixtures)
         print("Neustart ...", flush=True)
         restart_self()

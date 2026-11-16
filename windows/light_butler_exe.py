@@ -153,9 +153,10 @@ def main(argv=None, run=None, popen=None, timer=None):
     if first_run(prog):
         print("Neue Anlage: alle Ausgaben AUS (DMX, WLED, Nanoleaf). Einschalten im Panel: Einstellungen -> Ausgabe.")
     args = show_args(prog) + list(argv)
+    helper_proc = None
     if not os.environ.get("LB_HELPER_STARTED") and helper_on(prog, helper):   # nur beim ersten Start, nicht nach Neustart
         try:
-            start_helper(base, popen)
+            helper_proc = start_helper(base, popen)
             os.environ["LB_HELPER_STARTED"] = "1"
             print("Musik-Teil des Helfers gestartet (Log: %LOCALAPPDATA%\\Light-Butler\\helfer.log)", flush=True)
         except OSError as e:
@@ -181,6 +182,11 @@ def main(argv=None, run=None, popen=None, timer=None):
         exe = [sys.executable] if getattr(sys, "frozen", False) else [sys.executable, os.path.abspath(__file__)]
         (popen or subprocess.Popen)(exe + list(argv))
         return 0
+    if code == 0 and helper_proc is not None and hasattr(helper_proc, "terminate"):   # Beenden aus dem Panel: Helfer mit
+        try:
+            helper_proc.terminate()
+        except OSError:
+            pass
     return code
 
 
