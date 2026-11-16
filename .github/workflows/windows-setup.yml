@@ -1,0 +1,69 @@
+# Light-Butler-Setup.exe fuer Windows (16.11.2026): baut auf einem Windows-Rechner von GitHub die Exe (windows/build_exe.py,
+# PyInstaller) und daraus den Installer (windows/light-butler.iss, Inno Setup) und haengt beides an das Release.
+# Laeuft von selbst, wenn ein Release veroeffentlicht wird. Von Hand: Actions -> Windows-Installer -> Run workflow,
+# mit Tag (zum Beispiel v1.0) an ein vorhandenes Release, ohne Tag nur zum Herunterladen unter Artifacts.
+name: Windows-Installer
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release-Tag, an das die Dateien kommen (leer = nur bauen)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}   # von Hand: Stand des gewaehlten Zweigs
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pakete fuer die Exe
+        run: python -m pip install pyinstaller numpy pyyaml sounddevice mido python-rtmidi pyserial
+
+      - name: Light-Butler.exe bauen
+        run: python windows/build_exe.py
+
+      - name: Inno Setup bereitstellen
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          if (-not (Test-Path $iscc)) { throw "Inno Setup fehlt" }
+
+      - name: Light-Butler-Setup.exe bauen
+        shell: pwsh
+        run: |
+          $v = "$env:TAG".TrimStart("v")
+          if (-not $v) { $v = "0.0" }
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$v" windows\light-butler.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC fehlgeschlagen" }
+          Get-ChildItem windows\build\*.exe, windows\build\*.zip | Format-Table Name, Length
+
+      - name: An das Release haengen
+        if: env.TAG != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$env:TAG" windows/build/Light-Butler-Setup.exe windows/build/light-butler-windows-exe.zip --clobber
+
+      - name: Zum Herunterladen (ohne Release)
+        if: env.TAG == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: Light-Butler-Setup
+          path: |
+            windows/build/Light-Butler-Setup.exe
+            windows/build/light-butler-windows-exe.zip

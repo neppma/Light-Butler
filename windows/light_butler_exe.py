@@ -49,6 +49,28 @@ def first_run(prog):
     return False
 
 
+def panel_port(args):
+    """Port des Web-Panels aus den Startoptionen (--web 8080 oder --web=8080), 0 = kein Panel."""
+    for i, a in enumerate(args):
+        val = args[i + 1] if a == "--web" and i + 1 < len(args) else (a[6:] if a.startswith("--web=") else None)
+        if val is not None:
+            try:
+                return int(val)
+            except ValueError:
+                return 0
+    return 0
+
+
+def open_panel_later(port, delay=4.0, timer=None):
+    """Startmenue und Desktop-Symbol (Option --browser, 16.11.2026): Panel im Browser oeffnen, sobald es laeuft."""
+    import threading
+    import webbrowser
+    t = (timer or threading.Timer)(delay, webbrowser.open, ["http://localhost:%d/" % port])
+    t.daemon = True
+    t.start()
+    return t
+
+
 HELPER_ARGS = ["127.0.0.1", "--no-apc", "--no-lumi", "--no-audio", "--no-stems"]   # APC, Lumi, Ton haengen am PC direkt
 
 
@@ -92,7 +114,7 @@ def start_helper(base, popen=None):
     return (popen or subprocess.Popen)(exe + ["--helfer"], stdout=log, stderr=subprocess.STDOUT, creationflags=flags)
 
 
-def main(argv=None, run=None, popen=None):
+def main(argv=None, run=None, popen=None, timer=None):
     argv = sys.argv[1:] if argv is None else argv
     base = base_dir()
     helper = os.path.join(base, "helfer", "helper", "helper.py")
@@ -101,6 +123,8 @@ def main(argv=None, run=None, popen=None):
     if argv and argv[0] == "--helfer":
         os.environ.setdefault("PYTHONUTF8", "1")
         return run_script([helper] + HELPER_ARGS + list(argv[1:]), run)
+    browser = "--browser" in argv                          # nur beim Start vom Symbol, nie beim Neustart
+    argv = [a for a in argv if a != "--browser"]
     prog = os.path.join(base, "lichtshow")
     if not os.path.isfile(os.path.join(prog, "show.py")):
         print("Ordner 'lichtshow' mit show.py fehlt neben Light-Butler.exe (ZIP vollstaendig entpacken).")
@@ -115,6 +139,8 @@ def main(argv=None, run=None, popen=None):
             print("Musik-Teil des Helfers gestartet (Log: %LOCALAPPDATA%\\Light-Butler\\helfer.log)", flush=True)
         except OSError as e:
             print("Helfer liess sich nicht starten: %s" % e, flush=True)
+    if browser and panel_port(args):
+        open_panel_later(panel_port(args), timer=timer)
     os.chdir(prog)
     if prog not in sys.path:
         sys.path.insert(0, prog)

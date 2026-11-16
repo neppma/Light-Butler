@@ -661,17 +661,12 @@ Noch einmal ausführen aktualisiert die Programme. Einstellungen, Szenen, Shows 
 
 ### Windows-PC
 
-1. Python 3.12 von python.org installieren und dabei „Add python.exe to PATH“ anhaken.
-2. Das Paket **Windows: ganzer Light-Butler (ZIP)** laden und entpacken.
-3. Im entpackten Ordner ein Terminal öffnen und eintippen:
+1. **Light-Butler-Setup.exe** von der Projektseite auf GitHub laden (Releases).
+2. Doppelklicken. Zeigt Windows „Der Computer wurde durch Windows geschützt“: **Weitere Informationen** → **Trotzdem ausführen**.
+3. **Installieren** klicken. Administrator-Rechte und Python braucht es nicht. Auf Wunsch startet der Light-Butler mit Windows.
+4. Den Light-Butler über das Symbol auf dem Desktop oder im Startmenü starten. Das Panel öffnet sich im Browser (`http://localhost:8080/`). Fragt die Firewall, nur **Private Netzwerke** zulassen.
 
-```
-powershell -ExecutionPolicy Bypass -File install_windows.ps1
-```
-
-4. Das Panel steht dann unter `http://localhost:8080/`. Fragt die Firewall, nur **Private Netzwerke** zulassen.
-
-Ohne Python geht es mit **Windows: Light-Butler.exe ohne Python (ZIP)**: entpacken und `Light-Butler.exe` doppelklicken. Unter Windows fehlen Titelerkennung und die nächtliche Sicherung.
+Das schwarze Fenster zeigt die Meldungen, Schließen beendet den Light-Butler. Ein neuer Installer ersetzt nur die Programme, Einstellungen, Szenen und Shows bleiben. Unter Windows fehlen Titelerkennung und die nächtliche Sicherung.
 
 ### Mac
 

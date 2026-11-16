@@ -36,9 +36,10 @@ LIESMICH_EXE = """LIGHT-BUTLER ALS PROGRAMM FUER WINDOWS
 Die ganze Lichtsteuerung (Analyse, Szenen, Showmanager, Web-Panel) wie am Raspberry Pi, fuer Windows 10 oder 11.
 Python ist eingebaut, es muss nichts installiert werden.
 
-1. Dieses ZIP in einen eigenen Ordner entpacken, zum Beispiel Dokumente\\Light-Butler (nicht nach "Programme",
-   dort darf der Light-Butler seine Einstellungen nicht speichern).
-2. Light-Butler.exe doppelklicken. Windows zeigt beim ersten Mal evtl. "Der Computer wurde durch Windows geschuetzt":
+1. Am einfachsten: Light-Butler-Setup.exe ausfuehren (Startmenue, Desktop-Symbol, auf Wunsch Autostart; das Symbol
+   oeffnet das Panel im Browser). Ohne Installer: dieses ZIP in einen eigenen Ordner entpacken, zum Beispiel
+   Dokumente\\Light-Butler (nicht nach "Programme", dort darf der Light-Butler seine Einstellungen nicht speichern).
+2. Light-Butler.exe doppelklicken (vom Symbol aus oeffnet sich das Panel von selbst). Windows zeigt beim ersten Mal evtl. "Der Computer wurde durch Windows geschuetzt":
    "Weitere Informationen" -> "Trotzdem ausfuehren" (die Exe ist nicht kaeuflich signiert).
 3. Fragt Windows nach der Firewall: "Private Netzwerke" zulassen (nicht "Oeffentliche"), sonst erreichen Handy, iPad
    und der Ton vom Mac den PC nicht. Das Panel hat keine Anmeldung: nie ins Internet stellen.
@@ -69,6 +70,7 @@ Beim Anmelden starten: Verknuepfung zu Light-Butler.exe in den Autostart-Ordner 
 """
 
 
+COLLECT = ("sounddevice", "rtmidi", "soundfile", "aubio")
 HELPER_DIRS = [os.path.join(ROOT, "mac", "helper"), os.path.join(ROOT, "mac", "mixxx_bridge")]   # Musik-Teil (15.11.2026)
 
 
@@ -127,9 +129,9 @@ def main():
     print("Module fuer die Exe: %d, nicht installiert (optional): %s" % (len(mods), ", ".join(missing) or "-"))
     pyi.run([os.path.join(ROOT, "windows", "light_butler_exe.py"), "--name", NAME, "--onedir", "--console", "--noconfirm",
              "--distpath", os.path.join(OUT, "dist"), "--workpath", os.path.join(OUT, "work"), "--specpath", OUT,
-             "--paths", OUT, "--hidden-import", "_lb_deps", "--collect-all", "sounddevice", "--collect-all", "rtmidi",
-             "--collect-all", "soundfile", "--collect-all", "aubio",
-             "--log-level", "WARN"])
+             "--paths", OUT, "--hidden-import", "_lb_deps"]
+            + [x for m in COLLECT if available(m) for x in ("--collect-all", m)]   # nur installierte (aubio ist optional)
+            + ["--log-level", "WARN"])
     dist = os.path.join(OUT, "dist", NAME)
     sys.path.insert(0, PI)
     import pakete

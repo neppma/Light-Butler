@@ -8,12 +8,14 @@
 
 ## Download
 
-Ein ZIP laden, entpacken, das Installationsskript starten. Jedes Paket hat eine `LIESMICH.txt` mit den Schritten.
+**Windows:** [Light-Butler-Setup.exe](https://github.com/neppma/Light-Butler/releases/latest/download/Light-Butler-Setup.exe) laden, doppelklicken, installieren. Danach startest du den Light-Butler über das Symbol auf dem Desktop, das Panel öffnet sich im Browser. Python ist eingebaut, Administrator-Rechte braucht es nicht. Zeigt Windows „Der Computer wurde durch Windows geschützt“, auf **Weitere Informationen** und **Trotzdem ausführen** klicken (der Installer ist nicht kostenpflichtig signiert).
+
+Für die anderen Rechner: ZIP laden, entpacken, das Installationsskript starten. Jedes Paket hat eine `LIESMICH.txt` mit den Schritten.
 
 | Wofür | Paket |
 | --- | --- |
 | **Raspberry Pi** als Licht-Rechner | [light-butler-pi.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-pi.zip) |
-| **Windows-PC** als Licht-Rechner | [light-butler-windows-voll.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-windows-voll.zip) |
+| **Windows-PC** als Licht-Rechner | [Light-Butler-Setup.exe](https://github.com/neppma/Light-Butler/releases/latest/download/Light-Butler-Setup.exe) |
 | **Mac** als Licht-Rechner | [light-butler-mac-voll.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-mac-voll.zip) |
 | **Musik-Rechner Mac** (DJ-Software Mixxx, Ton übers Netz, Musik-Datenbank) | [light-butler-mac.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-mac.zip) |
 | **Musik-Rechner Windows** | [light-butler-windows-musik.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-windows-musik.zip) |

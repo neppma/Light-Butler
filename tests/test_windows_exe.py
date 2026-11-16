@@ -66,4 +66,58 @@ finally:
 
 src = open(os.path.join(ROOT, "windows", "build_exe.py"), encoding="utf-8").read()
 check('"--onedir"' in src and "_lb_deps" in src and "windows_zip" in src, "Bau: ein Ordner, Module aus den Programmen, lichtshow aus dem Paket")
+
+# Installer (16.11.2026): Symbole starten mit --browser, das Panel oeffnet sich; Neustart und Autostart ohne
+check(lbe.panel_port(["--master", "1.0", "--web", "8080"]) == 8080 and lbe.panel_port(["--web=9000"]) == 9000
+      and lbe.panel_port(["--dry-run"]) == 0 and lbe.panel_port(["--web", "x"]) == 0, "Port des Panels aus den Optionen")
+
+
+class FakeTimer:
+    made = []
+
+    def __init__(self, delay, fn, args):
+        FakeTimer.made.append((delay, fn, args))
+
+    def start(self):
+        pass
+
+
+base2 = tempfile.mkdtemp(prefix="s2l_exe_")
+prog2 = os.path.join(base2, "lichtshow")
+os.makedirs(prog2)
+open(os.path.join(prog2, "show.py"), "w").write("# Attrappe\n")
+open(os.path.join(prog2, "show.conf"), "w", encoding="utf-8").write("SHOW_ARGS=--master 1.0 --web 8080\n")
+lbe.base_dir = lambda: base2
+try:
+    seen.clear()
+    calls = []
+
+    def run_restart2(path, run_name):
+        seen.update(argv=list(sys.argv))
+        raise SystemExit(lbe.RESTART_CODE)
+    lbe.main(["--browser"], run=run_restart2, popen=lambda c: calls.append(c), timer=FakeTimer)
+    check(FakeTimer.made and FakeTimer.made[0][2] == ["http://localhost:8080/"], "--browser: Panel im Browser")
+    check("--browser" not in seen["argv"] and calls and "--browser" not in calls[0], "--browser geht nicht an show.py und nicht in den Neustart")
+    FakeTimer.made.clear()
+    lbe.main([], run=run_ok, timer=FakeTimer)
+    check(not FakeTimer.made, "ohne --browser (Autostart): kein Browser")
+finally:
+    sys.argv = old_argv
+    os.chdir(cwd)
+    os.environ.pop("LB_RESTART_EXIT", None)
+    shutil.rmtree(base2, ignore_errors=True)
+
+iss = open(os.path.join(ROOT, "windows", "light-butler.iss"), encoding="utf-8-sig").read()
+check("PrivilegesRequired=lowest" in iss and "{localappdata}\\Programs\\Light-Butler" in iss, "Installer ohne Administrator, im Benutzerordner")
+check(iss.count("onlyifdoesntexist") == 2 and "Excludes: \"\\lichtshow\\fixtures.yaml,\\lichtshow\\show.conf\"" in iss,
+      "Update ueberschreibt fixtures.yaml und show.conf nicht")
+check('Source: "build\\dist\\Light-Butler\\*"' in iss and "OutputBaseFilename=Light-Butler-Setup" in iss and 'NAME = "Light-Butler"' in src
+      and 'OUT = os.path.join(ROOT, "windows", "build")' in src, "Installer nimmt die Exe aus build_exe.py")
+check(iss.count('Parameters: "--browser"') == 3 and "{userstartup}" in iss and "unchecked" in iss, "Symbole mit Browser, Autostart ohne, Autostart nur auf Wunsch")
+_files = [ln for ln in iss.splitlines() if ln.startswith("Source:")]
+check(len(_files) == 3 and not any(w in ln for ln in _files for w in (".json", "shows")), "keine Einstellungen im Installer")
+wf = open(os.path.join(ROOT, ".github", "workflows", "windows-setup.yml"), encoding="utf-8").read()
+check("windows/build_exe.py" in wf and "windows\\light-butler.iss" in wf and "gh release upload" in wf
+      and "Light-Butler-Setup.exe" in wf and "types: [published]" in wf, "GitHub baut den Installer und haengt ihn an das Release")
+check(all(x in src for x in ("COLLECT", "if available(m)")), "nur installierte Pakete einsammeln (aubio optional)")
 finish("test_windows_exe")

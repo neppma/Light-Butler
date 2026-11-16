@@ -661,17 +661,12 @@ Running it again updates the programs. Settings, scenes, shows and devices stay.
 
 ### Windows PC
 
-1. Install Python 3.12 from python.org and tick "Add python.exe to PATH".
-2. Download the package **Windows: whole Light-Butler (ZIP)** and unpack it.
-3. Open a terminal in the unpacked folder and type:
+1. Download **Light-Butler-Setup.exe** from the project page on GitHub (Releases).
+2. Double-click it. If Windows shows "Windows protected your PC": **More info** → **Run anyway**.
+3. Click **Install**. Administrator rights and Python are not needed. If you like, the Light-Butler starts with Windows.
+4. Start the Light-Butler with the icon on the desktop or in the Start menu. The panel opens in the browser (`http://localhost:8080/`). If the firewall asks, only allow **Private networks**.
 
-```
-powershell -ExecutionPolicy Bypass -File install_windows.ps1
-```
-
-4. The panel is then at `http://localhost:8080/`. If the firewall asks, only allow **Private networks**.
-
-Without Python use **Windows: Light-Butler.exe without Python (ZIP)**: unpack it and double-click `Light-Butler.exe`. On Windows, track recognition and the nightly backup are missing.
+The black window shows the messages, closing it stops the Light-Butler. A new installer only replaces the programs, settings, scenes and shows stay. On Windows, track recognition and the nightly backup are missing.
 
 ### Mac
 
