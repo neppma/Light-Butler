@@ -27,6 +27,7 @@ OutputBaseFilename=Light-Butler-Musik-Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=light-butler.ico
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayIcon={app}\Light-Butler.exe

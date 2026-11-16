@@ -129,7 +129,8 @@ def main():
     print("Module fuer die Exe: %d, nicht installiert (optional): %s" % (len(mods), ", ".join(missing) or "-"))
     pyi.run([os.path.join(ROOT, "windows", "light_butler_exe.py"), "--name", NAME, "--onedir", "--console", "--noconfirm",
              "--distpath", os.path.join(OUT, "dist"), "--workpath", os.path.join(OUT, "work"), "--specpath", OUT,
-             "--paths", OUT, "--hidden-import", "_lb_deps"]
+             "--paths", OUT, "--hidden-import", "_lb_deps",
+             "--icon", os.path.join(ROOT, "windows", "light-butler.ico")]                # Light-Butler-Symbol (make_ico.py)
             + [x for m in COLLECT if available(m) for x in ("--collect-all", m)]   # nur installierte (aubio ist optional)
             + ["--log-level", "WARN"])
     dist = os.path.join(OUT, "dist", NAME)

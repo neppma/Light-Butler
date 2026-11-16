@@ -157,4 +157,12 @@ check("mixxx_start.py" in mi and 'Parameters: "--musik"' in mi and ".light-butle
       "Musik-Installer: Adresse abfragen, Helfer und Mixxx-Symbol")
 check(mi.split("AppId=")[1][:40] != iss.split("AppId=")[1][:40], "eigene AppId (beide nebeneinander installierbar)")
 check("light-butler-musik.iss" in wf and "Light-Butler-Musik-Setup.exe" in wf, "GitHub baut auch den Musik-Installer")
+
+# Symbol (16.11.2026): Exe und Installer mit dem Light-Butler-Symbol statt Python
+import struct  # noqa: E402
+ico = open(os.path.join(ROOT, "windows", "light-butler.ico"), "rb").read()
+_n = struct.unpack("<HHH", ico[:6])
+check(_n[:2] == (0, 1) and _n[2] >= 4 and ico[6 + 16 * _n[2]:][:8] == b"\x89PNG\r\n\x1a\n", "light-butler.ico: Windows-Symbol mit mehreren Groessen")
+check('"--icon", os.path.join(ROOT, "windows", "light-butler.ico")' in src and "SetupIconFile=light-butler.ico" in iss
+      and "SetupIconFile=light-butler.ico" in mi, "Exe und beide Installer mit dem Light-Butler-Symbol")
 finish("test_windows_exe")
