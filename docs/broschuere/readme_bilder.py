@@ -39,8 +39,51 @@ def quelle(name):
     raise FileNotFoundError(name)
 
 
+FONTS = ("/System/Library/Fonts/Helvetica.ttc", "/System/Library/Fonts/Supplemental/Arial.ttf")
+
+
+def font(size, bold=False):
+    from PIL import ImageFont
+    for f in FONTS:
+        try:
+            return ImageFont.truetype(f, size, index=1 if (bold and f.endswith(".ttc")) else 0)
+        except OSError:
+            continue
+    return ImageFont.load_default()
+
+
+def vorschau():
+    """Vorschaubild fuer GitHub (Settings -> Social preview, 1280 x 640): Symbol, Name, Satz, Handy-Bild. Nur am Mac (Schrift)."""
+    from PIL import ImageDraw
+    W, H = 1280, 640
+    im = Image.new("RGB", (W, H), "#16171f")
+    d = ImageDraw.Draw(im)
+    d.rectangle((0, 0, W, 8), fill="#e8770f")
+    ico = Image.open(os.path.join(ROOT, "windows", "light-butler.ico"))
+    ico = ico.ico.getimage(max(ico.ico.sizes())).convert("RGBA").resize((150, 150), Image.LANCZOS)
+    d.rounded_rectangle((72, 82, 238, 248), radius=38, fill="#2c3046")   # Rahmen, sonst verschwindet das dunkle Symbol
+    im.paste(ico, (80, 90), ico)
+    d.text((80, 270), "Light-Butler", font=font(96, True), fill="#ffffff")
+    d.text((84, 385), "Lighting that understands the music.", font=font(40), fill="#c9cde0")
+    d.text((84, 450), "Licht, das die Musik versteht.", font=font(30), fill="#8a90a8")
+    d.text((84, 545), "DMX · Art-Net · WLED · Nanoleaf · Mixxx", font=font(26), fill="#e8770f")
+    d.text((84, 582), "Raspberry Pi · Windows · Mac · free (GPLv3)", font=font(26), fill="#e8770f")
+    tel = Image.open(quelle("panel_handy.jpg")).convert("RGB")
+    h = 560
+    tel = tel.resize((int(tel.width * h / tel.height), h), Image.LANCZOS)
+    x, y = W - tel.width - 90, (H - h) // 2 + 4
+    d.rounded_rectangle((x - 12, y - 12, x + tel.width + 12, y + h + 12), radius=34, fill="#2c3046")
+    mask = Image.new("L", tel.size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, tel.width, h), radius=26, fill=255)
+    im.paste(tel, (x, y), mask)
+    p = os.path.join(ZIEL, "social-preview.png")
+    im.save(p, optimize=True)
+    print("social-preview.png  %d x %d  %d KB" % (W, H, os.path.getsize(p) // 1024))
+
+
 def main():
     os.makedirs(ZIEL, exist_ok=True)
+    vorschau()
     for ziel, (name, crop, breite) in BILDER.items():
         im = Image.open(quelle(name)).convert("RGB")
         if crop:

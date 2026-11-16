@@ -2,169 +2,171 @@
 
 <h1 align="center">Light-Butler</h1>
 
-<p align="center"><b>Licht, das die Musik versteht.</b></p>
+<p align="center"><b>Lighting that understands the music.</b></p>
 
 <p align="center">
   <a href="#download"><b>⬇ Download</b></a> &nbsp;·&nbsp;
-  <a href="pi/static/Light-Butler-Broschuere.pdf">Broschüre (PDF)</a> &nbsp;·&nbsp;
-  <a href="docs/HANDBUCH.md">Handbuch</a> &nbsp;·&nbsp;
-  <a href="#english">English</a>
+  <a href="docs/MANUAL_EN.md">Manual</a> &nbsp;·&nbsp;
+  <a href="docs/TECHNICAL_EN.md">Technical description</a> &nbsp;·&nbsp;
+  <a href="README.de.md">Deutsch</a>
 </p>
 
 <table>
 <tr>
 <td width="62%">
 
-**Musik an – und das Licht tanzt mit.** Der Light-Butler hört zu, erkennt Takt, Stimmung und den großen Moment im Lied und steuert daraus alle Lichter im Raum: Scheinwerfer, LED-Streifen, Lichtpaneele, Laser und Nebel.
+**Music on – and the lights dance along.** Light-Butler listens, recognises the beat, the mood and the big moment in a song and drives every light in the room from it: moving heads, LED strips, light panels, lasers and fog.
 
-- Für Partys zu Hause, im Keller oder im Vereinslokal
-- Bedienung mit Handy, Tablet oder Controller
-- Läuft von selbst – oder genau nach deiner Show
-- Hilft auch beim Ordnen der Musiksammlung
+- For parties at home, in the basement or at the club house
+- Control it from your phone, tablet or a MIDI controller
+- Runs on its own – or exactly to your programmed show
+- Helps you keep your music collection in order, too
 
-Ein kleiner Computer (Raspberry Pi, Windows-PC oder Mac) bekommt den Ton vom Mischpult oder vom DJ-Programm, hört genau hin und steuert alle Lichter so, dass sie zur Musik passen – ohne dass jemand am Pult stehen muss.
+A small computer (Raspberry Pi, Windows PC or Mac) gets the sound from the mixer or the DJ software, listens closely and drives all lights so they match the music – nobody has to stand at a lighting desk.
 
-**Musik** → **Light-Butler** hört zu, versteht und entscheidet → **Licht**
+**Music** → **Light-Butler** listens, understands and decides → **Light**
+
+Free and open source (GPLv3). Web panel and manual in English and German.
 
 </td>
-<td width="38%"><img src="docs/bilder/github/handy.jpg" alt="Light-Butler am Handy"></td>
+<td width="38%"><img src="docs/bilder/github/handy.jpg" alt="Light-Butler on a phone"></td>
 </tr>
 </table>
 
-### So fühlt sich das an
+### How it feels
 
-- In ruhigen Passagen ist das Licht weich und gedimmt, vor dem Refrain baut es Spannung auf – und beim „Drop“ geht es richtig los: alle Lichter auf dem Schlag, Blitze, Bewegung.
-- Weihnachtslieder bekommen warme Farben ohne Schwarzlicht, Rock wirkt anders als Schlager oder Club-Musik.
-- Ein Gerät nach dem anderen, Lichtwellen durch den Raum, Farben im Takt – der Abend wird nie eintönig.
-- Die Bar oder der Couchtisch bleiben dabei ruhig beleuchtet, damit man sich noch zurechtfindet.
+- In quiet parts the light is soft and dimmed, before the chorus it builds tension – and at the drop it really takes off: all lights on the beat, flashes, movement.
+- Christmas songs get warm colours without black light, rock looks different from pop or club music.
+- One fixture after another, light waves through the room, colours on the beat – the evening never gets dull.
+- The bar or the coffee table stays calmly lit so people can still find their way.
 
-**Drei Arten, Licht zu machen:** **AUTO** – der Light-Butler macht alles selbst, passend zu jedem Lied. **Szenen und Effekte** – auf Knopfdruck: Discokugel, Sternenhimmel, Lauflicht, Stroboskop, Nebel. **Shows** – für besondere Lieder eine eigene, genau programmierte Lichtshow.
+**Three ways to make light:** **AUTO** – Light-Butler does everything by itself, matching each song. **Scenes and effects** – at the push of a button: disco ball, starry sky, chaser, strobe, fog. **Shows** – for special songs, a precisely programmed light show of their own.
 
-## Die Bedienung
+## The panel
 
-<img src="docs/bilder/github/panel.jpg" alt="Das Panel">
+<img src="docs/bilder/github/panel.jpg" alt="The panel">
 
-Alles auf einer Seite, im Browser von Handy, Tablet oder Computer. Oben das laufende Lied mit Cover, Herz für Favoriten und dem Liedverlauf mit seinen Höhepunkten, darunter Sofort-Knöpfe, Geschwindigkeit, Stil, Farbe, Licht-Mix und Bewegung. Kein Programm zu installieren: Das Panel ist eine Webseite im eigenen WLAN.
+Everything on one page, in the browser of your phone, tablet or computer. At the top the song that is playing with its cover, a heart for favourites and the song timeline with its highlights; below, the instant buttons, speed, style, colour, light mix and movement. Nothing to install: the panel is a web page in your own Wi-Fi. *(Screenshots show the German interface; switch the language in the settings.)*
 
-- **Sofort-Knöpfe:** AUTO, Strobe, WOW!, Sonnenbrille (alles weiß), Freeze, Blackout, Nebel
-- **Stil:** Weihnachten, Club, Party, Rock oder Ruhig – oder automatisch nach dem Genre des Liedes
-- **Farben und Bewegung:** Wunschfarben antippen, die Scheinwerfer folgen einem Muster oder einem Ziel im Raum
+- **Instant buttons:** AUTO, strobe, WOW!, blinder (all white), freeze, blackout, fog
+- **Style:** Christmas, club, party, rock or calm – or automatically from the song's genre
+- **Colours and movement:** tap the colours you want, the moving heads follow a pattern or a target in the room
 
-## Hört die Musik
+## It hears the music
 
-<img src="docs/bilder/github/lied.jpg" alt="Liedverlauf mit Höhepunkten">
+<img src="docs/bilder/github/lied.jpg" alt="Song timeline with highlights">
 
-- **Takt und Tempo:** Lichter wechseln genau auf dem Schlag, Blitze sitzen auf dem Beat.
-- **Aufbau, Break und Drop:** Der Light-Butler erkennt, wenn ein Lied Spannung aufbaut, kurz ruhig wird und dann explodiert – und macht das Licht genau dazu.
-- **Mit dem DJ-Programm Mixxx** weiß er sogar im Voraus, wann der Drop kommt.
-- **Stimmung und Tonart:** Moll klingt anders als Dur, die Farben passen sich an. In leisen Stellen wird das Licht sanfter, bei Stille geht es in den Ruhemodus.
-- **Titel erkennen:** Auf Wunsch zeigt das Panel Titel, Interpret und die aktuelle Liedtext-Zeile.
+- **Beat and tempo:** lights change exactly on the beat, flashes sit on the beat.
+- **Build-up, break and drop:** Light-Butler recognises when a song builds tension, goes quiet for a moment and then explodes – and makes the light do exactly that.
+- **With the DJ software Mixxx** it even knows in advance when the drop is coming.
+- **Mood and key:** minor sounds different from major, the colours follow. In quiet passages the light gets softer, in silence it goes into idle mode.
+- **Track recognition:** if you like, the panel shows title, artist and the current line of the lyrics.
 
-## Bedienen, wie es gerade passt
+## Control it the way you like
 
 <table>
 <tr>
-<td width="50%"><img src="docs/bilder/github/apc.jpg" alt="Controller-Belegung"></td>
+<td width="50%"><img src="docs/bilder/github/apc.jpg" alt="Controller layout"></td>
 <td>
 
-**Am Handy** ist alles in einer Spalte – mit einer Hand bedienbar, mitten auf der Tanzfläche.
+**On the phone** everything is in one column – usable with one hand, right on the dance floor.
 
-**Am Controller** (AKAI APC mini): 64 leuchtende Tasten für Szenen und Effekte, Schieberegler für jede Gerätegruppe, jede Taste frei belegbar.
+**On the controller** (AKAI APC mini): 64 lit buttons for scenes and effects, faders for every fixture group, every button freely assignable.
 
-**An der Klaviatur** (ROLI LUMI Keys): Szenen und Farben auf den Tasten, die Tasten leuchten in der passenden Farbe.
+**On the keyboard** (ROLI LUMI Keys): scenes and colours on the keys, and the keys light up in the matching colour.
 
 </td>
 </tr>
 </table>
 
-## Der Showmanager
+## The show manager
 
 <table>
 <tr>
-<td width="50%"><img src="docs/bilder/github/editor.jpg" alt="Show-Editor"></td>
-<td width="50%"><img src="docs/bilder/github/assistent.jpg" alt="Show-Assistent"></td>
+<td width="50%"><img src="docs/bilder/github/editor.jpg" alt="Show editor"></td>
+<td width="50%"><img src="docs/bilder/github/assistent.jpg" alt="Show assistant"></td>
 </tr>
 </table>
 
-- **Eigene Licht- und Lasershows** für besondere Lieder: Lichtbilder auf die Zeitleiste ziehen – wie im Videoschnitt, auf den Takt genau.
-- **Fertige Muster:** Blinken, Regenbogen, Kreisbewegung, Lauflicht, Gewitter und viele mehr.
-- **Der Show-Assistent** baut aus dem Aufbau eines Liedes eine komplette Show auf Knopfdruck. Wer möchte, lässt die künstliche Intelligenz Claude mitentwerfen – mit eigenem Wunsch wie „mehr Blau, im zweiten Refrain alles auf einmal“.
-- Die Show **startet von selbst**, sobald das Lied im DJ-Programm läuft – oder per Knopf am Handy.
+- **Your own light and laser shows** for special songs: drag light cues onto the timeline – like video editing, precise to the beat.
+- **Ready-made patterns:** blink, rainbow, circles, chaser, thunderstorm and many more.
+- **The show assistant** builds a complete show from a song's structure at the push of a button. If you like, the AI Claude helps design it – with your own wishes such as "more blue, everything at once in the second chorus".
+- The show **starts by itself** as soon as the song plays in the DJ software – or with a button on the phone.
 
-<img src="docs/bilder/github/raum.jpg" width="60%" alt="Raumplan">
+<img src="docs/bilder/github/raum.jpg" width="60%" alt="Room plan">
 
-*Der Raumplan: wo jedes Licht steht. Der Assistent nutzt ihn für Lichtwellen von einer Wand zur anderen.*
+*The room plan: where each light is. The assistant uses it for light waves from one wall to the other.*
 
-## Die Musik-Datenbank
+## The music library
 
-<img src="docs/bilder/github/musik.jpg" alt="Musik-Datenbank">
+<img src="docs/bilder/github/musik.jpg" alt="Music library">
 
-- Alle Lieder mit Cover, Tempo, Tonart, Energie (1–9), Genre, Album und wie oft sie gespielt wurden – filtern und sortieren nach allem.
-- Fehlende Angaben misst der Light-Butler selbst: **Energie, Tonart und Tempo**.
-- Reinhören direkt im Browser, Tags und Cover bearbeiten, mit einem Klick eine Show anlegen.
-- **Interpreten und Alben** mit Bild, Lebenslauf und Titelliste, **Sterne und Favoriten**, Liedtexte live zur Musik.
+- All songs with cover, tempo, key, energy (1–9), genre, album and play count – filter and sort by anything.
+- Light-Butler measures missing values itself: **energy, key and tempo**.
+- Preview right in the browser, edit tags and covers, create a show with one click.
+- **Artists and albums** with picture, biography and track list, **stars and favourites**, lyrics live with the music.
 
 <table>
 <tr>
-<td width="50%"><img src="docs/bilder/github/interpreten.jpg" alt="Interpreten"></td>
-<td width="50%"><img src="docs/bilder/github/favoriten.jpg" alt="Favoriten"></td>
+<td width="50%"><img src="docs/bilder/github/interpreten.jpg" alt="Artists"></td>
+<td width="50%"><img src="docs/bilder/github/favoriten.jpg" alt="Favourites"></td>
 </tr>
 </table>
 
-## Der Auto-DJ
+## The auto-DJ
 
 <img src="docs/bilder/github/autodj.jpg" alt="Auto-DJ">
 
-- Wann beginnt das Fest, wie lange dauert es, wie wild soll es werden? Daraus entsteht eine Playlist, deren Energie über den Abend steigt.
-- Die Lieder passen zueinander: ähnliches Tempo, harmonische Tonarten, nie zweimal derselbe Interpret hintereinander.
-- Der Auto-DJ spielt selbst ab und überblendet taktgenau – und das Licht folgt ihm.
+- When does the party start, how long does it last, how wild should it get? From that comes a playlist whose energy rises through the evening.
+- The songs fit together: similar tempo, harmonic keys, never the same artist twice in a row.
+- The auto-DJ plays by itself and crossfades on the beat – and the light follows it.
 
-## Ordnung in der Sammlung
+## Keeping the collection tidy
 
 <table>
 <tr>
-<td width="45%"><img src="docs/bilder/github/pflege.jpg" alt="Datenpflege"></td>
+<td width="45%"><img src="docs/bilder/github/pflege.jpg" alt="Library maintenance"></td>
 <td>
 
-- **Tags und Cover:** CD-Cover besorgen, alle Tags eintragen, Titel per Musikerkennung finden, Cover erzeugen
-- **Beschädigte MP3s** erkennen und reparieren, andere Formate in MP3 umwandeln
-- **Doppelte Lieder** finden, die bessere Fassung behalten
-- **Genres und Gruppen** aufräumen, zusammenlegen, ergänzen
-- **Import:** neue Musik vorhören, taggen und einsortieren
-- **Sichern:** die Sammlung auf eine NAS oder einen Stick spiegeln
+- **Tags and covers:** fetch CD covers, fill in all tags, find titles by music recognition, generate covers
+- **Damaged MP3s:** detect and repair them, convert other formats to MP3
+- **Duplicate songs:** find them, keep the better version
+- **Genres and groups:** clean up, merge, fill in
+- **Import:** preview new music, tag it and file it in the right place
+- **Backup:** mirror the collection to a NAS or a USB stick
 
 </td>
 </tr>
 </table>
 
-## Sicherheit geht vor
+## Safety first
 
-- **Laser** bleiben aus, außer in der eigenen Laser-Szene oder in einer Show mit ausdrücklicher Freigabe – und sofort aus bei Pause, Stopp oder Blackout.
-- **Stroboskop:** Schnelles Blitzen kann Anfälle auslösen. Ohne Erlaubnis höchstens 2 Blitze pro Sekunde.
-- **Nebel** läuft nie von allein: nur kurze Stöße auf Knopfdruck, mit Pausen dazwischen.
-- **Blackout** geht immer vor: ein Tipp, und alles ist dunkel. Grenzwerte schützen die Scheinwerfer vor falschen Einstellungen.
-- Das Panel hat keine Anmeldung: nur im eigenen Heimnetz betreiben, nie offen im Internet.
+- **Lasers** stay off, except in their own laser scene or in a show with explicit permission – and off at once on pause, stop or blackout.
+- **Strobe:** fast flashing can trigger seizures. Without permission at most 2 flashes per second.
+- **Fog** never runs by itself: only short bursts at the push of a button, with pauses in between.
+- **Blackout** always wins: one tap and everything is dark. Limits protect the fixtures from wrong settings.
+- The panel has no login: only run it in your own home network, never openly on the internet.
 
-<img src="docs/bilder/github/dmx.jpg" width="70%" alt="DMX-Monitor">
+<img src="docs/bilder/github/dmx.jpg" width="70%" alt="DMX monitor">
 
-*DMX-Monitor: jeder Kanal jedes Geräts live im Blick.*
+*DMX monitor: every channel of every fixture live.*
 
-## Technik
+## Technology
 
 | | |
 | --- | --- |
-| **Herzstück** | Raspberry Pi, Windows-PC oder Mac, Bedienung als Webseite im Heimnetz |
-| **Ton** | USB-Audio vom Mischpult, Ton vom Musik-Rechner übers Netz oder direkt aus dem DJ-Programm Mixxx |
-| **Licht** | DMX über Art-Net oder USB-Adapter: Moving Heads, Wash-Lichter, Derby, Laser, Nebelmaschine |
-| **Mehr Licht** | LED-Streifen mit WLED, Nanoleaf-Lichtpaneele, Schaltsteckdosen über HomeMatic |
-| **Bedienung** | Browser auf Handy, Tablet, Computer; AKAI APC mini; ROLI LUMI Keys; Ableton Link fürs Tempo |
-| **Musik-Rechner** | Mac oder Windows-PC: Musiksammlung, Analyse, Tags, Pegelkurven |
-| **Intelligenz** | Eigene Musikanalyse; auf Wunsch Claude (Anthropic) für Shows, Playlists und Genres |
+| **Core** | Raspberry Pi, Windows PC or Mac, controlled through a web page in your home network |
+| **Sound** | USB audio from the mixer, sound from the music computer over the network, or straight from the DJ software Mixxx |
+| **Light** | DMX via Art-Net or a USB adapter: moving heads, washes, derby, laser, fog machine |
+| **More light** | LED strips with WLED, Nanoleaf light panels, smart sockets via HomeMatic |
+| **Control** | Browser on phone, tablet, computer; AKAI APC mini; ROLI LUMI Keys; Ableton Link for the tempo |
+| **Music computer** | Mac or Windows PC: music collection, analysis, tags, level curves |
+| **Intelligence** | Own music analysis; if you like, Claude (Anthropic) for shows, playlists and genres |
 
 <details>
-<summary><b>Wie alles zusammenhängt (Systemschema)</b></summary>
+<summary><b>How it all fits together (system diagram)</b></summary>
 
-![Systemschema](pi/static/sm/systemschema.svg)
+![System diagram](pi/static/sm/systemschema_en.svg)
 
 </details>
 
@@ -175,46 +177,42 @@ Alles auf einer Seite, im Browser von Handy, Tablet oder Computer. Oben das lauf
 <td align="center" width="33%" valign="top">
 <img src="docs/bilder/github/windows.svg" width="80" alt="Windows"><br>
 <h3>Windows</h3>
-<sub>Windows 10 und 11</sub><br><br>
+<sub>Windows 10 and 11</sub><br><br>
 <a href="https://github.com/neppma/Light-Butler/releases/latest/download/Light-Butler-Setup.exe"><b>⬇ Light-Butler-Setup.exe</b></a><br>
-<sub>Licht-Rechner: die ganze Lichtsteuerung</sub><br><br>
+<sub>Lighting computer: the whole light control</sub><br><br>
 <a href="https://github.com/neppma/Light-Butler/releases/latest/download/Light-Butler-Musik-Setup.exe"><b>⬇ Light-Butler-Musik-Setup.exe</b></a><br>
-<sub>Musik-Rechner: DJ-Programm Mixxx, Musik-Datenbank, Ton übers Netz</sub>
+<sub>Music computer: DJ software Mixxx, music library, sound over the network</sub>
 </td>
 <td align="center" width="33%" valign="top">
 <img src="docs/bilder/github/raspberry-pi.svg" width="80" alt="Raspberry Pi"><br>
 <h3>Raspberry Pi</h3>
-<sub>Pi 3, 4 oder 5 mit Raspberry Pi OS (64 Bit)</sub><br><br>
+<sub>Pi 3, 4 or 5 with Raspberry Pi OS (64-bit)</sub><br><br>
 <a href="https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-pi.zip"><b>⬇ light-butler-pi.zip</b></a><br>
-<sub>Licht-Rechner: klein, leise, läuft rund um die Uhr</sub>
+<sub>Lighting computer: small, quiet, runs around the clock</sub>
 </td>
 <td align="center" width="33%" valign="top">
 <img src="docs/bilder/github/mac.svg" width="80" alt="Mac"><br>
 <h3>Mac</h3>
-<sub>macOS 11 oder neuer, Apple-Chip (M1 und neuer)</sub><br><br>
+<sub>macOS 11 or later, Apple chip (M1 and later)</sub><br><br>
 <a href="https://github.com/neppma/Light-Butler/releases/latest/download/Light-Butler.dmg"><b>⬇ Light-Butler.dmg</b></a><br>
-<sub>Licht-Rechner: App in „Programme“ ziehen</sub><br><br>
+<sub>Lighting computer: drag the app to Applications</sub><br><br>
 <a href="https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-mac.zip"><b>⬇ light-butler-mac.zip</b></a><br>
-<sub>Musik-Rechner: DJ-Programm Mixxx, Musik-Datenbank, Ton übers Netz</sub>
+<sub>Music computer: DJ software Mixxx, music library, sound over the network</sub>
 </td>
 </tr>
 </table>
 
-**So geht's:** Du brauchst nur **einen** Licht-Rechner, ein Musik-Rechner ist optional.
+**How to start:** you only need **one** lighting computer, a music computer is optional.
 
-- **Windows:** Setup-Datei doppelklicken und installieren. Python ist eingebaut, Administrator-Rechte braucht es nicht. Das Symbol auf dem Desktop startet den Light-Butler und öffnet das Panel im Browser. Zeigt Windows „Der Computer wurde durch Windows geschützt“: **Weitere Informationen** → **Trotzdem ausführen** (der Installer ist nicht kostenpflichtig signiert).
-- **Mac:** DMG öffnen, **Light-Butler** auf **Programme** ziehen und starten. Beim ersten Mal: **Systemeinstellungen** → **Datenschutz & Sicherheit** → **Dennoch öffnen** (die App hat keine bezahlte Apple-Unterschrift), dann das Mikrofon erlauben. Für Macs mit Intel-Chip: [light-butler-mac-voll.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-mac-voll.zip).
-- **Raspberry Pi und Musik-Rechner Mac:** ZIP entpacken und das Installationsskript starten, die `LIESMICH.txt` im Paket nennt die Schritte.
-- Eine neue Anlage startet mit allen Ausgaben aus: Geräte im Panel unter Einstellungen → Fixtures anlegen, dann die Ausgaben einschalten.
+- **Windows:** double-click the setup file and install. Python is built in, no administrator rights needed. The desktop icon starts Light-Butler and opens the panel in the browser. If Windows shows "Windows protected your PC": **More info** → **Run anyway** (the installer is not commercially signed).
+- **Mac:** open the DMG, drag **Light-Butler** to **Applications** and start it. The first time: **System Settings** → **Privacy & Security** → **Open Anyway** (the app has no paid Apple signature), then allow the microphone. For Macs with Intel chip: [light-butler-mac-voll.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-mac-voll.zip).
+- **Raspberry Pi and music computer Mac:** unpack the ZIP and run the install script; the `LIESMICH.txt` in the package lists the steps (German).
+- A new system starts with all outputs off: add your fixtures in the panel under Settings → Fixtures, then switch the outputs on.
 
-Für genauere Pegelkurven (Schlagzeug, Bass, Gesang getrennt) gibt es optional einen Rechenhelfer für Windows mit NVIDIA-Grafikkarte: [light-butler-windows.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-windows.zip). Alles Weitere steht im [Handbuch](docs/HANDBUCH.md), Einzelheiten in der [Technischen Beschreibung](docs/TECHNIK.md). Alle Fassungen: [Releases](https://github.com/neppma/Light-Butler/releases).
+For more precise level curves (drums, bass, vocals separated) there is an optional helper for Windows with an NVIDIA graphics card: [light-butler-windows.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-windows.zip). Everything else is in the [manual](docs/MANUAL_EN.md), details in the [technical description](docs/TECHNICAL_EN.md). All versions: [Releases](https://github.com/neppma/Light-Butler/releases).
 
-## English
+## Licence
 
-Light-Butler is a party lighting controller that listens to the music. It runs on a Raspberry Pi, a Windows PC or a Mac, detects tempo, beat, key, mood and song structure (build-up, break, drop) and drives DMX (Art-Net or USB), WLED and Nanoleaf from it. It comes with a show editor, an auto-DJ and a music database. The web panel and the manual are available in English: [manual](docs/MANUAL_EN.md), [technical description](docs/TECHNICAL_EN.md). Downloads: see the table above.
+Copyright © 2026 Markus Nepp. Free software under the GNU General Public License version 3 (GPLv3), see [`LICENSE`](LICENSE). Without any warranty. Contact: lightbutler@gmx.at
 
-## Lizenz
-
-Copyright © 2026 Markus Nepp. Freie Software unter der GNU General Public License Version 3 (GPLv3), siehe [`LICENSE`](LICENSE). Ohne jede Gewährleistung. Kontakt: lightbutler@gmx.at
-
-*Alle Bilder zeigen eine Beispiel-Anlage mit erfundener Musik. Programm und Texte sind mit Unterstützung von KI (Claude von Anthropic) entstanden.*
+*All pictures show a sample system with made-up music. Program and texts were created with the help of AI (Claude by Anthropic).*

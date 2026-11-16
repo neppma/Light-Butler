@@ -1,9 +1,9 @@
 """make_ico.py - Symbole aus dem Light-Butler-Symbol pi/icon.svg (16.11.2026): windows/light-butler.ico (Windows) und
 mac/app/light-butler.icns (Mac-App).
 
-Nur am Mac (qlmanage zeichnet das SVG, sips verkleinert). Die fertige .ico liegt im Projekt, GitHub baut damit
+Nur am Mac (qlmanage zeichnet das SVG, pillow macht die Ecken durchsichtig, sips verkleinert). Die fertige .ico liegt im Projekt, GitHub baut damit
 Light-Butler.exe und die Installer. Nach einer Aenderung an pi/icon.svg neu erzeugen:
-    python3 windows/make_ico.py
+    python3 windows/make_ico.py      (ein Python mit pillow)
 """
 import os
 import shutil
@@ -32,11 +32,23 @@ def pack_ico(pngs):
     return head + dirs + data
 
 
+def clear_corners(png, radius=14 / 64):
+    """qlmanage zeichnet auf weissem Grund: alles ausserhalb des abgerundeten Quadrats (wie in icon.svg) durchsichtig."""
+    from PIL import Image, ImageDraw
+    im = Image.open(png).convert("RGBA")
+    w, h = im.size
+    mask = Image.new("L", (w * 4, h * 4), 0)                 # vierfach zeichnen, dann verkleinern: glatte Kante
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, w * 4 - 1, h * 4 - 1), radius=int(radius * w * 4), fill=255)
+    im.putalpha(mask.resize((w, h), Image.LANCZOS))
+    im.save(png)
+
+
 def main():
     tmp = tempfile.mkdtemp(prefix="lb-ico-")
     try:
         subprocess.run(["qlmanage", "-t", "-s", "512", "-o", tmp, SVG], check=True, capture_output=True)
         big = os.path.join(tmp, os.path.basename(SVG) + ".png")
+        clear_corners(big)
         pngs = {}
         for s in SIZES:
             out = os.path.join(tmp, "%d.png" % s)
@@ -52,6 +64,7 @@ def main():
         os.makedirs(big1k)
         subprocess.run(["qlmanage", "-t", "-s", "1024", "-o", big1k, SVG], check=True, capture_output=True)
         src1k = os.path.join(big1k, os.path.basename(SVG) + ".png")
+        clear_corners(src1k)
         for s in (16, 32, 128, 256, 512):
             for f, px in (("icon_%dx%d.png" % (s, s), s), ("icon_%dx%d@2x.png" % (s, s), 2 * s)):
                 subprocess.run(["sips", "-z", str(px), str(px), src1k, "--out", os.path.join(iconset, f)],
