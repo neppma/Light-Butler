@@ -665,16 +665,11 @@ The black window shows the messages, closing it stops the Light-Butler. A new in
 
 ### Mac
 
-1. Download the package **Mac: whole Light-Butler (ZIP)** and unpack it.
-2. In Terminal change into the folder and type:
+1. Download **Light-Butler.dmg** from the project page on GitHub (Releases, for Macs with Apple chip) and open it.
+2. Drag **Light-Butler** onto **Applications**, then double-click it in Applications.
+3. The first time macOS says the app is not verified: **System Settings** → **Privacy & Security** → at the bottom **Open Anyway**. If macOS asks for the microphone: allow it.
 
-```
-bash install_lightbutler_mac.sh
-```
-
-3. If macOS asks whether Python may use the microphone: allow it.
-
-This version is new and has not yet been tested on real lights. For Mixxx and the Helper on a music computer see chapter DJ software and music computer.
+A small window shows **Open panel** and **Quit**, the panel opens in the browser. Settings and shows are in `~/Light-Butler`. To start at login: right-click the icon in the Dock → **Options** → **Open at Login**. For Macs with Intel chip the package **Mac: whole Light-Butler (ZIP)** with `install_lightbutler_mac.sh` is still available. This version is new and has not yet been tested on real lights. For Mixxx and the Helper on a music computer see chapter DJ software and music computer.
 
 ### Level curves computer (Windows with graphics card)
 

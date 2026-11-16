@@ -1,4 +1,5 @@
-"""make_ico.py - Windows-Symbol windows/light-butler.ico aus dem Light-Butler-Symbol pi/icon.svg (16.11.2026).
+"""make_ico.py - Symbole aus dem Light-Butler-Symbol pi/icon.svg (16.11.2026): windows/light-butler.ico (Windows) und
+mac/app/light-butler.icns (Mac-App).
 
 Nur am Mac (qlmanage zeichnet das SVG, sips verkleinert). Die fertige .ico liegt im Projekt, GitHub baut damit
 Light-Butler.exe und die Installer. Nach einer Aenderung an pi/icon.svg neu erzeugen:
@@ -14,6 +15,7 @@ import tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SVG = os.path.join(ROOT, "pi", "icon.svg")
 ICO = os.path.join(ROOT, "windows", "light-butler.ico")
+ICNS = os.path.join(ROOT, "mac", "app", "light-butler.icns")
 SIZES = (16, 24, 32, 48, 64, 128, 256)
 
 
@@ -44,6 +46,18 @@ def main():
         with open(ICO, "wb") as f:
             f.write(pack_ico(pngs))
         print("geschrieben:", os.path.relpath(ICO, ROOT), "(%d Bytes)" % os.path.getsize(ICO))
+        iconset = os.path.join(tmp, "light-butler.iconset")              # Mac: iconutil aus 16 bis 1024 Pixel
+        os.makedirs(iconset)
+        big1k = os.path.join(tmp, "big1k")
+        os.makedirs(big1k)
+        subprocess.run(["qlmanage", "-t", "-s", "1024", "-o", big1k, SVG], check=True, capture_output=True)
+        src1k = os.path.join(big1k, os.path.basename(SVG) + ".png")
+        for s in (16, 32, 128, 256, 512):
+            for f, px in (("icon_%dx%d.png" % (s, s), s), ("icon_%dx%d@2x.png" % (s, s), 2 * s)):
+                subprocess.run(["sips", "-z", str(px), str(px), src1k, "--out", os.path.join(iconset, f)],
+                               check=True, capture_output=True)
+        subprocess.run(["iconutil", "-c", "icns", iconset, "-o", ICNS], check=True, capture_output=True)
+        print("geschrieben:", os.path.relpath(ICNS, ROOT), "(%d Bytes)" % os.path.getsize(ICNS))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     return 0

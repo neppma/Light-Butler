@@ -15,3 +15,4 @@ mac/mixxx_bridge/config.sh
 
 .venv-build/
 windows/build/
+mac/app/build/

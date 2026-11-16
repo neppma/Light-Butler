@@ -665,16 +665,11 @@ Das schwarze Fenster zeigt die Meldungen, Schließen beendet den Light-Butler. E
 
 ### Mac
 
-1. Das Paket **Mac: ganzer Light-Butler (ZIP)** laden und entpacken.
-2. Im Terminal in den Ordner wechseln und eintippen:
+1. **Light-Butler.dmg** von der Projektseite auf GitHub laden (Releases, für Macs mit Apple-Chip) und öffnen.
+2. **Light-Butler** auf **Programme** ziehen, dann in Programme doppelklicken.
+3. Beim ersten Mal sagt macOS, die App sei nicht geprüft: **Systemeinstellungen** → **Datenschutz & Sicherheit** → ganz unten **Dennoch öffnen**. Fragt macOS nach dem Mikrofon: erlauben.
 
-```
-bash install_lightbutler_mac.sh
-```
-
-3. Fragt macOS, ob Python das Mikrofon benutzen darf: erlauben.
-
-Diese Fassung ist neu und noch nicht am echten Licht geprüft. Für Mixxx und den Helfer auf einem Musik-Rechner siehe Kapitel DJ-Software und Musik-Rechner.
+Ein kleines Fenster zeigt **Panel öffnen** und **Beenden**, das Panel öffnet sich im Browser. Einstellungen und Shows liegen in `~/Light-Butler`. Beim Anmelden starten: Rechtsklick auf das Symbol im Dock → **Optionen** → **Bei der Anmeldung öffnen**. Für Macs mit Intel-Chip gibt es weiter das Paket **Mac: ganzer Light-Butler (ZIP)** mit `install_lightbutler_mac.sh`. Diese Fassung ist neu und noch nicht am echten Licht geprüft. Für Mixxx und den Helfer auf einem Musik-Rechner siehe Kapitel DJ-Software und Musik-Rechner.
 
 ### Pegelkurven-Rechner (Windows mit Grafikkarte)
 

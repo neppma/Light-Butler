@@ -191,9 +191,9 @@ Alles auf einer Seite, im Browser von Handy, Tablet oder Computer. Oben das lauf
 <td align="center" width="33%" valign="top">
 <img src="docs/bilder/github/mac.svg" width="80" alt="Mac"><br>
 <h3>Mac</h3>
-<sub>macOS, Apple-Chip oder Intel</sub><br><br>
-<a href="https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-mac-voll.zip"><b>⬇ light-butler-mac-voll.zip</b></a><br>
-<sub>Licht-Rechner</sub><br><br>
+<sub>macOS 11 oder neuer, Apple-Chip (M1 und neuer)</sub><br><br>
+<a href="https://github.com/neppma/Light-Butler/releases/latest/download/Light-Butler.dmg"><b>⬇ Light-Butler.dmg</b></a><br>
+<sub>Licht-Rechner: App in „Programme“ ziehen</sub><br><br>
 <a href="https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-mac.zip"><b>⬇ light-butler-mac.zip</b></a><br>
 <sub>Musik-Rechner: DJ-Programm Mixxx, Musik-Datenbank, Ton übers Netz</sub>
 </td>
@@ -203,7 +203,8 @@ Alles auf einer Seite, im Browser von Handy, Tablet oder Computer. Oben das lauf
 **So geht's:** Du brauchst nur **einen** Licht-Rechner, ein Musik-Rechner ist optional.
 
 - **Windows:** Setup-Datei doppelklicken und installieren. Python ist eingebaut, Administrator-Rechte braucht es nicht. Das Symbol auf dem Desktop startet den Light-Butler und öffnet das Panel im Browser. Zeigt Windows „Der Computer wurde durch Windows geschützt“: **Weitere Informationen** → **Trotzdem ausführen** (der Installer ist nicht kostenpflichtig signiert).
-- **Raspberry Pi und Mac:** ZIP entpacken und das Installationsskript starten, die `LIESMICH.txt` im Paket nennt die Schritte.
+- **Mac:** DMG öffnen, **Light-Butler** auf **Programme** ziehen und starten. Beim ersten Mal: **Systemeinstellungen** → **Datenschutz & Sicherheit** → **Dennoch öffnen** (die App hat keine bezahlte Apple-Unterschrift), dann das Mikrofon erlauben. Für Macs mit Intel-Chip: [light-butler-mac-voll.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-mac-voll.zip).
+- **Raspberry Pi und Musik-Rechner Mac:** ZIP entpacken und das Installationsskript starten, die `LIESMICH.txt` im Paket nennt die Schritte.
 - Eine neue Anlage startet mit allen Ausgaben aus: Geräte im Panel unter Einstellungen → Fixtures anlegen, dann die Ausgaben einschalten.
 
 Für genauere Pegelkurven (Schlagzeug, Bass, Gesang getrennt) gibt es optional einen Rechenhelfer für Windows mit NVIDIA-Grafikkarte: [light-butler-windows.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-windows.zip). Alles Weitere steht im [Handbuch](docs/HANDBUCH.md), Einzelheiten in der [Technischen Beschreibung](docs/TECHNIK.md). Alle Fassungen: [Releases](https://github.com/neppma/Light-Butler/releases).

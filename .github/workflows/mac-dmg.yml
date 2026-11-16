@@ -1,0 +1,53 @@
+# Light-Butler.dmg fuer den Mac (16.11.2026): baut auf einem Mac von GitHub die App (mac/app/build_app.py, PyInstaller)
+# und haengt die DMG an das Release. Laeuft von selbst, wenn ein Release veroeffentlicht wird. Von Hand: Actions ->
+# Mac-App -> Run workflow, mit Tag (zum Beispiel v1.0) an ein vorhandenes Release, ohne Tag nur unter Artifacts.
+# Gebaut fuer Macs mit Apple-Chip (M1 und neuer).
+name: Mac-App
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release-Tag, an das die DMG kommt (leer = nur bauen)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  dmg:
+    runs-on: macos-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}   # von Hand: Stand des gewaehlten Zweigs
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pakete fuer die App
+        run: |
+          python -c "import tkinter; print('Tk', tkinter.TkVersion)"
+          python -m pip install pyinstaller numpy pyyaml sounddevice mido python-rtmidi pyserial
+
+      - name: Light-Butler.app und Light-Butler.dmg bauen
+        run: python mac/app/build_app.py "${TAG:-0.0}"
+
+      - name: An das Release haengen
+        if: env.TAG != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" mac/app/build/Light-Butler.dmg --clobber
+
+      - name: Zum Herunterladen (ohne Release)
+        if: env.TAG == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: Light-Butler-Mac
+          path: mac/app/build/Light-Butler.dmg
