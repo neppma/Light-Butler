@@ -115,7 +115,7 @@ check('Source: "build\\dist\\Light-Butler\\*"' in iss and "OutputBaseFilename=Li
       and 'OUT = os.path.join(ROOT, "windows", "build")' in src, "Installer nimmt die Exe aus build_exe.py")
 check(iss.count('Parameters: "--browser"') == 3 and "{userstartup}" in iss and "unchecked" in iss, "Symbole mit Browser, Autostart ohne, Autostart nur auf Wunsch")
 _files = [ln for ln in iss.splitlines() if ln.startswith("Source:")]
-check(len(_files) == 3 and not any(w in ln for ln in _files for w in (".json", "shows")), "keine Einstellungen im Installer")
+check(len(_files) == 4 and not any(w in ln for ln in _files for w in (".json", "shows")), "keine Einstellungen im Installer")
 wf = open(os.path.join(ROOT, ".github", "workflows", "windows-setup.yml"), encoding="utf-8").read()
 check("windows/build_exe.py" in wf and "windows\\light-butler.iss" in wf and "gh release upload" in wf
       and "Light-Butler-Setup.exe" in wf and "types: [published]" in wf, "GitHub baut den Installer und haengt ihn an das Release")
@@ -165,4 +165,11 @@ _n = struct.unpack("<HHH", ico[:6])
 check(_n[:2] == (0, 1) and _n[2] >= 4 and ico[6 + 16 * _n[2]:][:8] == b"\x89PNG\r\n\x1a\n", "light-butler.ico: Windows-Symbol mit mehreren Groessen")
 check('"--icon", os.path.join(ROOT, "windows", "light-butler.ico")' in src and "SetupIconFile=light-butler.ico" in iss
       and "SetupIconFile=light-butler.ico" in mi, "Exe und beide Installer mit dem Light-Butler-Symbol")
+check(iss.count('IconFilename: "{app}\\light-butler.ico"') == 3 and mi.count('IconFilename: "{app}\\light-butler.ico"') == 4,
+      "Verknuepfungen mit eigener Symboldatei (kein Python-Symbol aus dem Zwischenspeicher)")
+check(all("StopRunning" in t and "PrepareToInstall" in t and "usUninstall" in t for t in (iss, mi)),
+      "laufender Light-Butler wird vor Update und Deinstallation beendet")
+check("DelData" in iss and "MB_DEFBUTTON2" in iss and 'TN ""Light-Butler""' in iss, "Daten nur auf Nachfrage loeschen (Standard Nein), alte Aufgabe abmelden")
+_run = iss.split("[Run]")[1].split("[Code]")[0] + mi.split("[Run]")[1].split("[Code]")[0]
+check("IconFilename" not in _run, "IconFilename nur bei Verknuepfungen")
 finish("test_windows_exe")

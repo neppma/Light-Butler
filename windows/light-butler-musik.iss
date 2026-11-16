@@ -74,12 +74,14 @@ Name: "autostart"; Description: "{cm:Autostart}"; GroupDescription: "{cm:Extra}"
 ; nur Python (Exe) und der Musik-Teil; der Light-Butler selbst (lichtshow\) laeuft auf einem anderen Rechner
 Source: "build\dist\Light-Butler\*"; DestDir: "{app}"; Excludes: "\lichtshow,\LIESMICH.txt"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+Source: "light-butler.ico"; DestDir: "{app}"; Flags: ignoreversion
+
 [Icons]
-Name: "{group}\{cm:MixxxLink}"; Filename: "{app}\Light-Butler.exe"; Parameters: """{app}\helfer\mixxx_bridge\mixxx_start.py"""; WorkingDir: "{app}\helfer\mixxx_bridge"
-Name: "{group}\{cm:HelperLink}"; Filename: "{app}\Light-Butler.exe"; Parameters: "--musik"; WorkingDir: "{app}"
+Name: "{group}\{cm:MixxxLink}"; Filename: "{app}\Light-Butler.exe"; Parameters: """{app}\helfer\mixxx_bridge\mixxx_start.py"""; WorkingDir: "{app}\helfer\mixxx_bridge"; IconFilename: "{app}\light-butler.ico"
+Name: "{group}\{cm:HelperLink}"; Filename: "{app}\Light-Butler.exe"; Parameters: "--musik"; WorkingDir: "{app}"; IconFilename: "{app}\light-butler.ico"
 Name: "{group}\{cm:Uninstall}"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\{cm:MixxxLink}"; Filename: "{app}\Light-Butler.exe"; Parameters: """{app}\helfer\mixxx_bridge\mixxx_start.py"""; WorkingDir: "{app}\helfer\mixxx_bridge"; Tasks: desktopicon
-Name: "{userstartup}\Light-Butler Helfer"; Filename: "{app}\Light-Butler.exe"; Parameters: "--musik"; WorkingDir: "{app}"; Tasks: autostart
+Name: "{userdesktop}\{cm:MixxxLink}"; Filename: "{app}\Light-Butler.exe"; Parameters: """{app}\helfer\mixxx_bridge\mixxx_start.py"""; WorkingDir: "{app}\helfer\mixxx_bridge"; IconFilename: "{app}\light-butler.ico"; Tasks: desktopicon
+Name: "{userstartup}\Light-Butler Helfer"; Filename: "{app}\Light-Butler.exe"; Parameters: "--musik"; WorkingDir: "{app}"; IconFilename: "{app}\light-butler.ico"; Tasks: autostart
 
 [Run]
 ; aeltere Installation per PowerShell (Aufgabe "Light-Butler Helfer") abmelden, sonst liefen zwei Helfer
@@ -87,6 +89,28 @@ Filename: "schtasks.exe"; Parameters: "/Delete /TN ""Light-Butler Helfer"" /F"; 
 Filename: "{app}\Light-Butler.exe"; Parameters: "--musik"; WorkingDir: "{app}"; Description: "{cm:StartNow}"; Flags: nowait postinstall skipifsilent runhidden
 
 [Code]
+function StopRunning(): Boolean;
+var
+  rc: Integer;
+begin
+  { laufenden Light-Butler aus diesem Ordner beenden (auch den Helfer), sonst bleiben Dateien gesperrt }
+  Result := Exec('powershell.exe', '-NoProfile -ExecutionPolicy Bypass -Command "Get-Process Light-Butler -ErrorAction SilentlyContinue | Where-Object { $_.Path -like ''' + ExpandConstant('{app}') + '\*'' } | Stop-Process -Force; Start-Sleep -Milliseconds 800"', '', SW_HIDE, ewWaitUntilTerminated, rc);
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  StopRunning();
+  Result := '';
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then
+    StopRunning();
+  if CurUninstallStep = usPostUninstall then
+    DelTree(ExpandConstant('{app}'), True, True, True);   { nur Programme, die Daten liegen in Light-Butler-Daten }
+end;
+
 var
   PiPage: TInputQueryWizardPage;
 

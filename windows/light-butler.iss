@@ -55,6 +55,8 @@ de.Readme=Kurzanleitung (LIESMICH)
 en.Readme=Quick guide (LIESMICH)
 de.Uninstall=Light-Butler deinstallieren
 en.Uninstall=Uninstall Light-Butler
+de.DelData=Auch die eigenen Daten löschen (Einstellungen, Szenen, Shows, Geräte)?%n%nNein = sie bleiben für eine spätere Installation erhalten.
+en.DelData=Also delete your own data (settings, scenes, shows, devices)?%n%nNo = they stay for a later installation.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:DesktopIcon}"; GroupDescription: "{cm:Extra}"
@@ -67,12 +69,40 @@ Source: "build\dist\Light-Butler\*"; DestDir: "{app}"; Excludes: "\lichtshow\fix
 Source: "build\dist\Light-Butler\lichtshow\fixtures.yaml"; DestDir: "{app}\lichtshow"; Flags: onlyifdoesntexist uninsneveruninstall
 Source: "build\dist\Light-Butler\lichtshow\show.conf"; DestDir: "{app}\lichtshow"; Flags: onlyifdoesntexist uninsneveruninstall
 
+Source: "light-butler.ico"; DestDir: "{app}"; Flags: ignoreversion
+
 [Icons]
-Name: "{group}\Light-Butler"; Filename: "{app}\Light-Butler.exe"; Parameters: "--browser"; WorkingDir: "{app}"
+Name: "{group}\Light-Butler"; Filename: "{app}\Light-Butler.exe"; Parameters: "--browser"; WorkingDir: "{app}"; IconFilename: "{app}\light-butler.ico"
 Name: "{group}\{cm:Readme}"; Filename: "{app}\LIESMICH.txt"
 Name: "{group}\{cm:Uninstall}"; Filename: "{uninstallexe}"
-Name: "{userdesktop}\Light-Butler"; Filename: "{app}\Light-Butler.exe"; Parameters: "--browser"; WorkingDir: "{app}"; Tasks: desktopicon
-Name: "{userstartup}\Light-Butler"; Filename: "{app}\Light-Butler.exe"; WorkingDir: "{app}"; Tasks: autostart
+Name: "{userdesktop}\Light-Butler"; Filename: "{app}\Light-Butler.exe"; Parameters: "--browser"; WorkingDir: "{app}"; IconFilename: "{app}\light-butler.ico"; Tasks: desktopicon
+Name: "{userstartup}\Light-Butler"; Filename: "{app}\Light-Butler.exe"; WorkingDir: "{app}"; IconFilename: "{app}\light-butler.ico"; Tasks: autostart
 
 [Run]
+; aeltere Installation per PowerShell (Aufgabe "Light-Butler", install_windows.ps1) abmelden, sonst liefen zwei Light-Butler
+Filename: "schtasks.exe"; Parameters: "/Delete /TN ""Light-Butler"" /F"; Flags: runhidden
 Filename: "{app}\Light-Butler.exe"; Parameters: "--browser"; WorkingDir: "{app}"; Description: "{cm:OpenPanel}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+function StopRunning(): Boolean;
+var
+  rc: Integer;
+begin
+  { laufenden Light-Butler aus diesem Ordner beenden (auch den Helfer), sonst bleiben Dateien gesperrt }
+  Result := Exec('powershell.exe', '-NoProfile -ExecutionPolicy Bypass -Command "Get-Process Light-Butler -ErrorAction SilentlyContinue | Where-Object { $_.Path -like ''' + ExpandConstant('{app}') + '\*'' } | Stop-Process -Force; Start-Sleep -Milliseconds 800"', '', SW_HIDE, ewWaitUntilTerminated, rc);
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  StopRunning();
+  Result := '';
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then
+    StopRunning();
+  if (CurUninstallStep = usPostUninstall) and DirExists(ExpandConstant('{app}')) and not UninstallSilent then
+    if MsgBox(CustomMessage('DelData'), mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
+      DelTree(ExpandConstant('{app}'), True, True, True);
+end;
