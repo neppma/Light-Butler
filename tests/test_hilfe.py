@@ -1,6 +1,7 @@
 """Hilfe-Knopf: Das Handbuch (docs/HANDBUCH.md, auf dem Pi HANDBUCH.md) als Seite /help. Ereignisfeld: Blackout,
 Blinder und Smoke werden oben angezeigt wie Freeze, Strobe und WOW!."""
 import os
+import re
 
 from _common import ROOT, check, finish
 
@@ -49,6 +50,11 @@ check('<p class="img"><img src="/static/sm/verbindungen.svg" alt="Schema"></p>' 
 for _f in ("verbindungen.svg", "verbindungen_en.svg"):
     _p = os.path.join(ROOT, "pi", "static", "sm", _f)
     check(os.path.isfile(_p) and xml.dom.minidom.parse(_p).documentElement.tagName == "svg", _f + " vorhanden und gueltig")
-check("(/static/sm/verbindungen.svg)" in open(os.path.join(ROOT, "docs", "TECHNIK.md"), encoding="utf-8").read()
-      and "(/static/sm/verbindungen_en.svg)" in open(os.path.join(ROOT, "docs", "TECHNICAL_EN.md"), encoding="utf-8").read(), "Verbindungs-Schema in beiden Fassungen der Technischen Beschreibung")
+check("(../pi/static/sm/verbindungen.svg)" in open(os.path.join(ROOT, "docs", "TECHNIK.md"), encoding="utf-8").read()
+      and "(../pi/static/sm/verbindungen_en.svg)" in open(os.path.join(ROOT, "docs", "TECHNICAL_EN.md"), encoding="utf-8").read(), "Verbindungs-Schema in beiden Fassungen der Technischen Beschreibung")
+_h2, _ = webpanel.markdown_to_html("![Schema](../pi/static/sm/systemschema.svg)")
+check('<img src="/static/sm/systemschema.svg" alt="Schema">' in _h2, "Bildpfad ../pi/static/... (GitHub) wird im Panel zu /static/...")
+for _f in ("HANDBUCH.md", "MANUAL_EN.md", "TECHNIK.md", "TECHNICAL_EN.md"):
+    for _p in re.findall(r"(?m)^!\[[^\]]*\]\(([^)]+)\)$", open(os.path.join(ROOT, "docs", _f), encoding="utf-8").read()):
+        check(os.path.isfile(os.path.normpath(os.path.join(ROOT, "docs", _p))), f"{_f}: Bild {_p} da (auch auf GitHub)")
 finish("test_hilfe")

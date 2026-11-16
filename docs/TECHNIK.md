@@ -10,7 +10,7 @@ Diese Beschreibung wurde mit Unterstützung von KI (Claude von Anthropic) erstel
 
 **Light-Butler** steuert deine Lichtanlage automatisch zur Musik: Ein **Licht-Rechner** (Raspberry Pi, Windows-PC oder Mac) wertet das Musiksignal aus und sendet die Lichtdaten an alle Geräte. Du bedienst ihn im Web-Panel am Handy, Tablet oder PC, auf Wunsch zusätzlich mit MIDI-Eingabetasten. Im Heimnetz erreichst du das Panel unter `http://<name-des-light-butler>:8080/`, zum Beispiel `http://lightbutler.local:8080/`. Im Browser des Handys legst du es über „Zum Home-Bildschirm“ als App mit dem Butler-Symbol ab.
 
-![Systemschema: was läuft wo](/static/sm/systemschema.svg)
+![Systemschema: was läuft wo](../pi/static/sm/systemschema.svg)
 
 Das Systemschema zeigt, was wo läuft: links der Musik-Rechner, in der Mitte der Light-Butler, rechts die Lichtausgänge und der Pegelkurven-Rechner, unten der DJ-Platz. Zum Antippen, mit den passenden Downloads, gibt es das Bild im Panel unter Einstellungen → Software für andere Rechner → **Systemschema und Downloads**.
 
@@ -87,7 +87,7 @@ Light-Butler macht das Licht und auf Wunsch auch die Musik von allein. Du kümme
 
 ### Geräte, Programme und Verbindungen
 
-![Geräte, Programme und Verbindungen](/static/sm/verbindungen.svg)
+![Geräte, Programme und Verbindungen](../pi/static/sm/verbindungen.svg)
 
 | Von → nach | Port | Wofür |
 | --- | --- | --- |

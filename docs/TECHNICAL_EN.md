@@ -10,7 +10,7 @@ This description was written with the help of AI (Claude by Anthropic).
 
 **Light-Butler** controls your lighting rig automatically to the music: a **lighting computer** (Raspberry Pi, Windows PC or Mac) analyses the music signal and sends the lighting data to all devices. You operate it in the web panel on a phone, tablet or PC and, if you like, also with MIDI input keys. On the home network you reach the panel at `http://<name-of-the-light-butler>:8080/`, for example `http://lightbutler.local:8080/`. In the phone's browser, "Add to Home Screen" puts it on the phone as an app with the butler icon.
 
-![System diagram: what runs where](/static/sm/systemschema_en.svg)
+![System diagram: what runs where](../pi/static/sm/systemschema_en.svg)
 
 The system diagram shows what runs where: on the left the music computer, in the middle the Light-Butler, on the right the light outputs plus the level curves computer, at the bottom the DJ desk. A clickable version with the matching downloads is in the panel under Settings → Software for other computers → **System diagram and downloads**.
 
@@ -87,7 +87,7 @@ Light-Butler runs the light, and if you like the music too, all by itself. You l
 
 ### Devices, programs and connections
 
-![Devices, programs and connections](/static/sm/verbindungen_en.svg)
+![Devices, programs and connections](../pi/static/sm/verbindungen_en.svg)
 
 | From → to | Port | Purpose |
 | --- | --- | --- |

@@ -53,7 +53,7 @@ for _l, _n in (("de", "systemschema.svg"), ("en", "systemschema_en.svg")):
     check(os.path.exists(_f) and open(_f, encoding="utf-8").read() == _ss.build(_l), f"{_n} passt zum Schema (sonst: python3 docs/bilder/systemschema_svg.py)")
 _en = _ss.build("en")
 check("Music computer" in _en and "Musik-Rechner" not in _en and "data-" not in _en and "var(--" not in _en, "englisches Bild ohne deutsche Texte, ohne Klick-Kennungen und Panel-Farben")
-check("(/static/sm/systemschema.svg)" in open(os.path.join(os.path.dirname(PI), "docs", "HANDBUCH.md"), encoding="utf-8").read()
-      and "(/static/sm/systemschema_en.svg)" in open(os.path.join(os.path.dirname(PI), "docs", "MANUAL_EN.md"), encoding="utf-8").read(), "Schema in beiden Handbuechern")
+check("(../pi/static/sm/systemschema.svg)" in open(os.path.join(os.path.dirname(PI), "docs", "HANDBUCH.md"), encoding="utf-8").read()
+      and "(../pi/static/sm/systemschema_en.svg)" in open(os.path.join(os.path.dirname(PI), "docs", "MANUAL_EN.md"), encoding="utf-8").read(), "Schema in beiden Handbuechern")
 
 finish("test_systemschema")

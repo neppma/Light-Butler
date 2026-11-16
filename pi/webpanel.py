@@ -1623,9 +1623,10 @@ def markdown_to_html(md):
             lst[1].append(re.sub(r"^\s*([-*]|\d+\.)\s+", "", s))
         elif not s.strip():
             flush()
-        elif re.match(r"^!\[[^\]]*\]\(/static/[a-z_/]+\.svg\)$", s):     # Bild aus pi/static (Schema im Handbuch)
+        elif re.match(r"^!\[[^\]]*\]\((\.\./pi)?/static/[a-z_/]+\.svg\)$", s):   # Bild aus pi/static (Schema im Handbuch)
             flush()
             alt, src = re.match(r"^!\[([^\]]*)\]\(([^)]+)\)$", s).groups()
+            src = src[len("../pi"):] if src.startswith("../pi/") else src     # ../pi/static/... (stimmt auch auf GitHub)
             out.append(f'<p class="img"><img src="{html_escape(src)}" alt="{html_escape(alt)}"></p>')
         elif "embedded content" in s:
             flush()

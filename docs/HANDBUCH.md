@@ -10,7 +10,7 @@ Dieses Handbuch wurde mit Unterstützung von KI (Claude von Anthropic) erstellt.
 
 **Light-Butler** steuert deine Lichtanlage automatisch zur Musik. Ein **Licht-Rechner** (Raspberry Pi, Windows-PC oder Mac) hört die Musik und schickt die Lichtdaten an alle Geräte. Du bedienst alles im **Web-Panel** am Handy, Tablet oder PC. Technische Einzelheiten stehen in der **Technischen Beschreibung** (Link oben).
 
-![Systemschema: was läuft wo](/static/sm/systemschema.svg)
+![Systemschema: was läuft wo](../pi/static/sm/systemschema.svg)
 
 Das Systemschema zeigt, was auf welchem Rechner läuft. Zum Antippen findest du es unter **⚙** → **Software für andere Rechner** → **Systemschema und Downloads**.
 

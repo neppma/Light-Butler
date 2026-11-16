@@ -10,7 +10,7 @@ This manual was written with the help of AI (Claude by Anthropic).
 
 **Light-Butler** controls your lighting rig automatically to the music. A **lighting computer** (Raspberry Pi, Windows PC or Mac) listens to the music and sends the lighting data to all devices. You operate everything in the **web panel** on a phone, tablet or PC. Technical details are in the **Technical description** (link at the top).
 
-![System diagram: what runs where](/static/sm/systemschema_en.svg)
+![System diagram: what runs where](../pi/static/sm/systemschema_en.svg)
 
 The system diagram shows what runs on which computer. A clickable version is under **⚙** → **Software for other computers** → **System diagram and downloads**.
 
