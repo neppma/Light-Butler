@@ -1,0 +1,75 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Tag-Vorschläge</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ #fart { border: 1px solid var(--line); border-radius: 10px; background: var(--pan); padding: 8px 12px; margin: 0 0 10px; }
+ #fart summary { cursor: pointer; font-weight: 600; } #fart p { font-size: 13px; margin: 6px 0; }
+ .frow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; } #fst { font-size: 13px; color: var(--dim); }
+ #flist { max-height: 260px; overflow: auto; font-size: 12px; color: var(--dim); margin-top: 6px; overflow-wrap: anywhere; }
+ #volbox { display: inline-flex; align-items: center; gap: 4px; color: var(--dim); font-size: 14px; } #volbox input { width: 100px; }
+ #pbar { position: fixed; left: 0; right: 0; bottom: 0; display: none; align-items: center; gap: 10px; padding: 8px 14px; background: #1f2230; border-top: 1px solid var(--line); z-index: 5; }
+ #pbar.on { display: flex; } body.atg.bar { padding-bottom: 70px; }
+ #pt { flex: 1 1 200px; min-width: 100px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+ #ppos { flex: 3 1 240px; min-width: 120px; } #ptm { font-variant-numeric: tabular-nums; color: var(--dim); font-size: 12px; min-width: 84px; text-align: right; }
+ body.atg { padding: 12px 14px 40px; max-width: 1200px; margin: 0 auto; }
+ #ahead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+ #astat { color: var(--dim); font-size: 13px; flex: 1 1 300px; }
+ #astat b { color: var(--txt); }
+ #aerr { color: #ffb35c; font-size: 13px; min-height: 18px; margin: 4px 0; }
+ #lvtabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 10px; }
+ #lvtabs button.on, #bgo.on, #bauto.on, #bauto2.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ .arow { display: grid; grid-template-columns: 24px 34px minmax(0, 1fr) minmax(0, 1.3fr) auto; gap: 10px; align-items: center;
+   padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--pan); margin-bottom: 8px; }
+ .arow input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--acc); }
+ .acv { width: 64px; height: 64px; flex: none; border-radius: 6px; background: #0003; overflow: hidden; display: flex; align-items: center; justify-content: center; color: var(--dim); font-size: 20px; }
+ .acv.none { border: 1px dashed #ffffff26; background: none; }
+ .aside { display: flex; gap: 10px; align-items: center; margin-top: 2px; }
+ .pb { min-width: 30px; min-height: 28px; padding: 0 6px; font-size: 13px; border-radius: 6px; }
+ .aplay { min-width: 34px; } .aplay.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ .acv img { width: 100%; height: 100%; object-fit: cover; }
+ .alab { color: var(--dim); font-size: 12px; }
+ .anow, .anew { font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+ .anew .chg { color: #9fd0ff; }
+ .abtns { display: flex; flex-direction: column; gap: 4px; } .abtns .adel { color: #ff8a80; } .abtns .aone { background: var(--acc); border-color: var(--acc); color: #fff; }
+ .pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 6px 0 10px; font-size: 13px; color: var(--dim); } .pager b { color: var(--txt); }
+ .adur { color: #c8cbd6; margin-left: 4px; }
+ .agen { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; } .agen button { min-height: 26px; padding: 2px 8px; font-size: 12px; }
+ .agen button.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ .afile { grid-column: 3 / 5; font-size: 12px; color: #c8cbd6; overflow-wrap: anywhere; margin-top: -4px; } .afile span { color: var(--dim); }
+ .lv { font-size: 11px; padding: 1px 6px; border-radius: 6px; margin-left: 4px; }
+ .lv.gut { background: #1e4d2b; color: #8fe0a5; } .lv.unsicher { background: #4d401e; color: #ffd38a; } .lv.nichts, .lv.cover { background: #2a2c3d; color: var(--dim); }
+ .empty { color: var(--dim); padding: 20px 0; }
+ @media (max-width: 700px) { .arow { grid-template-columns: 24px 34px minmax(0, 1fr); } .acv { width: 52px; height: 52px; } .anew { grid-column: 3 / -1; } .adur { color: #c8cbd6; margin-left: 4px; }
+ .agen { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; } .agen button { min-height: 26px; padding: 2px 8px; font-size: 12px; }
+ .agen button.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ .afile { grid-column: 3 / -1; } .abtns { grid-column: 3 / -1; flex-direction: row; } }
+</style></head>
+<body class="atg">
+<div class="s2lnav" data-back="/musik" data-cur="musik" data-title="h_autotag">Tag-Vorschläge</div>
+<div id="ahead">
+ <div id="astat">Lade …</div>
+ <div class="dim" style="font-size:12.5px;margin:4px 0">Hier stehen nur Lieder, zu denen der Assistent etwas gefunden hat. Lieder ohne Cover, zu denen er nichts fand oder deren Vorschlag du abgelehnt hast (zum Beispiel lizenzfreie Musik), zeigt die <a href="/musik?f=nocover">Musik-Datenbank mit „ohne Cover“ →</a>; dort mit <b>Tag</b> → „Cover erzeugen“.</div>
+ <button id="bauto2" title="Alle Vorschläge „gut“ gleich in die MP3s schreiben, auch die, die die Suche ab jetzt neu als gut findet. Läuft am Musik-Rechner, auch ohne diese Seite. Die unsicheren entscheidest du selbst.">Gute automatisch übernehmen: aus</button>
+ <button id="bgo" title="Der Auto-Tagger nimmt sich die Lieder ohne Cover vor, eines nach dem anderen, langsam im Hintergrund am Musik-Rechner">Starten</button>
+ <span id="volbox" title="Lautstärke beim Hineinhören (gilt auch für die Musik-Datenbank, merkt sich dieser Browser)">🔊<input type="range" id="vol" min="0" max="100" value="80"></span>
+ <button id="bapply" class="on" title="Alle angehakten Vorschläge dieser Seite in die MP3s schreiben (Tags und Cover)">Markierte dieser Seite übernehmen</button>
+</div>
+<div id="aerr"></div>
+<details id="fart"><summary>Ordnerbilder in die MP3s übernehmen</summary>
+ <p class="dim">Manche älteren Alben haben das Cover nur als Bild im Ordner (Folder.jpg, AlbumArt…jpg, cover.jpg), nicht in der MP3. Hier kommt es in die MP3, <b>nur wenn darin noch kein Bild steckt</b>, ein vorhandenes wird nie überschrieben. Die Musik bleibt unverändert, große Bilder werden auf 800 Pixel verkleinert. Mixxx zeigt es nach „Metadaten aus Datei importieren“.</p>
+ <div class="frow"><button id="fscan">Suchen</button><button id="fwrite" class="on" hidden>Alle übernehmen</button><span id="fst"></span></div>
+ <div id="flist"></div>
+</details>
+<div id="lvtabs"><button data-lv="" class="on">Alle</button><button data-lv="gut">gut</button><button data-lv="unsicher">unsicher</button><button data-lv="nichts">nichts gefunden</button><button data-lv="cover" title="Samples und Testsamples: ohne Suche, nur Cover erzeugen">nur Cover</button><button data-lv="ti" title="Lieder, bei denen Titel und Interpret gleich waren (Assistent aus der Musik-Datenbank): Shazam, sonst der Dateiname">Titel = Interpret</button><button data-lv="rej" title="Vorschläge, die du abgelehnt hast: wieder anbieten, ansehen oder ein Cover erzeugen">Abgelehnt</button>
+ <button id="bauto" hidden title="Für alle Lieder unter „nur Cover“ (im Reiter „nichts gefunden“: für diese) der Reihe nach ein Cover erzeugen und gleich speichern (nur das Bild, die Tags bleiben)">Alle Cover automatisch</button>
+ <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#a8acba;margin-left:auto"><input type="checkbox" id="ball" style="width:16px;height:16px"> alle auf dieser Seite anhaken</label></div>
+<div id="list"></div>
+<div id="toast"></div>
+<div id="pbar"><button id="ppp" class="pb" title="Abspielen / Pause">❚❚</button><span id="pt"></span><input type="range" id="ppos" min="0" max="1000" value="0" title="Im Lied springen"><span id="ptm"></span><button id="pcl" class="pb" title="Schließen">✕</button></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/tagedit.js"></script>
+<script src="/static/sm/autotag.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

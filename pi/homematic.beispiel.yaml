@@ -1,0 +1,32 @@
+# BEISPIEL fuer homematic.yaml (Geraetenummern und Adresse erfunden). Fuer die eigene Anlage als homematic.yaml
+# daneben speichern und Adresse der CCU sowie die Kanaele eintragen. Ohne homematic.yaml ist die HomeMatic-Anbindung aus.
+# HomeMatic-CCU: Geraete, die im Panel (Bereich "Haus") geschaltet werden koennen.
+# Verbindung per XML-RPC ohne Anmeldung (HmIP-RF Port 2010, BidCos-RF Port 2001).
+# Je Geraet:  id (fest, nur a-z, 0-9, _), label (Text im Panel), kind (switch | dimmer), interface (HmIP-RF | BidCos-RF),
+#             address (Kanal zum Schalten), status (Kanal mit dem tatsaechlichen Zustand, sonst wie address).
+# Bewusst NICHT hier: "Nebelschub" (Geraet aus ccu.fog_trigger) als Kanal. Nebel laeuft nur ueber den SMOKE-Knopf (Sicherheitsregel);
+# dafuer steht er unter ccu.fog_trigger, den nur der SMOKE-Knopf schaltet (mit ON_TIME-Sicherung).
+ccu:
+  host: 192.168.1.20
+  ports: {HmIP-RF: 2010, BidCos-RF: 2001}
+  poll_s: 5                      # so oft wird der Zustand gelesen
+  room_light: licht_wz           # dieses Licht schaltet die Automatik (Stille an, Musik aus), siehe Einstellungen, Gruppe Haus
+  fog_power: nebelmaschine       # Steckdose der Nebelmaschine: der SMOKE-Knopf schaltet sie zuerst ein (Aufheizen)
+  fog_trigger: {interface: BidCos-RF, address: "ABC0000002:1"}   # Nebelschub, nur fuer den SMOKE-Knopf (Einstellung Nebel ueber)
+  # Steckdose je Geraet aus der Verbindungsliste: ist das Geraet nicht erreichbar, schaltet ein Tipp auf seinen Namen
+  # oben im Panel (rote Warnung) diese Steckdose ein. Links: Name wie in der Liste (OLA, Effektband, Theke, Couchtisch,
+  # Nanoleaf), rechts: id aus devices oder eine Liste von ids (alle werden eingeschaltet).
+  power_for: {Nanoleaf: nanoleaf, Effektband: [effektband1, effektband2]}
+  # Geraete ohne eigene Erreichbarkeit (am DMX-Bus, Musikanlage): ist ihre Steckdose aus, steht oben rot "<Name> aus",
+  # Antippen schaltet sie ein.
+  power_watch: {"Derby und Bar": derby_bar, Musik: musik}
+
+devices:
+  - {id: licht_wz,      label: Wohnzimmerlicht,      kind: dimmer, interface: HmIP-RF,   address: "000A1B2C3D4E01:4", status: "000A1B2C3D4E01:3"}
+  - {id: nanoleaf,      label: Nanoleaf,             kind: switch, interface: HmIP-RF,   address: "000A1B2C3D4E02:3", status: "000A1B2C3D4E02:2"}
+  - {id: effektband1,   label: Effektband 1,         kind: switch, interface: HmIP-RF,   address: "000A1B2C3D4E03:3", status: "000A1B2C3D4E03:2"}
+  - {id: effektband2,   label: Effektband 2,         kind: switch, interface: HmIP-RF,   address: "000A1B2C3D4E04:3", status: "000A1B2C3D4E04:2"}
+  - {id: disco,         label: Disco,                kind: switch, interface: HmIP-RF,   address: "000A1B2C3D4E05:3", status: "000A1B2C3D4E05:2"}
+  - {id: derby_bar,     label: Derby und Bar,        kind: switch, interface: HmIP-RF,   address: "000A1B2C3D4E06:3", status: "000A1B2C3D4E06:2"}
+  - {id: musik,         label: Musik,                kind: switch, interface: HmIP-RF,   address: "000A1B2C3D4E07:3", status: "000A1B2C3D4E07:2"}
+  - {id: nebelmaschine, label: Nebelmaschine (Strom), kind: switch, interface: BidCos-RF, address: "ABC0000001:1"}       # nur Strom, kein Nebelschub

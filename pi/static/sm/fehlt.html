@@ -1,0 +1,27 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Fehlt mir</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body { padding: 12px 16px 40px; max-width: 900px; margin: 0 auto; }
+ #intro { margin: 2px 0 10px; font-size: 13px; }
+ .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0 10px; }
+ .bar input[type=search] { flex: 1 1 220px; min-height: 36px; font-size: 15px; }
+ #sum { color: var(--dim); font-size: 13px; }
+ .it { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); }
+ .it .t { font-weight: 600; overflow-wrap: anywhere; } .it .s { color: var(--dim); font-size: 12.5px; overflow-wrap: anywhere; }
+ .it .spot { display: inline-flex; padding: 2px; }
+ .it .del { min-width: 30px; min-height: 28px; padding: 0 8px; border-radius: 6px; }
+ .empty { color: var(--dim); font-size: 13px; padding: 10px 0; }
+</style></head>
+<body>
+<div class="s2lnav" data-back="/musik/pflege" data-cur="musik" data-title="h_missing">Fehlt mir</div>
+<p class="dim" id="intro">Lieder, die dir in der Sammlung fehlen. Merken geht mit <b>+ merken</b> bei den Alben (Titelliste laut Deezer) und in der Musik-Datenbank, wenn die Suche nichts findet. Kommt ein Lied in deine Sammlung, verschwindet es von hier von selbst. Das grüne Symbol sucht es auf Spotify (eigenes Fenster). Diese Seite findest du in der Datenpflege beim Import.</p>
+<div class="bar"><input type="search" id="q" placeholder="In der Liste suchen" autocomplete="off"><span id="sum"></span></div>
+<div id="list" class="empty">Lade …</div>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/fehlt.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

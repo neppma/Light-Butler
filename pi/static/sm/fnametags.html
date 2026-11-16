@@ -1,0 +1,45 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Tags aus Dateinamen</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body.fnt { padding: 12px 14px 40px; }
+ .box { border: 1px solid var(--line); border-radius: 12px; background: var(--pan); padding: 10px 12px; margin-bottom: 12px;
+        width: auto; max-width: none; max-height: none; overflow: visible; }
+ .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+ .row label { color: var(--dim); font-size: 13px; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+ #dir { flex: 1 1 360px; min-height: 30px; font: inherit; font-size: 13.5px; }
+ .primary { background: var(--acc); border-color: var(--acc); color: #fff; }
+ div.fold { border: 1px solid var(--line); border-radius: 10px; background: var(--pan); }
+ table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+ col.c-on { width: 30px; } col.c-pl { width: 128px; } col.c-file { width: 30%; } col.c-len { width: 56px; }
+ th { text-align: left; color: var(--dim); font-weight: 600; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+ td { padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+ .pb { min-width: 30px; min-height: 28px; padding: 0 6px; font-size: 12px; border-radius: 6px; } .pb.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ .cell1 { display: flex; gap: 6px; align-items: flex-start; } .cell1 span { display: flex; flex-direction: column; gap: 4px; }
+ .cvimg { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; flex: 0 0 auto; background: var(--line); }
+ .dim { color: var(--dim); } .new { color: #8fe0a5; } .same { color: var(--dim); } .bad { color: #ff6b6b; } .ok { color: #8fe0a5; }
+ .num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+ tr.off td { opacity: .5; }
+ .pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 6px 0 10px; font-size: 13px; color: var(--dim); }
+ .pager b { color: var(--txt); }
+ [hidden] { display: none !important; }
+ @media (max-width: 800px) { table { table-layout: auto; } col.c-file { width: auto; } }
+</style></head>
+<body class="fnt">
+<div class="s2lnav" data-back="/musik/pflege" data-cur="musik" data-title="h_fnametags">Tags aus Dateinamen</div>
+<p class="dim">Für Lieder ohne Tags (zum Beispiel lizenzfreie Musik): Interpret, Titel und Tracknummer aus dem Dateinamen ins Tag schreiben. Ordner wählen, Muster wählen, die Vorschau zeigt je Lied, was jetzt im Tag steht und was hineinkommt (<span class="new">grün</span> = wird eingetragen). Standard: nur leere Felder füllen. Seiten zu 20 Liedern, „Eintragen“ gilt für die angehakten Lieder der gezeigten Seite. Die Musik bleibt gleich; Mixxx zeigt die neuen Angaben nach „Metadaten aus Datei importieren“ (Liste „Geänderte → Mixxx“ in der Musik-Datenbank).</p>
+<div class="box">
+ <div class="row"><input type="text" id="dir" list="dirs" placeholder="Ordner im Musikordner, z. B. FREE" spellcheck="false"><datalist id="dirs"></datalist>
+  <label>Muster <select id="pat"></select></label><label><input type="checkbox" id="ow"> auch vorhandene überschreiben</label><button id="bload">Anzeigen</button></div>
+ <div id="msg" class="dim">Ordner wählen.</div>
+ <div class="row"><button id="bgo" class="primary" disabled>Eintragen</button><span id="gosum" class="dim"></span></div>
+</div>
+<div id="list"></div>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/tagedit.js"></script>
+<script src="/static/sm/fnametags.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

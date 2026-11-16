@@ -1,0 +1,32 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Ordner umbenennen</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body.ord { padding: 12px 14px 40px; }
+ .box { border: 1px solid var(--line); border-radius: 12px; background: var(--pan); padding: 10px 12px; margin-bottom: 12px;
+        width: auto; max-width: none; max-height: none; overflow: visible; }   /* sm.css: .box ist ein Dialog, hier die ganze Breite */
+ .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+ .row label { color: var(--dim); font-size: 13px; min-width: 7em; }
+ input[type=text] { flex: 1 1 420px; min-height: 32px; font: inherit; font-size: 13.5px; }
+ .primary { background: var(--acc); border-color: var(--acc); color: #fff; }
+ #omsg { color: #ffb35c; font-size: 13px; min-height: 18px; margin: 4px 0; }
+ #oinfo, #odone { font-size: 13px; } #odone { color: #8fe0a5; }
+ .dim { color: var(--dim); }
+</style></head>
+<body class="ord">
+<div class="s2lnav" data-back="/musik/pflege" data-cur="musik" data-title="h_folders">Ordner umbenennen</div>
+<p class="dim">Einen Ordner im Musikordner umbenennen oder an eine andere Stelle verschieben, zum Beispiel „…/1998 - Nicht Von Dieser Welt/Disc 2“ → „…/Xavier Naidoo/1999 - Live“. Die Musik bleibt gleich. Jede Datei darin wird für Mixxx vorgemerkt: Mixxx übernimmt die neuen Pfade beim nächsten Start der App „Light-Butler Mixxx“ (bis dahin nicht „Bibliothek neu einlesen“), Hotcues, Plattenkisten und Wiedergabelisten bleiben. Nie überschrieben wird ein Ordner, den es schon gibt; ein leerer alter Überordner kommt weg.</p>
+<div class="box">
+ <div class="row"><label for="odir">Ordner jetzt</label><input type="text" id="odir" list="odirs" placeholder="z. B. U-MUSIK/Artists/Xavier Naidoo/1998 - Nicht Von Dieser Welt/Disc 2"><datalist id="odirs"></datalist></div>
+ <div id="oinfo" class="dim"></div>
+ <div class="row"><label for="onew">Neuer Pfad</label><input type="text" id="onew" placeholder="z. B. U-MUSIK/Artists/Xavier Naidoo/1999 - Live"></div>
+ <div class="row"><button id="ogo" class="primary">Umbenennen</button><span class="dim">Erlaubt sind keine Zeichen \ : * ? " &lt; &gt; | und kein Punkt am Ende eines Namens.</span></div>
+ <div id="omsg"></div><div id="odone"></div>
+</div>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/ordner.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

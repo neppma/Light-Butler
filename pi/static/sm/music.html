@@ -1,0 +1,196 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Musik-Datenbank</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body.music { padding: 12px 14px 40px; max-width: 1500px; margin: 0 auto; }
+ #mhead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+ #mhead h1 { font-size: 20px; margin: 0 auto 0 0; }
+ #liblamp { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 4px 10px; border-radius: 999px; background: var(--line, #2a2d3a); white-space: nowrap; }
+ #liblamp i { width: 11px; height: 11px; border-radius: 50%; background: #888; flex: none; }
+ #liblamp.ok i { background: #3fbf5f; box-shadow: 0 0 6px #3fbf5f; }
+ #liblamp.build i { background: #f0a030; box-shadow: 0 0 6px #f0a030; animation: lampblink 1.2s ease-in-out infinite; }
+ #liblamp.off i { background: #8a8f9c; }
+ @keyframes lampblink { 50% { opacity: .35; } }
+ #fadechip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 3px 10px 3px 10px; border-radius: 999px; background: #3a2f1a; max-width: 100%; }
+ #fadechip[hidden] { display: none; }
+ #fadechip i { width: 11px; height: 11px; border-radius: 50%; background: #f0a030; flex: none; animation: lampblink 1.2s ease-in-out infinite; }
+ #fadechip.done { background: #1d3524; } #fadechip.done i { background: #3fbf5f; animation: none; }
+ #fadechipt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 360px; }
+ #fadechip button { min-height: 24px; padding: 0 8px; border-radius: 999px; }
+ #syncbox { background: #4d401e55; border: 1px solid #8a6d2a; border-radius: 10px; padding: 8px 12px; margin: 6px 0 10px; font-size: 13px; color: #ffe2a8; }
+ #syncbox.soft { background: #1e3a4d55; border-color: #2f5f80; color: #bfe0ff; } .synckn { color: var(--dim); }
+ #syncbox summary { cursor: pointer; margin-top: 6px; color: #ffd38a; } .synclist { max-height: 220px; overflow: auto; font-size: 12px; color: var(--dim); margin-top: 4px; overflow-wrap: anywhere; }
+ #mstat { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 6px 0 2px; }
+ #sum { color: var(--dim); font-size: 13px; margin: 0; }
+ #mhead { margin: 2px 0 8px; }
+ #sum b { color: var(--txt); font-variant-numeric: tabular-nums; }
+ .lpbar { flex: 0 0 90px; height: 6px; border-radius: 3px; background: #ffffff18; overflow: hidden; }
+ #lpfill { height: 100%; width: 0; background: #ffb35c; transition: width .6s; }
+ #hint { color: #ffb35c; font-size: 13px; margin: 0 0 6px; }   /* unter den Knoepfen: kommt er spaeter, verschiebt er sie nicht (14.11.2026) */
+ #hint:empty { display: none; }
+ #filt { display: flex; gap: 6px 10px; align-items: center; flex-wrap: wrap; background: var(--pan); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; }
+ #filt label { display: flex; align-items: center; gap: 5px; font-size: 13px; color: #a8acba; white-space: nowrap; }
+ #filt input[type=search] { flex: 1 1 220px; min-width: 160px; min-height: 32px; }
+ #filt input[type=number] { width: 62px; }
+ #filt select { min-height: 32px; max-width: 170px; }
+ #filt input[type=checkbox] { min-height: 0; width: 16px; height: 16px; accent-color: var(--acc); }
+ #energy { display: flex; gap: 3px; }
+ #energy button { min-width: 28px; min-height: 28px; padding: 0 4px; font-size: 12px; border-radius: 6px; color: var(--dim); }
+ #energy button.on { color: #fff; border-color: transparent; }
+ .e1, .e2, .e3 { --ec: #2f8fd4; } .e4, .e5, .e6 { --ec: #d4a32f; } .e7, .e8 { --ec: #e8710a; } .e9, .e10 { --ec: #e0423a; }
+ #energy button.on { background: var(--ec); }
+ .chip { display: inline-block; min-width: 22px; text-align: center; padding: 1px 5px; border-radius: 6px; font-weight: 700; font-size: 12px; background: var(--ec, #2a2c3d); color: #fff; }
+ .chip.e0 { background: #2a2c3d; color: var(--dim); font-weight: 400; }
+ #colbox { background: var(--pan); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; }
+ #colbox[hidden] { display: none; }
+ .colhead { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 2px 0 6px; }
+ #collist { columns: 240px 3; column-gap: 28px; margin-bottom: 6px; }   /* von oben nach unten, dann die naechste Spalte: so liest sich die Reihenfolge */
+ .colrow { display: flex; align-items: center; gap: 4px; break-inside: avoid; margin-bottom: 2px; }
+ .colrow label { flex: 1; display: flex; align-items: center; gap: 6px; font-size: 14px; }
+ .colrow input { min-height: 0; width: 18px; height: 18px; accent-color: var(--acc); }
+ .colrow button { min-width: 34px; min-height: 30px; padding: 0; }
+ #bcols.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ #tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+ #tbl th { position: sticky; top: 0; background: var(--pan2); color: #9fd0ff; text-align: left; padding: 7px 8px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; user-select: none; white-space: nowrap; border-bottom: 1px solid var(--line); z-index: 1; }
+ #tbl th.on { color: #fff; }
+ #tbl th .grip { position: absolute; right: -5px; top: 0; bottom: 0; width: 11px; cursor: col-resize; z-index: 2; touch-action: none; }
+ #tbl th .grip::after { content: ""; position: absolute; left: 5px; top: 25%; bottom: 25%; border-left: 1px solid #3a3f58; }
+ #tbl th .grip:hover::after { border-left-color: var(--acc); }
+ #tbl th.on::after { content: " ▾"; } #tbl th.on.up::after { content: " ▴"; }
+ #tbl td { padding: 5px 8px; border-bottom: 1px solid #1f2230; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; vertical-align: middle; }
+ #tbl tr:hover td { background: #1a1d2a; }
+ #tbl td.num, #tbl th.num { text-align: right; font-variant-numeric: tabular-nums; }
+ #tbl td.c, #tbl th.c { text-align: center; }
+ .stars { color: #f0c040; letter-spacing: 1px; font-size: 12px; } .stars .dim { color: #3a3f58; }   /* Sterne aus Mixxx */
+ #tbl td.file { color: var(--dim); font-size: 12px; max-width: 260px; }   /* Breite je Spalte: music.js (#colwidths), Ordner 520 px */
+ #tbl td.genre { color: #cfd3e6; }
+ #tbl td.artist { font-weight: 600; }
+ .ok { color: var(--ok); font-weight: 700; } .so { color: #ffb86b; font-weight: 700; } .no { color: #3a3f58; }
+ #tbl a.shlink { color: var(--blue); font-weight: 600; }
+ #tbl a.artl { color: inherit; text-decoration: none; } #tbl a.artl:hover { color: var(--blue); text-decoration: underline; }
+ #more { text-align: center; color: var(--dim); padding: 12px; }
+ #more .spotq { margin-top: 10px; } #more .spot { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; color: inherit; text-decoration: none; } #more .spot:hover { border-color: #1ed760; }
+ #tbl td.act { padding: 2px 4px; }
+ .pb { min-width: 30px; min-height: 28px; padding: 0 6px; font-size: 13px; border-radius: 6px; }
+ .pb.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ .pb:disabled { opacity: .3; }
+ .pb.del { margin-left: 4px; color: #ff8a80; }
+ .pb.nx { margin-left: 4px; padding: 0 5px; color: #9fd0ff; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; }
+ .pb.tag { margin-left: 4px; font-size: 11.5px; color: #c9b6ff; }
+ .pb.conv { margin-left: 4px; font-size: 11.5px; white-space: nowrap; color: #9fd0ff; } .qst.ok { color: #6fdc8c; }
+ .cvw { display: inline-block; min-width: 58px; white-space: nowrap; vertical-align: middle; }   /* gleiche Breite in jedem Zustand: nichts springt */
+ .cvw .qst { display: inline-block; margin-left: 4px; font-size: 11.5px; line-height: 28px; }
+ #tbl td.cv { padding: 1px 4px; width: 40px; min-width: 40px; }
+ .cvimg { width: 36px; height: 36px; object-fit: cover; border-radius: 4px; display: block; }
+ .mk { min-height: 26px; padding: 0 7px; font-size: 12px; border-radius: 6px; color: #9fd0ff; }
+ .mk.quick { margin-left: 4px; color: #ffd38a; }
+ .qst { font-size: 12px; white-space: nowrap; } .qst.run { color: #ffd38a; } .qst.wait { color: var(--dim); } .qst.err { color: #ff6b6b; cursor: help; }
+ tr.cur td { background: #22263a !important; }
+ tr.g1 td { background: #1a1f2e; } tr.g0 td { background: #161a24; }
+ .dup { display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 5px; background: #4a3a1a; color: #ffb35c; font-size: 11px; font-weight: 700; }
+ #blong.on, #bnomp3.on, #bsame.on, #bdup.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ #bar { position: fixed; left: 0; right: 0; bottom: 0; display: none; align-items: center; gap: 10px; padding: 8px 14px; background: #1f2230; border-top: 1px solid var(--line); z-index: 5; flex-wrap: wrap; }
+ #bar.on { display: flex; }
+ #bar #bt { flex: 1 1 200px; min-width: 120px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+ #bar #pos { flex: 3 1 240px; min-width: 120px; }
+ #bar #volbox { display: flex; align-items: center; gap: 4px; color: var(--dim); font-size: 13px; }
+ #bar #vol { width: 90px; }
+ #bar #tm { font-variant-numeric: tabular-nums; color: var(--dim); font-size: 12px; min-width: 84px; text-align: right; }
+ #bar #bst { color: #ffb35c; font-size: 12px; flex-basis: 100%; }
+ body.music.bar { padding-bottom: 90px; }
+ #gbar { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin: 0 0 8px; }
+ #pglinks { margin-left: auto; order: 5; display: inline-flex; gap: 6px; flex-wrap: wrap; }   /* Seiten rechtsbuendig neben den Ansichten (Wunsch 14.11.2026) */
+ #pglinks .btn { min-height: 32px; font-size: 13px; }
+ #az { order: 10; flex-basis: 100%; }                 /* A-Z in eigener Zeile: die Seiten-Knoepfe bleiben an ihrem Platz */
+ #mhead .keep { display: inline-flex; gap: 4px; white-space: nowrap; }   /* Geaenderte → Mixxx und ↺ nie getrennt */
+ #gview { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+ #gview button { border: 0; border-radius: 0; min-height: 32px; padding: 0 14px; font-size: 13px; }
+ #gview button + button { border-left: 1px solid var(--line); }
+ #gview button.on { background: var(--acc); color: #fff; }
+ #az { display: flex; flex-wrap: wrap; gap: 2px; } #az[hidden], #gall[hidden] { display: none; }
+ #az button { min-width: 24px; min-height: 26px; padding: 0 4px; font-size: 12px; border-radius: 5px; }
+ #az button:disabled { opacity: .25; }
+ #tbl tr.grp td { background: var(--pan2); cursor: pointer; padding: 8px 10px; font-size: 14px; border-bottom: 1px solid var(--line); max-width: none; }
+ #tbl tr.grp:hover td { background: #262a3c; }
+ #tbl tr.grp b { font-weight: 600; } .gch { display: inline-block; width: 18px; color: var(--dim); }
+ .gkind { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 5px; background: #2a2c3d; color: #c9b6ff; margin-right: 4px; } .gkind.gl { color: #9fd0ff; }
+ .gexp { margin-left: 14px; min-height: 24px; padding: 0 8px; font-size: 12px; border-radius: 6px; }
+ .gsub { margin-left: 10px; font-size: 12px; color: var(--dim); } .gn { margin-left: 14px; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+ #tbl tr.grp.open td { color: #fff; }
+ #tbl tr.gmore td { padding: 4px 10px 8px 28px; } .gbtn { min-height: 26px; font-size: 12px; color: #9fd0ff; }
+ #tblwrap { overflow-x: auto; background: var(--pan); border: 1px solid var(--line); border-radius: 10px; }
+ @media (max-width: 760px) { .wide { display: none; } body.music { padding: 8px 6px 40px; } #tbl td { max-width: 180px; } }
+ @media (max-width: 480px) { .wide2 { display: none; } }
+ .xdrv, .xdir { display: flex; gap: 8px; align-items: center; width: 100%; text-align: left; margin: 3px 0; min-height: 38px; }
+ .xdrv small, .xdir small { margin-left: auto; color: var(--dim, #889); }
+ #xlist { max-height: 46vh; overflow: auto; margin: 8px 0; }
+ #xbar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 8px 0; }
+ #xbar i { display: block; height: 100%; background: var(--acc); width: 0; }
+</style>
+</head><body class="music">
+<div class="s2lnav" data-back="/" data-cur="musik" data-title="h_music">Musik-Datenbank</div>
+<!-- oben: Stand der Liste und Zahlen in einer Zeile; die Knoepfe direkt ueber Suche und Tabelle (Wunsch 11.11.2026) -->
+<div id="mstat">
+ <span id="liblamp" class="build" title="Stand der Liedliste am Light-Butler"><i></i><span id="liblampt">Liste wird geladen …</span></span>
+ <span id="fadechip" hidden><i></i><button id="fadestop" title="Nach dem laufenden Lied anhalten">■</button><span id="fadechipt"></span></span>
+ <p id="sum">Lade ...</p>
+</div>
+
+
+<!-- Knoepfe bleiben an ihrem Platz (Wunsch 14.11.2026): was erst spaeter Bescheid weiss, steht hinten und ist bis dahin ausgegraut -->
+<div id="mhead">
+ <button id="bcols" title="Spalten ein- und ausblenden und ihre Reihenfolge ändern (merkt sich dieser Browser)">Spalten</button>
+ <button id="bcsv" title="Die gefilterte Liste als CSV-Datei herunterladen (für Excel oder Numbers)">CSV</button><button id="bexp" title="Die gefilterte Liste als Dateien in einen Ordner kopieren (alle in einer Ebene, ohne Unterordner), zum Beispiel auf einen Party-Stick oder die NAS. Der Musik-Rechner kopiert, die Originale bleiben.">Export</button><button id="bfade" title="Fade-in/-out für alle gefilterten MP3s (der Musik-Rechner bearbeitet sie der Reihe nach, Originale in den Papierkorb)">〰 Fade</button><button id="bgrp" title="Gruppe (Feld Gruppe im Tag, in Mixxx „Gruppierung“, zum Beispiel Après-Ski) in alle gefilterten MP3s schreiben">🏷 Gruppe setzen</button><a class="btn" id="bgroups" href="/musik/gruppen" title="Gruppen-Manager: alle Gruppen mit Zahl der Lieder, Lieder verschieben, umbenennen, auflösen">🗂 Gruppen</a>
+ <a class="btn" id="bgenres" href="/musik/genres" title="Genre-Editor: alle Genres, zusammenlegen, umbenennen, Lieder ohne Genre füllen">🏷 Genres</a>
+ <a class="btn" id="bcare" href="/musik/pflege" title="Datenpflege: alle Werkzeuge zum Bereinigen (MP3 umwandeln, Doppelte, Titel, Tags und Cover, Dateinamen) als Rezept in sinnvoller Reihenfolge">🧹 Datenpflege</a>
+ <button id="beject" title="Den Musik-Stick am Musik-Rechner auswerfen: der Light-Butler hält seine Arbeit am Stick an, dann wirft der Musik-Rechner ihn aus. Wieder angesteckt, geht alles von selbst weiter.">⏏ Stick</button>
+ <button id="breload" title="Seite neu aufbauen: die Liedliste, die der Light-Butler von der Mixxx-Brücke hat, und den Abgleich Mixxx/Stick sofort neu holen (sonst von selbst alle paar Minuten). Mixxx selbst liest dabei nichts neu ein.">Neu laden</button>
+ <span class="keep mx"><button id="bchg" disabled title="Die MP3s, deren Tags der Light-Butler geändert hat (Tag-Editor, Vorschläge, Titel bereinigen, Ordnerbilder …), als Playlist für Mixxx ablegen. In Mixxx importieren, dort alle markieren und „Metadaten aus Datei importieren“: nur diese statt aller Lieder.">Geänderte → Mixxx (–)</button><button id="bchg0" disabled title="Zähler „Geänderte → Mixxx“ auf 0 setzen: was bis jetzt geändert wurde, zählt nicht mehr (zum Beispiel, wenn Mixxx schon alles eingelesen hat)">↺</button></span>
+</div>
+<div id="syncbox" hidden></div>
+<p id="hint"></p>
+<div id="colbox" class="box" hidden><div class="colhead"><b>Spalten</b> <span class="dim">Häkchen = sichtbar, Pfeile = Reihenfolge (↑ nach links). Die Breite ziehst du am rechten Rand des Spaltenkopfs. Dieser Browser merkt es sich.</span></div><div id="collist"></div><div class="colhead"><button id="colreset">Standard</button><button id="colclose">Fertig</button></div></div>
+<div id="filt">
+ <input type="search" id="q" list="qhist" placeholder="Suchen: Interpret, Titel, Datei, Genre ..." autocomplete="off"><datalist id="qhist"></datalist>
+ <label title="Favoriten: Lieder mit Herz. Halbes Herz = Lied eines Lieblings-Albums oder -Interpreten">♥ <select id="ffav"><option value="">alle Lieder</option><option value="2">nur Favoriten</option><option value="1">Favoriten und halbe ♥</option></select></label>
+ <label title="Bewertung aus Mixxx (0 bis 5 Sterne)">★ <select id="frat"><option value="">alle</option><option value="1">ab 1 Stern</option><option value="3">ab 3 Sternen</option><option value="4">ab 4 Sternen</option><option value="5">5 Sterne</option></select></label>
+ <label>Genre <select id="genre"><option value="">alle</option></select></label>
+ <label class="mx" title="Plattenkisten und Wiedergabelisten (▶) aus Mixxx">Kiste <select id="crate"><option value="">alle</option></select></label>
+ <label>Tonart <select id="key"><option value="">alle</option></select></label>
+ <label>BPM <input type="number" id="bmin" min="0" max="300" placeholder="von"> – <input type="number" id="bmax" min="0" max="300" placeholder="bis"></label>
+ <label title="Lautheit in LUFS (am Musik-Rechner gemessen): -6 sehr laut, -14 wie Spotify, -20 leise. Zum Beispiel von leer bis -18 = die leisen Ausreißer">Lautheit <input type="number" id="lmin" min="-70" max="5" step="0.5" placeholder="von" style="width:4.5em"> – <input type="number" id="lmax" min="-70" max="5" step="0.5" placeholder="bis" style="width:4.5em"> LUFS <input type="checkbox" id="lnone" title="nur Lieder, die noch nicht gemessen sind"> ungemessen</label>
+ <label>Energie <span id="energy"></span></label>
+ <label><input type="checkbox" id="flyr"> mit Liedtext</label>
+ <label><input type="checkbox" id="fshow"> mit Show</label>
+ <label><input type="checkbox" id="fana"> analysiert</label>
+ <label><input type="checkbox" id="fnoana" title="Lieder, deren Analyse am Musik-Rechner (Aufbau, Drops) noch fehlt"> nicht analysiert</label>
+ <label><input type="checkbox" id="fbad" title="Dateien, die die Analyse am Musik-Rechner nicht lesen konnte (Seite Statistik: nicht lesbar)"> nicht lesbar</label>
+ <label class="mx"><input type="checkbox" id="fcue"> mit Hotcues</label>
+ <label class="mx" title="Lieder ohne Hotcues in Mixxx: mit den Einstellungen „Cues ohne Mixxx“ bekommen sie geschätzte"><input type="checkbox" id="fnocue"> ohne Hotcues</label>
+ <label><input type="checkbox" id="fstems"> mit Kurven</label>
+ <label title="Wann das Lied dazukam: Importdatum der Import-Seite, sonst wann Mixxx es aufgenommen hat, sonst wann die Datei auf den Stick kam">hinzugefügt <select id="fadd"><option value="">immer</option><option value="heute">heute</option><option value="gestern">gestern</option><option value="1">seit 1 Tag</option><option value="7">seit 7 Tagen</option><option value="30">seit 30 Tagen</option><option value="90">seit 90 Tagen</option><option value="365">seit 1 Jahr</option><option value="datum">von … bis …</option></select>
+ <span id="faddr" hidden><input type="date" id="faddv" title="hinzugefügt ab diesem Tag"> – <input type="date" id="faddb" title="hinzugefügt bis einschließlich diesem Tag (leer = bis heute)"></span></label>
+ <label><input type="checkbox" id="fnocv" title="Lieder ohne Cover (Datei und Ordner am Musik-Rechner geprüft). Noch nie geprüfte zählen nicht dazu, die holt „Cover vorab holen“ auf der Seite Statistik."> ohne Cover</label>
+ <label class="mx"><input type="checkbox" id="fsrc" title="Lieder, die nur im Musikordner liegen und nicht in der Mixxx-Bibliothek stehen"> nur Ordner (nicht in Mixxx)</label>
+ <button id="blong" title="Nur Lieder, die länger als 10 Minuten sind (Mitschnitte, Mixe, Hörbücher)">über 10 min</button>
+ <button id="bnomp3" title="Nur Dateien, die keine MP3 sind (MP4, WAV, FLAC …), zum Umwandeln mit → MP3">nicht MP3</button>
+ <button id="bsame" title="Nur Lieder zeigen, bei denen Titel und Interpret gleich sind (meist falsch getaggt). Ändern mit dem Tag-Editor (Knopf Tag in der Zeile).">Titel = Interpret</button>
+ <button id="bsameai" hidden title="Assistent: diese Lieder mit Shazam (sonst Dateiname und Internet) prüfen lassen, die Vorschläge kommen auf die Seite Tag-Vorschläge (Reiter Titel = Interpret). Geschrieben wird nur auf Klick.">Assistent …</button>
+ <button id="bdup" title="Nur Lieder zeigen, deren Dateiname mehrfach in der Bibliothek vorkommt (dieselbe MP3 in mehreren Ordnern)">Doppelte</button>
+ <button id="bclear" title="Alle Filter zurücksetzen">Filter leeren</button>
+</div>
+<div id="gbar"><span id="gview" title="Liste wie bisher oder nach Interpret, Genre oder Energie gruppiert (aufklappen wie einen Baum). Die Filter oben wirken auch hier. Dieser Browser merkt sich die Ansicht."><button data-gv="list">Liste</button><button data-gv="art">Interpreten</button><button data-gv="alb" title="Nach Album (Tag der Datei, sonst aus Mixxx), Lieder nach CD und Track">Alben</button><button data-gv="gen">Genres</button><button data-gv="grp" title="Nach dem Feld Gruppe im Tag (in Mixxx „Gruppierung“), zum Beispiel Après-Ski oder Lizenzfrei. Ein Lied mit mehreren Gruppen (mit ; getrennt) steht in jeder">Gruppen</button><button data-gv="lvl">Energie</button><button data-gv="kl" class="mx" title="Plattenkisten und Wiedergabelisten aus Mixxx (ein Lied kann in mehreren stehen)">Kisten/Listen</button></span>
+ <span id="pglinks" title="Eigene Seiten (die Reiter links gruppieren nur die Liste)"><a class="btn" id="bfavs" href="/musik/favoriten" title="Alle Favoriten: Lieder, Alben, Interpreten und Genres mit Herz">♥ Favoriten</a><a class="btn" id="bartists" href="/musik/interpreten" title="Alle Interpreten mit Bild, antippen zeigt ihre Lieder">👤 Interpreten-Seite</a><a class="btn" id="balbums" href="/musik/alben" title="Alle Alben mit Cover, antippen zeigt die Lieder und was dir fehlt">💿 Alben-Seite</a></span>
+ <button id="gall" hidden>Alle aufklappen</button><span id="az" hidden></span></div>
+<div id="tblwrap"><table id="tbl"><thead><tr id="headrow"></tr></thead><tbody id="rows"></tbody></table><div id="more"></div></div>
+<p class="dim">Die Liste kommt von der Mixxx-Brücke am Musik-Rechner (alle 10 Minuten) und bleibt am Light-Butler gespeichert. Liedtext und Show stammen vom Light-Butler. Vorhören und „+ Show“ holen die MP3 direkt vom Musik-Rechner, solange die Brücke läuft. Aufs Licht wirkt die Seite nicht.</p>
+<div id="bar"><button id="bpp" class="pb" title="Abspielen / Pause">⏸</button><span id="bt"></span><input type="range" id="pos" min="0" max="1000" value="0"><span id="tm"></span><span id="volbox" title="Lautstärke des Vorhörens (nur in diesem Browser)">🔈<input type="range" id="vol" min="0" max="100" value="80"></span><label id="vnormbox" class="dim"><input type="checkbox" id="vnorm" checked> gleich laut</label><button id="bcl" class="pb" title="Schließen">✕</button><span id="bst"></span></div>
+<audio id="player" preload="none"></audio>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/tagedit.js"></script>
+<script src="/static/sm/music_groups.js"></script>
+<script src="/static/sm/music.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

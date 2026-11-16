@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+# Zustandsdateien und Geheimnisse (gehoeren dem Pi bzw. dem Mac, nicht ins Git)
+pi_state/
+pi/*.json
+pi/*.json.alt
+pi/backup.conf
+pi/shows/
+mac/mixxx_bridge/config.sh
+*.sqlite
+*.zip
+.claude/settings.local.json
+
+.venv-build/
+windows/build/

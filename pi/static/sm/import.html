@@ -1,0 +1,65 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Import</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body.imp { padding: 12px 14px 40px; }
+ .box { border: 1px solid var(--line); border-radius: 12px; background: var(--pan); padding: 10px 12px; margin-bottom: 12px;
+        width: auto; max-width: none; max-height: none; overflow: visible; }
+ .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+ .row label { color: var(--dim); font-size: 13px; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+ .primary { background: var(--acc); border-color: var(--acc); color: #fff; }
+ details.fold { border: 1px solid var(--line); border-radius: 10px; margin: 10px 0; background: var(--pan); }
+ details.fold > summary { cursor: pointer; padding: 8px 12px; font-weight: 600; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+ details.fold > summary .dim { font-weight: 400; }
+ table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+ col.c-pl { width: 128px; }
+ .cell1 { display: flex; gap: 6px; align-items: flex-start; } .cell1 span { display: flex; flex-direction: column; gap: 4px; }
+ .cvimg.dupcv { width: 22px; height: 22px; display: inline-block; vertical-align: middle; margin-right: 6px; }
+ .cvimg { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; flex: 0 0 auto; background: var(--line); } col.c-song { width: 30%; } col.c-len { width: 82px; } col.c-do { width: 132px; }
+ th { text-align: left; color: var(--dim); font-weight: 600; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+ td { padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+ td input[type=text] { width: 100%; box-sizing: border-box; min-height: 30px; font: inherit; font-size: 12.5px; }
+ td select { width: 100%; min-height: 30px; }
+ .pb { min-width: 30px; min-height: 28px; padding: 0 6px; font-size: 12px; border-radius: 6px; } .pb.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ .file { color: var(--dim); font-size: 11.5px; overflow-wrap: anywhere; }
+ .chip { display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 8px; border: 1px solid var(--line); color: var(--dim); margin-left: 4px; }
+ .dup { font-size: 12px; color: #ffd38a; overflow-wrap: anywhere; margin-top: 3px; }
+ .dup.riv { color: #9cc7ff; }
+ .chip.warnchip { background: #4a3413; color: #ffcf7a; border-color: #8a6420; }
+ .otab { border-collapse: collapse; margin: 6px 0; font-size: 13px; } .otab td { padding: 4px 8px; border-bottom: 1px solid #2c2f42; vertical-align: middle; }
+ .warn { color: #ffd38a; font-size: 12px; } .bad { color: #ff6b6b; } .ok { color: #8fe0a5; }
+ .num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+ tr.skip td { opacity: .5; } tr.trash td { opacity: .6; text-decoration: line-through; } tr.trash td select, tr.trash td button { text-decoration: none; }
+ #imsg { min-height: 18px; margin: 6px 0; }
+ #itabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 10px; }
+ #itabs button.on { background: var(--acc); border-color: var(--acc); color: #fff; } #itabs button.on .dim { color: #fff; }
+ .pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 6px 0 10px; font-size: 13px; color: var(--dim); }
+ .pager b { color: var(--txt); }
+ div.fold { border: 1px solid var(--line); border-radius: 10px; background: var(--pan); }
+ [hidden] { display: none !important; }
+ @media (max-width: 800px) { table { table-layout: auto; } col.c-song { width: auto; } }
+</style></head>
+<body class="imp">
+<div class="s2lnav" data-back="/musik/pflege" data-cur="musik" data-title="h_import">Import</div>
+<p class="dim">Neue Musik liegt zuerst im Wartebereich <b>musik-import</b> neben dem Musikordner: dort sehen sie weder Mixxx noch der Light-Butler. Hier hörst du die Lieder vor (▶, unten die Leiste zum Springen), änderst ihre Tags (Tag) und wählst, was mit jedem passiert: <b>Verschieben</b> in den Musikordner (das Ziel ist nach deinem Muster vorgeschlagen und lässt sich ändern), <b>Ersetzen</b> (das vorhandene gleiche Lied kommt in den Papierkorb, das neue an seinen Platz), <b>Papierkorb</b> oder <b>Liegen lassen</b>. Die Lieder stehen je Ordner in einem eigenen Reiter, zu 20 je Seite: „Ausführen“ gilt nur für die gezeigte Seite. Erst „Ausführen“ verschiebt, nie wird etwas überschrieben (gibt es den Namen schon, kommt „(2)“ dazu). Danach in Mixxx „Bibliothek neu einlesen“.<br>Neue Dateien legst du einfach direkt in <b>musik-import</b> (ohne Unterordner). Wenn das Kopieren fertig ist, tippst du auf <b>Einsortieren</b>: der Musik-Rechner vergleicht jede Datei mit deiner Bibliothek und verschiebt sie in die Reiter „gibt es schon“, „gibt es schon, andere Länge“, „gleicher Titel, anderer Interpret“ oder „neu“ (andere Formate als MP3 nach „nicht MP3“).</p>
+<div class="box">
+ <div class="row"><label>Oberordner für den Vorschlag <select id="top"></select></label><button id="breload">Neu laden</button>
+  <span id="isum" class="dim"></span></div>
+ <div id="iloose" class="row" hidden><span id="ilooset"></span><button id="bsort" class="primary">Einsortieren</button></div>
+ <div id="iother" class="row" hidden><span id="iothert" class="warn"></span><button id="bother">Ansehen / umwandeln</button></div>
+ <div id="iotherbox" hidden><table class="otab"><tbody id="iotherlist"></tbody></table>
+  <div class="row"><button id="bothall" class="primary">Alle in MP3 umwandeln</button><span id="iothmsg" class="warn"></span></div></div>
+ <div class="row" id="iklang"><button id="bklang" title="Der Musik-Rechner vergleicht den Klang der Lieder in „neu“, „gleicher Titel, anderer Interpret“ und „gibt es schon, andere Länge“ mit Liedern deiner Bibliothek, die fast gleich lang sind (Chromaprint). So findet er dieselbe Musik auch unter ganz anderem Namen oder mit anderer Bitrate. Treffer kommen nach „gibt es schon“.">🔊 Klang prüfen</button><button id="bklangstop" disabled title="Die Klang-Prüfung nach dem laufenden Lied anhalten">Anhalten</button><span id="klangt" class="dim"></span></div>
+ <div id="imsg" class="dim">Lade …</div>
+ <div class="row"><button id="bgo" class="primary" disabled>Ausführen</button><span id="gosum" class="dim"></span></div>
+</div>
+<div id="itabs"></div>
+<div id="folders"></div>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/tagedit.js"></script>
+<script src="/static/sm/import.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

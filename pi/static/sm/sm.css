@@ -1,0 +1,188 @@
+/* Showmanager: dunkle Oberflaeche, gleiche Schrift wie das Panel */
+:root{color-scheme:dark;--bg:#0f1017;--pan:#171923;--pan2:#1f2230;--line:#2c2f42;--txt:#e8eaf2;--dim:#8a90a8;--acc:#e8710a;--blue:#4aa8ff;--ok:#3ddc6a;--red:#ff5a4d}
+@font-face{font-family:Inter;src:url(/static/inter.woff2) format("woff2");font-weight:100 900;font-display:swap}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--txt);font:13px/1.35 Inter,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
+button,input,select,textarea{font:inherit;color:inherit}
+button,a.btn{background:var(--pan2);border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-weight:600;cursor:pointer;min-height:32px}
+a.btn{display:inline-flex;align-items:center;color:inherit;text-decoration:none;box-sizing:border-box;font-size:13.3px}
+button:hover{border-color:#4a4f70}button:active{background:#3a3f5c}
+button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+button.danger{color:var(--red)}
+button:disabled{opacity:.4;cursor:default}
+input,select,textarea{background:#10121a;border:1px solid var(--line);border-radius:6px;padding:4px 6px;min-height:28px;min-width:0}
+input[type=range]{padding:0;background:none;border:0;accent-color:var(--acc)}
+input[type=color]{padding:1px;width:44px}
+a{color:var(--blue);text-decoration:none}
+h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:12px 0 6px}
+.dim{color:var(--dim)}.warn{color:#ffb86b}.err{color:var(--red)}
+
+/* ---- Editor: Gitter ---- */
+#app{display:grid;height:100dvh;grid-template:"top top" auto "left mid" minmax(0,1fr) "left bot" auto/250px minmax(0,1fr)}
+#top{grid-area:top;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px 8px;background:var(--pan);border-bottom:1px solid var(--line)}
+#left{grid-area:left;background:var(--pan);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+#mid{grid-area:mid;position:relative;min-height:0;min-width:0;background:#0b0c12;touch-action:none}
+#mid canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+#over{pointer-events:none}
+#bot{grid-area:bot;background:var(--pan);border-top:1px solid var(--line);max-height:38vh;overflow:auto;padding:8px 10px}
+#bot.closed{max-height:0;padding:0;border:0;overflow:hidden}
+
+#tools{display:contents}
+.tgroup{display:flex;gap:4px;align-items:center}
+.ic{width:22px;height:22px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tgroup button:has(.ic){min-width:40px;min-height:40px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.sep{width:1px;height:26px;background:var(--line);margin:0 2px}
+.tbtn{min-width:44px;min-height:40px;font-size:18px;line-height:1;padding:4px 8px;display:inline-flex;align-items:center;justify-content:center}
+#bplay{background:#1e6f3a;border-color:#2a8a4c}#bplay.on{background:var(--acc);border-color:var(--acc)}
+#time{font:600 20px/1 ui-monospace,Menlo,monospace;background:#090a10;border:1px solid var(--line);border-radius:7px;padding:9px 10px;min-width:124px;text-align:center;cursor:pointer;font-variant-numeric:tabular-nums}
+#bpmv{font-weight:700;color:#9fd0ff}
+#title{font-weight:700;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dirty{color:var(--acc);font-weight:700}
+#syncst{font-size:11px;color:var(--dim);min-width:90px}
+#stemst{font-size:11px;color:var(--dim);white-space:nowrap}#stemst.busy{color:#ffb86b}
+#syncst b{color:var(--ok);font-weight:600}#syncst b.free{color:#ffb86b}
+#blk.on{background:#b3261e;border-color:#b3261e;color:#fff}
+#volbox{display:inline-flex;align-items:center;gap:3px}#volic{font-size:14px;line-height:1}#vol{width:80px}
+.spacer{flex:1}
+
+/* ---- linke Leiste ---- */
+#tabs{display:flex;border-bottom:1px solid var(--line)}
+#tabs button{flex:1;border:0;border-radius:0;background:none;color:var(--dim);padding:9px 2px;font-size:12px;min-height:38px}
+#tabs button.on{color:#fff;box-shadow:inset 0 -2px 0 var(--acc);background:none}
+#list{flex:1;overflow:auto;padding:6px;min-height:0;-webkit-overflow-scrolling:touch}
+.item{display:flex;align-items:center;gap:6px;padding:7px 8px;border-radius:7px;background:var(--pan2);margin-bottom:4px;border:1px solid transparent;cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.item.sel{border-color:var(--acc)}
+.item.locked{opacity:.45;cursor:default}
+.item .sw{width:10px;height:10px;border-radius:3px;flex:none}
+.item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.item small{color:var(--dim);font-weight:400}
+.item button{min-height:24px;padding:0 7px}
+#ghost{position:fixed;z-index:50;pointer-events:none;background:var(--acc);color:#fff;font-weight:600;border-radius:7px;padding:5px 10px;transform:translate(-50%,-120%);box-shadow:0 4px 14px #000a;white-space:nowrap}
+
+/* ---- unten: Eigenschaften ---- */
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px 12px;align-items:end}
+.form label{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--dim);min-width:0}
+.form label input,.form label select{color:var(--txt);width:100%;font-size:13px}
+.form label .rg{display:flex;gap:6px;align-items:center}
+.form label .rg input[type=number]{width:72px;flex:none}
+.form label .rg input[type=text]{flex:1;width:auto}
+.form label .rg .stp{min-height:28px;min-width:32px;padding:0 4px;font-size:11px;flex:none}
+.bothead{display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.bothead b{font-size:14px}
+.dmxgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px 12px;font-size:12px}
+.dmxrow{display:flex;gap:6px;align-items:center}.dmxrow i{width:26px;color:var(--dim);font-style:normal;text-align:right;flex:none}.dmxrow span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dmxrow b{font-variant-numeric:tabular-nums}
+.dmxrow.lock{color:#ff8a7a;opacity:.7}
+
+/* ---- Dialoge ---- */
+.modal{position:fixed;inset:0;background:#000a;z-index:40;display:flex;align-items:center;justify-content:center;padding:12px}
+.box{background:var(--pan);border:1px solid var(--line);border-radius:12px;padding:14px;width:min(560px,100%);max-height:90vh;overflow:auto}
+.box h2{margin:0 0 10px;font-size:16px}
+/* Fenster (Tag bearbeiten, Wellenform, Rueckfragen) scrollen immer selbst, auch auf Seiten, die .box fuer ihre Kaesten auf
+   max-height:none/overflow:visible setzen (Fehlerbericht 12.11.2026: Tag-Fenster im Import oben abgeschnitten, kein Scrollen) */
+.modal>.box{max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;margin:0}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}
+#toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#000d;border:1px solid var(--line);padding:8px 14px;border-radius:9px;z-index:60;display:none;max-width:92vw}
+#btoggle{display:none}#bleft{display:none}
+
+/* ---- Handy und Tablet hochkant ---- */
+@media(max-width:820px){
+ #app{grid-template:"top" auto "mid" minmax(0,1fr) "bot" auto/minmax(0,1fr)}
+ #left{position:fixed;left:0;top:0;bottom:0;width:min(280px,84vw);z-index:30;transform:translateX(-102%);transition:transform .16s;box-shadow:4px 0 22px #000a}
+ #left.open{transform:none}
+ #bleft{display:inline-flex}
+ #tools{display:flex;gap:6px;align-items:center;width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+ #tools::-webkit-scrollbar{display:none}#tools>*{flex:none}#tools .spacer{display:none}
+ #time{font-size:16px;min-width:104px;padding:8px}
+ #title,#syncst,.hide-s{display:none}
+ #vol{width:64px}
+ #bot{max-height:42vh}
+}
+
+/* ---- Playback-Seite ---- */
+body.play{min-height:100dvh;overflow:auto}
+#pl{max-width:760px;margin:0 auto;padding:12px;display:flex;flex-direction:column;gap:12px}
+#plhead{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#plhead h1{font-size:18px;margin:0;flex:1}
+.card{background:var(--pan);border:1px solid var(--line);border-radius:12px;padding:12px}
+#plname{font-size:20px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pltime{font:600 38px/1.1 ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+#wave{width:100%;height:84px;display:block;border-radius:8px;background:#0b0c12;touch-action:none;margin:8px 0}
+#ptrans{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+#ptrans button{min-height:68px;font-size:26px}
+#pplay{background:#1e6f3a;border-color:#2a8a4c}#pplay.on{background:var(--acc);border-color:var(--acc)}
+.show{display:flex;gap:8px;align-items:center;padding:10px;border-radius:9px;background:var(--pan2);margin-bottom:6px;border:1px solid transparent;cursor:pointer}
+.show.sel{border-color:var(--acc)}
+.cvimg{width:36px;height:36px;object-fit:cover;border-radius:4px;flex:0 0 auto}
+.show .cvimg{width:44px;height:44px}
+#cover[hidden]{display:none}
+.plhead{display:flex;align-items:center;gap:12px;margin-bottom:4px}.plhead #plname{flex:1;min-width:0;margin-bottom:0}#plcover{width:64px;height:64px;border-radius:6px}#plcover[hidden]{display:none}
+.show .nm{flex:1;min-width:0;font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.show small{color:var(--dim);font-weight:400;display:block}
+.show button{min-height:30px;padding:2px 8px}
+.show button.ib{width:40px;height:40px;padding:0;display:inline-flex;align-items:center;justify-content:center}.show button.ib .ic{width:20px;height:20px}
+
+/* runder Knopf: Bedienungsanleitung als PDF */
+.rbtn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#23263a;border:1px solid #3a3e55;color:#e4e7f3;text-decoration:none}
+.rbtn:hover{background:#2f3350}
+.rbtn .ic{width:20px;height:20px}
+
+/* ---- Fenster Tag bearbeiten (tagedit.js): gemeinsam fuer Musik-Datenbank und Tag-Vorschlaege ---- */
+.tagbox, .modal>.tagbox { width: min(900px, 100%); }   /* .modal>: gewinnt gegen .box{width:auto} der Werkzeugseiten */
+.tggrid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; }
+.tgfields { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 5px 8px; align-items: center; align-content: start; }
+.tgfields input, .tgfields textarea { width: 100%; box-sizing: border-box; font: inherit; }
+.tggenre { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tggenre .tgg2 { display: flex; gap: 6px; min-width: 0; }
+.tggenre .tgg2 select { flex: 1 1 auto; min-width: 0; }
+.tggenre .tgg2 button { flex: 0 0 auto; }
+#tg_gaimsg { font-size: 12px; line-height: 1.35; }
+#tg_gaimsg:empty { display: none; }
+.tglab { color: var(--dim); font-size: 13px; } .tgro { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tgmore { grid-column: 1 / -1; margin-top: 6px; } .tgmore summary { cursor: pointer; color: var(--dim); font-size: 13px; }
+.tgpick { font-size: 12px; color: #9fd0ff; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tgcover { width: 100%; aspect-ratio: 1; background: #0003; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.tgcover img { width: 100%; height: 100%; object-fit: cover; }
+.tgcvs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 4px; }
+.tgcv { padding: 0; aspect-ratio: 1; overflow: hidden; border-radius: 6px; } .tgcv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tgbtns { margin-top: 10px; }
+#tgplay { width: 100%; height: 36px; margin-bottom: 8px; }
+@media (max-width: 700px) { .tggrid { grid-template-columns: minmax(0, 1fr); } .tgfields { grid-template-columns: 90px minmax(0, 1fr); } .tgsug { grid-column: 2; } }
+
+/* ---- Cover und Bilder beim Darueberfahren (Wunsch 14.11.2026) ----
+   Kacheln (Interpreten, Alben, Favoriten): heben sich leicht, weicher Schatten, oranger Neon-Rand wie die gewaehlten Knoepfe.
+   Grosses Bild in der Detailansicht: kippt leicht nach hinten, Lichtreflex, farbiger Schein.
+   Kleine Cover in Listen: nur ein duenner oranger Rand. Nur mit Maus (am iPad und Handy gibt es kein Darueberfahren),
+   ohne Bewegung, wenn im System "Bewegung reduzieren" an ist. Bewegt werden nur Lage und Schatten: das rechnet die Grafikkarte. */
+@media (hover: hover) and (pointer: fine) {
+  .tile .im, .alb img { transition: transform .16s ease, box-shadow .16s ease; will-change: transform; }
+  .albums { padding: 8px 6px 10px; } .col > .lst .grid { padding: 8px 6px; }   /* Platz fuer Leuchten und Anheben (seitlich scrollende Leisten schneiden sonst ab) */
+  .tile:hover .im, .alb:hover img {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, .55), 0 0 0 2px #ff9a3c, 0 0 18px 4px rgba(255, 140, 40, .45);
+  }
+  #det .big { position: relative; transition: transform .2s ease, box-shadow .2s ease; }
+  #det .big::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+                     background: linear-gradient(135deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, 0) 45%); transition: opacity .2s ease; }
+  #det .big:hover { transform: perspective(600px) rotateX(5deg) translateY(-4px) scale(1.04);
+                    box-shadow: 0 18px 30px rgba(0, 0, 0, .6), 0 0 24px rgba(255, 140, 40, .35); }
+  #det .big:hover::after { opacity: 1; }
+  .song img.cvimg, #tbl td.cv img.cvimg, .songs img.cvimg { transition: box-shadow .12s ease; }
+  .song img.cvimg:hover, #tbl td.cv img.cvimg:hover, .songs img.cvimg:hover { box-shadow: 0 0 0 2px #ff9a3c, 0 0 8px 1px rgba(255, 140, 40, .5); }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: reduce) {
+  .tile:hover .im, .alb:hover img, #det .big:hover { transform: none; }
+}
+
+/* ---- Lauftext fuer zu lange Titel unter festen Kacheln (Wunsch 14.11.2026) ----
+   Die Kachel bleibt so breit wie ihr Cover; ist der Titel laenger, gleitet er langsam hin und zurueck (SM.marquee in core.js
+   misst und setzt die Klasse run). Mit "Bewegung reduzieren" im System: zweizeilig statt laufend. */
+.mq { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mq > span { display: inline-block; }
+.mq.run { text-overflow: clip; }
+.mq.run > span { animation: lbmq var(--mqd, 6s) ease-in-out infinite alternate; }
+@keyframes lbmq { 0%, 18% { transform: translateX(0); } 82%, 100% { transform: translateX(var(--mqx, 0)); } }
+@media (prefers-reduced-motion: reduce) {
+  .mq.run { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .mq.run > span { animation: none; display: inline; }
+}

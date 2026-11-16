@@ -1,0 +1,42 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Lose Album-Lieder</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body.lose { padding: 12px 14px 90px; }
+ .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+ .primary { background: var(--acc); border-color: var(--acc); color: #fff; }
+ .alb { border: 1px solid var(--line); border-radius: 12px; background: var(--pan); padding: 10px 12px; margin: 10px 0; }
+ .ah { display: flex; gap: 12px; align-items: center; }
+ .ah img { width: 56px; height: 56px; border-radius: 6px; object-fit: cover; background: var(--line); flex: none; }
+ .ah .t { font-weight: 600; font-size: 15px; } .ah .s { color: var(--dim); font-size: 12.5px; overflow-wrap: anywhere; }
+ .ah button { margin-left: auto; flex: none; }
+ .song { display: grid; grid-template-columns: 26px 32px 36px minmax(0, 1fr); gap: 8px; align-items: center; padding: 5px 0; border-top: 1px solid var(--line); font-size: 13px; }
+ .song:first-of-type { margin-top: 8px; }
+ .song img.cvimg { width: 36px; height: 36px; border-radius: 4px; object-fit: cover; background: var(--line); cursor: pointer; }
+ .song .f { color: var(--dim); font-size: 11.5px; overflow-wrap: anywhere; } .song.ex { opacity: .55; }
+ .warn { color: #ffd38a; font-size: 12px; }
+ .no { display: inline-block; min-width: 22px; margin-right: 6px; color: var(--dim); font-variant-numeric: tabular-nums; }   /* Tracknummer aus dem Tag */
+ .pb { min-width: 30px; min-height: 28px; padding: 0 6px; font-size: 12px; border-radius: 6px; } .pb.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ .pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 6px 0 10px; font-size: 13px; color: var(--dim); }
+ #msg { min-height: 18px; margin: 6px 0; font-size: 13px; } .ok { color: #8fe0a5; } .bad { color: #ff6b6b; }
+ #hist .h { display: flex; gap: 8px; align-items: center; font-size: 13px; padding: 4px 0; border-top: 1px solid var(--line); }
+ #hist .h span { flex: 1; color: var(--dim); }
+ [hidden] { display: none !important; }
+</style></head>
+<body class="lose">
+<div class="s2lnav" data-back="/musik/pflege" data-cur="musik" data-title="h_lose">Lose Album-Lieder</div>
+<p class="dim">Lieder eines Albums, die lose im Interpreten-Ordner liegen, während der Rest des Albums in seinem eigenen Ordner steckt (zum Beispiel <b>Falco/Falco - Zuviel Hitze.mp3</b> neben <b>Falco/1982 - Einzelhaft/</b>). Die Alben-Seite zählt sie schon zum Album; hier kommen die Dateien auf Wunsch in den Album-Ordner. Der Dateiname bleibt, <b>überschrieben wird nie</b>: gibt es im Album-Ordner schon eine Datei mit dem Namen, bleibt das Lied liegen. Mixxx übernimmt die neuen Pfade beim nächsten Start der Mixxx-App, Hotcues, Kisten und Playlists bleiben. Jeder Schritt lässt sich unten zurücknehmen. Seiten zu 20 Alben.</p>
+<div class="bar"><button id="ball" class="primary" disabled>Angehakte dieser Seite verschieben</button><button id="breload">Neu suchen</button><span id="stat" class="dim">Lade …</span></div>
+<div id="msg"></div>
+<div class="pager" id="pg1"></div>
+<div id="list"></div>
+<div class="pager" id="pg2"></div>
+<div class="alb"><b>Verlauf</b> <span class="dim">(Zurücknehmen legt die Dateien an ihren alten Platz, wo dort nichts liegt)</span><div id="hist"><div class="dim">Noch nichts verschoben.</div></div></div>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/tagedit.js"></script>
+<script src="/static/sm/lose.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

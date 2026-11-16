@@ -1,0 +1,3 @@
+Inter (Rasmus Andersson), Variable-Font, Zeichensatz Latin
+Quelle: npm-Paket @fontsource-variable/inter 5.1.0 (files/inter-latin-wght-normal.woff2), geladen am 02.11.2026
+Lizenz: SIL Open Font License 1.1 (https://openfontlicense.org), frei nutzbar, auch weitergeben

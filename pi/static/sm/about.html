@@ -1,0 +1,65 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Über Light-Butler</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body { padding: 12px 16px 40px; max-width: 760px; margin: 0 auto; font-size: 14px; line-height: 1.5; }
+ h2 { font-size: 16px; margin: 20px 0 6px; }
+ .card { background: var(--pan); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 10px 0; }
+ ul { margin: 6px 0; padding-left: 20px; } li { margin: 4px 0; }
+ #lic { white-space: pre-wrap; font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace; max-height: 60vh; overflow: auto; background: #10121a; border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+ summary { cursor: pointer; color: var(--blue); }
+</style></head>
+<body>
+<div class="s2lnav" data-back="/settings" data-cur="about" data-title="h_about">Über Light-Butler</div>
+<div class="card">
+ <div style="font-size:18px;font-weight:600">Light-Butler</div>
+ <div class="dim" data-en="Lighting control that listens to the music">Lichtsteuerung, die Musik hört</div>
+ <div style="margin-top:6px"><span data-en="Version:">Stand:</span> <span id="stand">–</span></div>
+ <div>Copyright © 2026 Markus Nepp</div>
+ <div class="dim" style="margin-top:4px" data-en="Idea, concept, design and testing on the real system: Markus Nepp. Programmed with the help of AI (Claude by Anthropic).">Idee, Konzept, Gestaltung und Tests an der echten Anlage: Markus Nepp. Programmiert mit Unterstützung von KI (Claude von Anthropic).</div>
+ <div><span data-en="Contact:">Kontakt:</span> <a href="mailto:lightbutler@gmx.at">lightbutler@gmx.at</a></div>
+ <div><span data-en="Source code:">Quelltext:</span> <span style="user-select:all">https://github.com/neppma/Light-Butler</span></div>
+</div>
+
+<h2 data-en="Licence">Lizenz</h2>
+<p data-en="Light-Butler is free software under the GNU General Public License version 3 (GPLv3). You may use it, pass it on and change it. Whoever passes it on, changed or not, must do so under the GPLv3 again and include the source code. The source code of every version is at github.com/neppma/Light-Butler.">Light-Butler ist freie Software unter der GNU General Public License Version 3 (GPLv3). Du darfst sie benutzen, weitergeben und verändern. Wer sie weitergibt, verändert oder nicht, muss das wieder unter der GPLv3 tun und den Quelltext mitliefern. Den Quelltext jeder Fassung gibt es unter github.com/neppma/Light-Butler.</p>
+<p><b data-en="Without warranty:">Ohne Gewährleistung:</b> <span data-en="This program is distributed in the hope that it will be useful, but without any warranty, without even the implied warranty of merchantability or fitness for a particular purpose. Details in the licence text (sections 15 and 16).">Das Programm wird in der Hoffnung verbreitet, dass es nützlich ist, aber ohne jede Gewährleistung, auch ohne die stillschweigende Zusicherung der Marktreife oder der Eignung für einen bestimmten Zweck. Einzelheiten im Lizenztext (Abschnitte 15 und 16).</span></p>
+<details><summary data-en="Show the full licence text (English, legally binding)">Ganzen Lizenztext zeigen (Englisch, rechtlich maßgeblich)</summary><div id="lic">…</div></details>
+
+<h2 data-en="Safety">Sicherheit</h2>
+<div class="card" id="safety"></div>
+
+<h2 data-en="Third-party components">Fremde Bestandteile</h2>
+<ul>
+ <li data-en="Font Inter (Rasmus Andersson), SIL Open Font License 1.1">Schrift Inter (Rasmus Andersson), SIL Open Font License 1.1</li>
+ <li data-en="Python and the packages numpy, PyYAML, sounddevice (PortAudio), mido, python-rtmidi, pyserial, aubio (GPLv3), each under its own free licence">Python und die Pakete numpy, PyYAML, sounddevice (PortAudio), mido, python-rtmidi, pyserial, aubio (GPLv3), je unter ihrer eigenen freien Lizenz</li>
+ <li data-en="On the music computer: Demucs (MIT, level curves), optionally essentia (AGPLv3, key and tempo), ffmpeg (LGPL/GPL)">Am Musik-Rechner: Demucs (MIT, Pegelkurven), optional essentia (AGPLv3, Tonart und Tempo), ffmpeg (LGPL/GPL)</li>
+ <li data-en="Mixxx (mixxx.org) is a separate free program and not part of the Light-Butler.">Mixxx (mixxx.org) ist ein eigenes freies Programm und gehört nicht zum Light-Butler.</li>
+ <li data-en="Ableton Link (optional, package LinkPython-extern, GPLv2 or later): passes the tempo on to other devices.">Ableton Link (optional, Paket LinkPython-extern, GPLv2 oder später): gibt das Tempo an andere Geräte weiter.</li>
+</ul>
+
+<h2 data-en="Names of other manufacturers">Namen anderer Hersteller</h2>
+<p data-en="The following names belong to their owners. The Light-Butler is not connected with them; they only appear because it works together with these products.">Die folgenden Namen gehören ihren Inhabern. Der Light-Butler steht in keiner Verbindung zu ihnen; sie kommen nur vor, weil er mit diesen Produkten zusammenarbeitet.</p>
+<ul>
+ <li><b data-en="Computers and systems:">Rechner und Systeme:</b> Raspberry Pi, Windows, Mac, macOS, Apple, iPad, iPhone, Android, FRITZ!Box</li>
+ <li><b data-en="Lighting and devices:">Licht und Geräte:</b> Art-Net, Open Lighting Architecture (OLA), Enttec, FTDI, Docooler, BeamZ, KTV, Nanoleaf, WLED, HomeMatic, openHAB, NVIDIA</li>
+ <li><b data-en="Controllers:">Bedienung:</b> AKAI APC mini, ROLI LUMI Keys</li>
+ <li><b data-en="Music software:">Musik-Programme:</b> Mixxx, Ableton Link, SongRec, BlackHole, VB-Cable, loopMIDI, Demucs, essentia, Homebrew, PyTorch</li>
+ <li><b data-en="Services on the internet:">Dienste im Internet:</b> Spotify, Apple Music, iTunes, YouTube, Deezer, Shazam, MusicBrainz, Cover Art Archive, TheAudioDB, Discogs, LRCLIB, Claude, Anthropic</li>
+</ul>
+
+<h2 data-en="Services on the internet">Dienste im Internet</h2>
+<p data-en="The light works without the internet. Some extras ask services on the internet, only when you switch them on or press a button. No login, no personal data; your music files never leave your computers.">Das Licht läuft ohne Internet. Einige Zusätze fragen Dienste im Internet, nur wenn du sie einschaltest oder einen Knopf drückst. Ohne Anmeldung, ohne persönliche Daten; deine Musikdateien verlassen nie deine Rechner.</p>
+<ul>
+ <li data-en="Shazam (via SongRec): track recognition and the Shazam button in the tag editor; sends an audio fingerprint of a few seconds.">Shazam (über SongRec): Titelerkennung und der Shazam-Knopf im Tag-Editor; schickt einen Klang-Fingerabdruck von ein paar Sekunden.</li>
+ <li data-en="Deezer, iTunes (Apple), MusicBrainz, Cover Art Archive, TheAudioDB: suggestions for tags, covers, artist pictures and album information; send artist, title or album name.">Deezer, iTunes (Apple), MusicBrainz, Cover Art Archive, TheAudioDB: Vorschläge für Tags, Cover, Interpretenbilder und Albuminfos; schicken Interpret, Titel oder Albumname.</li>
+ <li data-en="LRCLIB: lyrics; sends artist, title and length.">LRCLIB: Liedtexte; schickt Interpret, Titel und Länge.</li>
+ <li data-en="Claude (Anthropic): show assistant, Auto-DJ and genre suggestions, only with your own key; sends song details (title, artist, analysis), the lyrics and the description of your rig.">Claude (Anthropic): Show-Assistent, Auto-DJ und Genre-Vorschläge, nur mit eigenem Schlüssel; schickt Liedangaben (Titel, Interpret, Analyse), den Liedtext und die Beschreibung deiner Anlage.</li>
+ <li data-en="Spotify: only a search link that your browser opens; the Light-Butler sends nothing.">Spotify: nur ein Such-Link, den dein Browser öffnet; der Light-Butler schickt nichts.</li>
+ <li data-en="Installation: Python packages (PyPI), on the Mac also Homebrew, BlackHole and PyTorch for the level curves.">Installation: Python-Pakete (PyPI), am Mac auch Homebrew, BlackHole und PyTorch für die Pegelkurven.</li>
+</ul>
+<script src="/static/sm/about.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

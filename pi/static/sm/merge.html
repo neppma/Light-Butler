@@ -1,0 +1,53 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Ordner auflösen</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body.mrg { padding: 12px 14px 40px; }
+ .box { border: 1px solid var(--line); border-radius: 12px; background: var(--pan); padding: 10px 12px; margin-bottom: 12px;
+        width: auto; max-width: none; max-height: none; overflow: visible; }
+ .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+ .row label { color: var(--dim); font-size: 13px; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+ .primary { background: var(--acc); border-color: var(--acc); color: #fff; }
+ div.fold { border: 1px solid var(--line); border-radius: 10px; background: var(--pan); }
+ table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+ col.c-pl { width: 128px; } col.c-song { width: 30%; } col.c-len { width: 82px; } col.c-do { width: 132px; }
+ th { text-align: left; color: var(--dim); font-weight: 600; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+ td { padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+ td input[type=text] { width: 100%; box-sizing: border-box; min-height: 30px; font: inherit; font-size: 12.5px; }
+ td select { width: 100%; min-height: 30px; }
+ #grp { width: 14em; }
+ .pb { min-width: 30px; min-height: 28px; padding: 0 6px; font-size: 12px; border-radius: 6px; } .pb.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ .file { color: var(--dim); font-size: 11.5px; overflow-wrap: anywhere; }
+ .chip { display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 8px; border: 1px solid var(--line); color: var(--dim); margin-left: 4px; }
+ .dup { font-size: 12px; color: #ffd38a; overflow-wrap: anywhere; margin-top: 3px; }
+ .warn { color: #ffd38a; font-size: 12px; } .bad { color: #ff6b6b; } .ok { color: #8fe0a5; }
+ .num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+ tr.skip td { opacity: .5; } tr.trash td { opacity: .6; text-decoration: line-through; } tr.trash td select, tr.trash td button { text-decoration: none; }
+ .cell1 { display: flex; gap: 6px; align-items: flex-start; } .cell1 span { display: flex; flex-direction: column; gap: 4px; }
+ .cvimg { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; flex: 0 0 auto; background: var(--line); }
+ .cvimg.dupcv { width: 22px; height: 22px; display: inline-block; vertical-align: middle; margin-right: 6px; }
+ .pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 6px 0 10px; font-size: 13px; color: var(--dim); }
+ .pager b { color: var(--txt); }
+ #mmsg { min-height: 18px; margin: 6px 0; }
+ [hidden] { display: none !important; }
+ @media (max-width: 800px) { table { table-layout: auto; } col.c-song { width: auto; } }
+</style></head>
+<body class="mrg">
+<div class="s2lnav" data-back="/musik/pflege" data-cur="musik" data-title="h_merge">Ordner auflösen</div>
+<p class="dim">Einen Oberordner auflösen (zum Beispiel OLDIES) und seine Lieder in einen anderen einsortieren (zum Beispiel U-MUSIK), nach deinem Muster <b>Ziel/Artists/Interpret/Interpret - Titel.mp3</b>; ein vorhandener Interpreten-Ordner wird erkannt, das Ziel lässt sich je Lied ändern. Gibt es das Lied im Ziel schon, steht es daneben: <b>Verschieben</b>, <b>Ersetzen</b> (das vorhandene in den Papierkorb), <b>Papierkorb</b> oder <b>Liegen lassen</b>. Damit die Einteilung nicht verloren geht, kommt der Ordnername in das Feld <b>Gruppe</b> (nur wo er noch fehlt). Mixxx übernimmt die neuen Pfade beim nächsten Start der App „Light-Butler Mixxx“, Hotcues, Kisten und Playlists bleiben (bis dahin in Mixxx nicht „Bibliothek neu einlesen“). Seiten zu 20 Liedern, „Ausführen“ gilt nur für die gezeigte Seite; ist der Ordner am Ende leer, kommt er weg.</p>
+<div class="box">
+ <div class="row"><label>Auflösen <select id="src"></select></label><label>einsortieren in <select id="dst"></select></label>
+  <label><input type="checkbox" id="grpon" checked> Gruppe eintragen <input type="text" id="grp" spellcheck="false"></label>
+  <button id="breload">Neu laden</button><span id="msum" class="dim"></span></div>
+ <div id="mmsg" class="dim">Ordner wählen.</div>
+ <div class="row"><button id="bgo" class="primary" disabled>Ausführen</button><span id="gosum" class="dim"></span></div>
+</div>
+<div id="list"></div>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/tagedit.js"></script>
+<script src="/static/sm/merge.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

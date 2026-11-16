@@ -1,0 +1,2 @@
+/* Betrieb ohne Mixxx (Einstellung mixxx_on, 14.11.2026): alles mit der Klasse mx ist nur mit Mixxx sinnvoll */
+.nomixxx .mx { display: none !important; }

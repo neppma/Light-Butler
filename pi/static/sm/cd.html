@@ -1,0 +1,62 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>CD-Assistent</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body.cd { padding: 12px 14px 40px; }            /* ganze Breite (Wunsch 09.11.2026) */
+ .box { border: 1px solid var(--line); border-radius: 12px; background: var(--pan); padding: 10px 12px; margin-bottom: 12px;
+        width: auto; max-width: none; max-height: none; overflow: visible; }   /* sm.css: .box ist ein Dialog (560 px), hier die ganze Breite */
+ .row label { white-space: nowrap; }
+ .box h3 { margin: 0 0 8px; font-size: 14px; color: var(--dim); font-weight: 600; }
+ .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+ .row label { color: var(--dim); font-size: 13px; display: inline-flex; gap: 6px; align-items: center; }
+ input[type=text] { min-height: 30px; font: inherit; font-size: 13.5px; }
+ #dir { flex: 1 1 420px; } #list { width: 100%; min-height: 160px; font: inherit; font-size: 13px; box-sizing: border-box; }
+ #cmsg { color: #ffb35c; font-size: 13px; min-height: 18px; margin: 4px 0; }
+ .primary { background: var(--acc); border-color: var(--acc); color: #fff; }
+ table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+ col.c-on { width: 28px; } col.c-nr { width: 70px; } col.c-pl { width: 40px; } col.c-file { width: 24%; } col.c-len { width: 64px; } col.c-a { width: 19%; } col.c-t { width: 25%; }
+ .dir { color: var(--dim); font-size: 11.5px; overflow-wrap: anywhere; } td input[type=text] { min-height: 30px; font-size: 13.5px; }
+ .pb { min-width: 30px; min-height: 28px; padding: 0 6px; font-size: 12px; border-radius: 6px; } .pb.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ #album { width: 26em; } #aart { width: 18em; } #perf { width: 22em; }
+ th { text-align: left; color: var(--dim); font-weight: 600; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+ td { padding: 4px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+ td input[type=text] { width: 100%; box-sizing: border-box; }
+ .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+ .old { color: #ff9a9a; overflow-wrap: anywhere; } .new { color: #8fe0a5; overflow-wrap: anywhere; font-size: 12.5px; }
+ .bad { color: #ff6b6b; font-weight: 600; } .warn { color: #ffd38a; } .dim { color: var(--dim); }
+ tr.off td { opacity: .45; }
+ [hidden] { display: none !important; }
+ @media (max-width: 800px) { table { table-layout: auto; } col.c-file, col.c-a, col.c-t { width: auto; } }
+</style></head>
+<body class="cd">
+<div class="s2lnav" data-back="/musik/pruefen" data-cur="musik" data-title="h_cd">CD-Assistent</div>
+<p class="dim">Für ganze CDs mit falschen oder fehlenden Tags: Ordner wählen (freiwillig: ohne Ordner sucht er in der ganzen Bibliothek), die Trackliste aus dem Internet hineinkopieren (Discogs, Wikipedia, Händler …), „Zuordnen“. Der Assistent ordnet die Lieder über die Tracknummer zu (mit Länge, wenn die Liste welche hat), zeigt jede Änderung vorher und schreibt erst auf Knopfdruck: Interpret, Titel, Album, Album-Interpret, Jahr, Track, neuer Dateiname nach den Namensregeln, auf Wunsch ein eigener Ordner unter Compilations. Die Musik bleibt gleich, Mixxx übernimmt die neuen Namen beim nächsten Start der App „Light-Butler Mixxx“ (bis dahin nicht „Bibliothek neu einlesen“).</p>
+<div class="box"><h3>1. Ordner (freiwillig)</h3>
+ <div class="row"><input type="text" id="dir" list="dirs" placeholder="Ordner im Musikordner, z. B. U-MUSIK/Artists/Techno Dance Highflyer/Techno Dance Highflyer"><datalist id="dirs"></datalist><button id="bload">Laden</button></div>
+ <div id="finfo" class="dim"></div>
+</div>
+<div class="box"><h3>2. Trackliste einfügen</h3>
+ <textarea id="list" placeholder="1. Maximum Overdrive – 2 Unlimited&#10;2. Slave To The Vibe – Aftershock&#10;…&#10;&#10;oder von Discogs: 1   The Bronx – We Like The Rain   5:42"></textarea>
+ <div class="row"><button id="bparse" class="primary">Zuordnen</button><span id="pinfo" class="dim"></span></div>
+</div>
+<div class="box" id="meta" hidden><h3>3. Angaben für die ganze CD</h3>
+ <div class="row"><label>Album <input type="text" id="album" size="34"></label><label title="Bei einer CD eines Interpreten: auch der Interpret aller Zeilen ohne Interpret">Album-Interpret <input type="text" id="aart" size="22" value="Various Artists"></label>
+  <label>Jahr <input type="text" id="year" size="5"></label><label>Genre <input type="text" id="genre" size="14" placeholder="bleibt"></label></div>
+ <div class="row"><label><input type="checkbox" id="swap"> In der Liste steht zuerst der Titel, dann der Interpret</label></div>
+ <div class="row"><label><input type="checkbox" id="cover"> Nachgespielt (Cover-Versionen): Interpret ist</label><input type="text" id="perf" size="30" placeholder="z. B. DJ 7 And The Sound Generators"><span class="dim">der Original-Interpret kommt in Klammern hinter den Titel</span></div>
+ <div class="row"><label><input type="checkbox" id="move"> In einen eigenen Ordner verschieben:</label><span id="mdest" class="dim"></span></div>
+</div>
+<div class="box" id="prev" hidden><h3>4. Vorschau</h3>
+ <div id="sum" class="dim"></div>
+ <table><colgroup><col class="c-on"><col class="c-nr"><col class="c-pl"><col class="c-file"><col class="c-len"><col class="c-a"><col class="c-t"><col></colgroup>
+  <thead><tr><th></th><th class="num">Nr</th><th></th><th>Datei jetzt (Ordner)</th><th class="num">Länge</th><th>Interpret</th><th>Titel</th><th>Neuer Name (ungefähr)</th></tr></thead><tbody id="tb"></tbody></table>
+ <div class="row" style="margin-top:10px"><button id="bgo" class="primary">Angehakte schreiben</button><span id="ginfo" class="dim"></span></div>
+</div>
+<div id="cmsg"></div>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/cd.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

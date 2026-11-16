@@ -1,0 +1,32 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Beschädigte Dateien</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body.defekt { padding: 12px 14px 90px; max-width: 1000px; margin: 0 auto; }
+ .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+ .primary { background: var(--acc); border-color: var(--acc); color: #fff; }
+ #st { color: var(--dim); font-size: 13px; }
+ .it { display: grid; grid-template-columns: 32px 36px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 13px; }
+ .it img.cvimg { width: 36px; height: 36px; border-radius: 4px; object-fit: cover; background: var(--line); cursor: pointer; }
+ .it .t { font-weight: 600; overflow-wrap: anywhere; } .it .f { color: var(--dim); font-size: 11.5px; overflow-wrap: anywhere; }
+ .it .w { color: #ffd38a; font-size: 12px; } .it .x { color: #ff8a8a; font-size: 12px; }
+ .it .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+ .pb { min-width: 30px; min-height: 28px; padding: 0 6px; font-size: 12px; border-radius: 6px; } .pb.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ #msg { min-height: 18px; margin: 6px 0; font-size: 13px; } .ok { color: #8fe0a5; } .bad { color: #ff6b6b; }
+ .empty { color: var(--dim); font-size: 13px; padding: 10px 0; }
+ [hidden] { display: none !important; }
+</style></head>
+<body class="defekt">
+<div class="s2lnav" data-back="/musik/pflege" data-cur="musik" data-title="h_damaged">Beschädigte Dateien</div>
+<p class="dim">Dateien, die das Abspielmodul von macOS nicht öffnen kann; Mixxx kann sie am Mac dann auch nicht laden („konnte nicht geladen werden“). Der Musik-Rechner prüft dazu im Hintergrund jede Datei einmal, danach nur neue oder geänderte. <b>Reparieren</b> (nur MP3): ffmpeg schreibt die Musik ohne Neukodieren in eine saubere Datei, Tags und Cover bleiben, der Name bleibt. Erst wenn macOS die neue Datei lesen kann und die Länge passt, kommt das Original in den Papierkorb des Musik-Rechners (im Finder „Zurücklegen“ holt es zurück); sonst bleibt alles, wie es war. Andere Formate: mit <b>→ MP3</b> in der Musik-Datenbank umwandeln.</p>
+<div class="bar"><button id="ball" class="primary" disabled>Alle MP3s reparieren</button><span id="st"></span></div>
+<div id="msg"></div>
+<div id="list" class="empty">Lade …</div>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/tagedit.js"></script>
+<script src="/static/sm/defekt.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

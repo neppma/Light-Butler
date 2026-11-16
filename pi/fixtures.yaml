@@ -1,0 +1,422 @@
+# fixtures.yaml - Entwurf v2 (18 Fixtures)
+# Mit "?" markierte Werte sind noch zu bestaetigen.
+# nr = laufende Nummer der Geraete (13-18 vom Nutzer bestaetigt).
+
+universe: 0                      # Art-Net-Universe 0 (bestaetigt)
+artnet_target: 192.168.1.45      # OLA-Pi (bestaetigt)
+
+types:
+  docooler_90w:                  # Docooler Mini Spider 90W RGBW, 13CH (Anleitung, bestaetigt)
+    channels: 13
+    hw_strobe: {param: strobe, lo: 60, hi: 220}            # Einzel-Strobe im AUTO-Modus: Strobe-Kanal (10-255 langsam bis schnell)
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      tilt1: Neigung Zelle 1 (0 bis 255 = 0 bis 270 Grad), sicherer Bereich 10 bis 220
+      tilt2: Neigung Zelle 2 (0 bis 255 = 0 bis 270 Grad), sicherer Bereich 10 bis 220
+      dimmer: Gesamthelligkeit 0 bis 255
+      strobe: 0 bis 9 kein Strobo, 10 bis 255 langsam bis schnell
+      r1: Zelle 1 Rot
+      g1: Zelle 1 Grün
+      b1: Zelle 1 Blau
+      w1: Zelle 1 Weiß
+      w2: Zelle 2 Weiß
+      b2: Zelle 2 Blau
+      g2: Zelle 2 Grün
+      r2: Zelle 2 Rot
+      reset: 'Reset-Kanal: 200 bis 249 löst einen Reset von 3 Sekunden aus. Nie senden, Grenze 199'
+    map: {tilt1: 1, tilt2: 2, dimmer: 3, strobe: 4,
+          r1: 5, g1: 6, b1: 7, w1: 8, w2: 9, b2: 10, g2: 11, r2: 12, reset: 13}
+    defaults: {tilt1: 127, tilt2: 127, dimmer: 255, strobe: 0, reset: 0}
+    # tilt1/tilt2: 0-255 = 0-270 Grad, je eine Haelfte (Cell 1 / Cell 2)
+    # dimmer: Gesamtdimmer 0-255
+    # strobe: 0-9 kein Strobe, 10-255 langsam -> schnell
+    # Cell 1 = Kanal 5-8 (R, G, B, W), Cell 2 = Kanal 9-12 (W, B, G, R), je 0-255
+    # reset (CH13): 200-249 loest 3 s Reset aus -> NIE senden, Maximum 199
+    cells:
+      cell1: [r1, g1, b1, w1]
+      cell2: [r2, g2, b2, w2]
+    safe_limits: {reset: [0, 199], tilt1: [10, 220], tilt2: [10, 220]}
+
+  led_4in1_rgbuv:                # 8 Kanaele
+    channels: 8
+    blitz: false                                           # NICHT im allgemeinen Strobe (Blitz-Knopf, Strobo-Burst, WOW!): Dimmer ein/aus ist zu langsam, sie bleiben dunkel
+    hw_strobe: {param: mode, value: 230, unlock: [mode], speed: {param: speed, lo: 120, hi: 255}, set: {dimmer: 255, colorwheel: 0}}
+    # Einzel-Strobe der 4in1-Washes ueber das Strobe-Programm: CH1 Mode 201-255 (hier 230, die Grenze 10 wird dafuer
+    # nur waehrend des Strobes aufgehoben), CH2 = feste Farbe (colorwheel, 0 = erster Farbwert, bei Bedarf aendern),
+    # CH3 = Geschwindigkeit (120 langsam bis 255 schnell, Richtung beim ersten Test bestaetigen)
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      mode: '0 bis 10 direkte Steuerung über Kanal 4 bis 8 (Grenze 10), darüber interne Programme: 11 bis 50 statische Farbe, 51 bis 100 Sprung, 101 bis 150 Fade, 151 bis 200 Ton, 201 bis 255 Strobo'
+      colorwheel: Farbvorwahl, wirkt nur bei Mode über 10
+      speed: Programmgeschwindigkeit, nur für interne Programme
+      dimmer: Master-Dimmer
+      r: Rot 0 bis 255
+      g: Grün 0 bis 255
+      b: Blau 0 bis 255
+      uv: UV (Lila) 0 bis 255
+    map: {mode: 1, colorwheel: 2, speed: 3, dimmer: 4, r: 5, g: 6, b: 7, uv: 8}
+    defaults: {mode: 5, colorwheel: 0, speed: 0, dimmer: 255}
+    safe_limits: {mode: [0, 10]}
+    # Anleitung (3 LEDs Par, 8CH, fuer die 4in1 RGBUV bestaetigt): CH1 0-10 = "AUS" der Programme (vermutlich direkte
+    # Steuerung ueber CH4-8, Foto: Mode 5), 11-50 statische Farbe, 51-100 Sprung,
+    # 101-150 Fade, 151-200 Ton, 201-255 Strobe (feste Farben via CH2, kein RGB-Mix).
+    # CH2 = Farbvorwahl (nur wenn CH1 > 10), CH3 = Programmgeschwindigkeit,
+    # CH4 = Master-Dimmer, CH5-8 = R, G, B, UV (Lila) 0-255.
+    # ? Mode 0-10 = RGB direkt beim ersten Test bestaetigen.
+
+  vega_spot_60:                  # 15 Kanaele (Herstellerhandbuch, bestaetigt)
+    channels: 15
+    hw_strobe: {param: shutter, lo: 30, hi: 230, set: {dimmer: 255}}   # Einzel-Strobe: Shutter 5-250 = Strobo langsam bis schnell
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      pan: Pan (Drehung), grob. Bereich 540 Grad
+      pan_fine: Pan fein
+      tilt: Tilt (Neigung), grob. Bereich 210 Grad
+      tilt_fine: Tilt fein
+      pt_speed: Geschwindigkeit von Pan und Tilt
+      dimmer: Helligkeit 0 bis 255
+      shutter: 0 bis 4 zu, 5 bis 250 Strobo langsam bis schnell, 251 bis 255 offen
+      colorwheel: 0 bis 13 Weiß, 14 bis 31 Rot, 32 bis 49 Gelb, 50 bis 67 Blau, 68 bis 85 Grün, 86 bis 103 Orange, 104 bis 121 Lila, 122 bis 130 Hellblau, 131 bis 139 Weiß, 140 bis 195 Regenbogen vor, 196 bis 199 Stopp, 200 bis 255 Regenbogen zurück
+      gobo: 0 bis 8 offen, 9 bis 33 Stern, 34 bis 58 Spirale, 59 bis 83 drei Punkte, 84 bis 108 Dreieck, 109 bis 133 fünf Punkte, 134 bis 255 Regenbogen-Wechsel
+      gobo_rot: 'Gobo-Drehung (am Gerät getestet): 0 bis 10 Stopp, 11 bis 129 im Uhrzeigersinn (schnell bis langsam), 130 bis 134 Stopp, 135 bis 255 gegen den Uhrzeigersinn (langsam bis schnell)'
+      zoom: Fokus (Strahlgröße) 0 bis 255
+      prism: 0 bis 7 offen, 8 bis 134 Prisma steht, 135 bis 194 dreht im Uhrzeigersinn, 195 bis 255 gegen den Uhrzeigersinn (255 schnell, am Gerät getestet)
+      auto_play: 0 bis 7 keine Funktion, darüber interne Programme (gesperrt)
+      auto_run: 0 bis 7 keine Funktion, darüber interne Programme (gesperrt)
+      speed_mode: 0 bis 50 leer, höhere Werte schalten Geschwindigkeit und Fade, 251 bis 255 = Reset (10 s). Nie senden, Grenze 50
+    map: {pan: 1, pan_fine: 2, tilt: 3, tilt_fine: 4, pt_speed: 5, dimmer: 6,
+          shutter: 7, colorwheel: 8, gobo: 9, gobo_rot: 10, zoom: 11,
+          prism: 12, auto_play: 13, auto_run: 14, speed_mode: 15}
+    defaults: {pan: 114, tilt: 127, dimmer: 255, shutter: 255, colorwheel: 0,
+               gobo: 0, gobo_rot: 0, zoom: 255, prism: 0, auto_play: 0,
+               auto_run: 0, speed_mode: 0}
+    # shutter: 0-4 zu, 5-250 Strobe langsam->schnell, 251-255 OFFEN
+    # colorwheel: 0-13 weiss, 14-31 rot, 32-49 gelb, 50-67 blau, 68-85 gruen,
+    #   86-103 orange, 104-121 lila, 122-130 hellblau, 131-139 weiss,
+    #   140-195 Regenbogen vor, 196-199 Stop, 200-255 Regenbogen zurueck
+    # gobo: 0-8 offen, 9-33 Stern, 34-58 Spirale, 59-83 3 Punkte, 84-108 Dreieck,
+    #   109-133 fuenf Punkte, 134-194 / 195-255 Regenbogen-Wechsel vor/zurueck
+    # gobo_rot (am Geraet getestet): 0-10 Stop, 11-129 im Uhrzeigersinn (schnell->langsam), 130-134 Stop,
+    #   135-255 gegen den Uhrzeigersinn (langsam->schnell)
+    # prism: 0-7 offen, 8-134 Prisma steht, 135-194 dreht im Uhrzeigersinn, 195-255 gegen den Uhrzeigersinn (255 schnell)
+    # auto_play / auto_run: 0-7 = keine Funktion (sonst interne Programme!)
+    # speed_mode (CH15): 0-50 leer, 51-100 Speed Mode high, 151-200 Fade,
+    #   251-255 = RESET (10 s) -> NIE senden, Maximum 200 erlaubt.
+    # Pan 540 Grad, Tilt 210 Grad.
+    safe_limits: {speed_mode: [0, 50], auto_play: [0, 7], auto_run: [0, 7]}
+    presets:
+      colorwheel: {white: 0, red: 22, yellow: 40, blue: 58, green: 76,
+                   orange: 94, purple: 112, lightblue: 126}
+      gobo: {open: 0, star: 21, spiral: 46, dots3: 71, triangle: 96, gobo5: 121}
+
+  laser_ktv34:                   # KTV Colorful Animation Laser, Profi-Modus 34 Kanaele (am Geraet: d301, bestaetigt am 03.11.2026: Muster bleiben stabil, Rad ruhig)
+    channels: 34
+    desc:                        # Kanalbeschreibung (Uebersetzung der Anleitung, siehe Handbuch)
+      power: 'Laser ein/aus: 0 bis 9 aus, 10 bis 255 ein. Nur mit Freigabe, sonst immer 0'
+      color: 'Farbe Muster A, je 4 Werte eine (10 = Rot, 17 = Grün, 27 = Blau, 255 = bunt)'
+      color_speed: 'Farbtempo A'
+      pattern: 'Muster A, je 6 Werte eines'
+      group: 'Gruppe A: 0 bis 191 Liniengruppen (je 32 Werte eine), 192 bis 255 Animationen'
+      size: 'Größe A, groß bis klein'
+      zoom: 'Zoom A: 0 bis 127 Größe, 128 bis 159 vergrößern, 160 bis 191 verkleinern, 192 bis 255 Zoom 1 und 2 (Tempo)'
+      rotate: 'Drehung A: 0 bis 127 Winkel, 128 bis 191 rückwärts, 192 bis 255 vorwärts (Tempo)'
+      flip_h: 'Waagrecht A: 1 bis 127 Kipp-Position, 128 bis 191 Verzerrung 1 und 2, 192 bis 255 Kippen 1 und 2 (Tempo)'
+      flip_v: 'Senkrecht A: 1 bis 127 Kipp-Position, 128 bis 191 Verzerrung 1 und 2, 192 bis 255 Kippen 1 und 2 (Tempo)'
+      pos_x: 'Waagrecht A: 1 bis 127 Position, 128 bis 255 Bewegung (Tempo)'
+      pos_y: 'Senkrecht A: 1 bis 127 Position, 128 bis 255 Bewegung (Tempo)'
+      wave_x: 'X-Welle A: Tempo, je 32 Werte eine Größe'
+      draw: 'Muster A nach und nach zeichnen (Tempo)'
+      effect: 'Effekt: 0 bis 1 kein Selbstlauf, 2 bis 244 Effekte von Hand, 245 bis 250 Selbstlauf, 251 bis 255 Ton'
+      effect_speed: 'Tempo des Selbstlaufs'
+      grating: 'Gitter, je 20 Werte ein Effekt'
+      b_color: 'Farbe Muster B, je 4 Werte eine (10 = Rot, 17 = Grün, 27 = Blau, 255 = bunt)'
+      b_color_speed: 'Farbtempo B'
+      b_pattern: 'Muster B, je 6 Werte eines'
+      b_group: 'Gruppe B: 0 bis 191 Liniengruppen (je 32 Werte eine), 192 bis 255 Bnimationen'
+      b_size: 'Größe B, groß bis klein'
+      b_zoom: 'Zoom B: 0 bis 127 Größe, 128 bis 159 vergrößern, 160 bis 191 verkleinern, 192 bis 255 Zoom 1 und 2 (Tempo)'
+      b_rotate: 'Drehung B: 0 bis 127 Winkel, 128 bis 191 rückwärts, 192 bis 255 vorwärts (Tempo)'
+      b_flip_h: 'Waagrecht B: 1 bis 127 Kipp-Position, 128 bis 191 Verzerrung 1 und 2, 192 bis 255 Kippen 1 und 2 (Tempo)'
+      b_flip_v: 'Senkrecht B: 1 bis 127 Kipp-Position, 128 bis 191 Verzerrung 1 und 2, 192 bis 255 Kippen 1 und 2 (Tempo)'
+      b_pos_x: 'Waagrecht B: 1 bis 127 Position, 128 bis 255 Bewegung (Tempo)'
+      b_pos_y: 'Senkrecht B: 1 bis 127 Position, 128 bis 255 Bewegung (Tempo)'
+      b_wave_x: 'X-Welle B: Tempo, je 32 Werte eine Größe'
+      b_draw: 'Muster B nach und nach zeichnen (Tempo)'
+      draw_a: 'Muster A von Hand zeichnen, bei 255 ist das Licht zu'
+      wave_y_a: 'Y-Welle A: Tempo, je 32 Werte eine Größe'
+      draw_b: 'Muster B von Hand zeichnen, bei 255 ist das Licht zu'
+      wave_y_b: 'Y-Welle B: Tempo, je 32 Werte eine Größe'
+    map: {power: 1, color: 2, color_speed: 3, pattern: 4, group: 5, size: 6, zoom: 7, rotate: 8, flip_h: 9, flip_v: 10, pos_x: 11, pos_y: 12, wave_x: 13, draw: 14, effect: 15, effect_speed: 16, grating: 17, b_color: 18, b_color_speed: 19, b_pattern: 20, b_group: 21, b_size: 22, b_zoom: 23, b_rotate: 24, b_flip_h: 25, b_flip_v: 26, b_pos_x: 27, b_pos_y: 28, b_wave_x: 29, b_draw: 30, draw_a: 31, wave_y_a: 32, draw_b: 33, wave_y_b: 34}
+    # SICHERHEIT: alle Kanaele immer 0 (Laser aus, kein Ruhewert noetig), ausser in der Szene Laser und in Laser-Clips des Showmanagers.
+    locked_channels: [power, color, color_speed, pattern, group, size, zoom, rotate, flip_h, flip_v, pos_x, pos_y, wave_x, draw, effect, effect_speed, grating, b_color, b_color_speed, b_pattern, b_group, b_size, b_zoom, b_rotate, b_flip_h, b_flip_v, b_pos_x, b_pos_y, b_wave_x, b_draw, draw_a, wave_y_a, draw_b, wave_y_b]
+    laser_channels: [power, color, color_speed, pattern, group, size, zoom, rotate, flip_h, flip_v, pos_x, pos_y, wave_x, draw, effect, effect_speed, grating, b_color, b_color_speed, b_pattern, b_group, b_size, b_zoom, b_rotate, b_flip_h, b_flip_v, b_pos_x, b_pos_y, b_wave_x, b_draw, draw_a, wave_y_a, draw_b, wave_y_b]
+
+  laser_ktv:                     # KTV Colorful Animation Laser, 6CH-Modus (Anleitung vom Nutzer, bestaetigt)
+    channels: 6
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      power: 'Laser ein/aus: 0 aus, 1 bis 255 ein. Immer 0, außer in der Szene Laser'
+      group: 'Effektgruppe: 0 bis 191 Liniengruppen (je 32 Werte eine Gruppe), 192 bis 255 Animationsgruppe. Gesperrt: Ruhewert 255 (Motor still)'
+      effect: 'Effektauswahl: 0 bis 5 alle Effekte, ab 6 je 6 Werte ein Effekt'
+      color: Musterfarbe, je 4 Werte eine Farbe (10 = Rot, 17 = Grün, 27 = Blau, 255 = bunt)
+      color_speed: Farbgeschwindigkeit 0 bis 255
+      auto: 0 bis 127 Auto-Modus (laut Notiz 0 = schnell, 1 bis 127 Geschwindigkeit), 128 bis 255 Sound-to-Light
+    map: {power: 1, group: 2, effect: 3, color: 4, color_speed: 5, auto: 6}
+    defaults: {power: 0, group: 15, effect: 119, color: 255, color_speed: 255, auto: 255}
+    # CH1 Ein/Aus: 0 aus, 1-255 ein
+    # CH2 Effektgruppe: 0-191 Liniengruppen (je 32 Werte eine Gruppe, 6 Gruppen), 192-255 Animationsgruppe
+    # CH3 Effektauswahl: 0-5 alle Effekte, ab 6 je 6 Werte ein Effekt
+    # CH4 Musterfarbe: je 4 Werte eine Farbe; Nutzernotiz: 10 = rot, 17 = gruen, 27 = blau; Default 255
+    # CH5 Farbgeschwindigkeit 0-255
+    # CH6: 0-127 Auto-Modus (Nutzernotiz: 0 = schnell, 1-127 Geschwindigkeit), 128-255 Sound-to-Light
+    # SICHERHEIT: alle Kanaele immer 0 (= Laser aus), ausser in der Szene Laser (siehe laser_channels); einzige
+    # Ausnahme: Effektgruppe steht gesperrt auf dem Ruhewert 255, die Leistung (Kanal 1) bleibt immer 0.
+    locked_channels: [power, group, effect, color, color_speed, auto]
+    laser_channels: [power, group, effect, color, color_speed, auto]
+    # Ruhewert, solange der Laser gesperrt ist (Leistung bleibt 0): mit Effektgruppe 255 steht der Motor still,
+    # mit 0 surrt er dauernd (am 31.10.2026 vom Nutzer an der OLA-Konsole getestet: Kanal 182 = 255, Rest 0, ruhig)
+    rest_values: {group: 255}
+
+  eyes_21:                       # 21 Eyes Strobe Laser Party Light, 11 Kanaele (Anleitung)
+    channels: 11
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      mode: 0 bis 30 keine Funktion (LEDs per DMX), 31 bis 70 AUTO, 71 bis 110 LED Gradual Change, 111 bis 150 Flash Auto, 151 bis 190 DJ Sound, 191 bis 230 LED DJ Sound. Nur 31 und 151 in der Szene Laser, sonst Grenze 30
+      laser_red1: Laser Rot 1 (gesperrt, nur in der Szene Laser)
+      laser_red2: Laser Rot 2 (gesperrt, nur in der Szene Laser)
+      laser_green: Laser Grün (gesperrt, nur in der Szene Laser)
+      laser_blue: Laser Blau (gesperrt, nur in der Szene Laser)
+      motor_speed: Motorgeschwindigkeit der Laser (gesperrt)
+      uv: UV-LED 0 bis 255
+      led_r: LED Rot
+      led_g: LED Grün
+      led_b: LED Blau
+      flash: 0 aus, 1 bis 4 an (3 = LEDs mit RGB-Farben), 5 bis 29 Zufallsblitz, 30 bis 255 Blitz langsam bis schnell
+    map: {mode: 1, laser_red1: 2, laser_red2: 3, laser_green: 4, laser_blue: 5,
+          motor_speed: 6, uv: 7, led_r: 8, led_g: 9, led_b: 10, flash: 11}
+    defaults: {mode: 0, motor_speed: 0, uv: 0, flash: 3}
+    safe_limits: {mode: [0, 30]}
+    # mode (CH1): 0-30 = keine Auto-Funktion, LEDs per DMX (Handnotiz: 0)
+    #             31-255 = interne Programme -> NIE senden
+    # flash (CH11): 0 aus, 1-4 an (Handnotiz: 3 = LEDs mit RGB-Farben),
+    #               5-29 Zufallsblitz, 30-255 Blitz langsam bis schnell
+    # SICHERHEIT: Kanal 2-5 sind LASER (rot x2, gruen, blau) -> immer 0.
+    # Achtung: In einer frueheren Steuerung standen diese Kanaele auf 255/166/192 (Laser an!).
+    locked_channels: [laser_red1, laser_red2, laser_green, laser_blue, motor_speed]
+    laser_channels: [laser_red1, laser_red2, laser_green, laser_blue, motor_speed]   # nur in der Szene Laser freigegeben
+    # Mode-Kanal CH1 laut Anleitung (11CH-Modus): 000-030 keine Funktion (DMX/RGB), 031-070 AUTO, 071-110 LED Gradual Change,
+    #   111-150 Flash Auto, 151-190 DJ Sound, 191-230 LED DJ Sound, 231-255 keine Funktion.
+    # Diese Werte werden NUR in der Szene Laser gesendet, passend zum Schalter "Laser-Betrieb" im Panel:
+    #   Sound-to-Light -> sound_mode, Auto (eigene Show) -> auto_mode, Pi steuert -> Mode bleibt 0.
+    sound_mode: 151        # DJ Sound (eigenes Mikrofon)
+    auto_mode: 31          # AUTO (eigene Show ohne Mikrofon)
+
+  par_rgbw_8ch:                  # RGBW LED PAR 8CH (Anleitung bestaetigt)
+    channels: 8
+    hw_strobe: {param: strobe, lo: 60, hi: 220}            # Einzel-Strobe im AUTO-Modus: Strobe-Kanal (langsam bis schnell)
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      dimmer: Master-Dimmer
+      r: Rot
+      g: Grün
+      b: Blau
+      w: Weiß (am Barlicht keine Weiß-LED, deshalb gesperrt, Weiß wird über RGB gemischt)
+      strobe: Strobo aus R, G, B, W gemischt, 0 = aus
+      function: 0 bis 50 direkte DMX-Steuerung, darüber interne Programme. Muss unter 51 bleiben
+      func_speed: Geschwindigkeit der Programme, bleibt 0
+    map: {dimmer: 1, r: 2, g: 3, b: 4, w: 5, strobe: 6, function: 7, func_speed: 8}
+    defaults: {dimmer: 255, r: 0, g: 0, b: 0, w: 0, strobe: 0, function: 0, func_speed: 0}
+    # function (CH7): 0-50 = DMX-Dimmen (direkte Steuerung), 51-100 Farbausgabe,
+    #   101-150 Sprung, 151-200 Fade, 201-250 Puls, 251-255 Ton
+    #   -> muss 0-50 bleiben (Foto: 25 war ok)
+    # strobe (CH6): R,G,B,W gemischt, langsam -> schnell (0 = aus)
+    # func_speed (CH8): nur fuer Programme relevant, 0 lassen
+    safe_limits: {function: [0, 50]}
+    # Am angeschlossenen LED-Streifen gibt es keine weissen LEDs: Weiss wird ueber
+    # R+G+B zugemischt (white_mix), der W-Kanal bleibt gesperrt auf 0.
+    white_mix: true
+    locked_channels: [w]
+
+  derby_4in1_15ch:               # 15 Kanaele, enthaelt Laser (Belegung laut Littleboyny-Anleitung)
+    channels: 15
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      dimmer: Master-Dimmer
+      strobe_a: Strobo A
+      r: LED Rot
+      g: LED Grün
+      b: LED Blau
+      w: LED Weiß
+      laser_red: Laser Rot (gesperrt, nur in der Szene Laser)
+      laser_green: Laser Grün (gesperrt, nur in der Szene Laser)
+      strobe_b: Strobo B
+      led_motor: Motor der LEDs
+      laser_motor: Laser-Motor (gesperrt)
+      laser_red8: Laser Rot 8 (gesperrt)
+      laser_effect: Laser-Effekt (gesperrt)
+      mode: 0 bis 10 Kanäle 1 bis 13 wirksam (DMX), 11 bis 45 Einzelfarbsprung, 46 bis 80 Mischfarbsprung 1, 81 bis 115 Mischfarbsprung 2, 116 bis 150 Tonsteuerung 1, 151 bis 185 Tonsteuerung 2, 186 bis 220 Tonsteuerung 3, 221 bis 255 Tonsteuerung 4. Grenze 10, Tonsteuerung nur in der Szene Laser
+      speed: Programmgeschwindigkeit
+    map: {dimmer: 1, strobe_a: 2, r: 3, g: 4, b: 5, w: 6,
+          laser_red: 7, laser_green: 8, strobe_b: 9, led_motor: 10,
+          laser_motor: 11, laser_red8: 12, laser_effect: 13,
+          mode: 14, speed: 15}
+    defaults: {dimmer: 255, strobe_a: 0, strobe_b: 0, led_motor: 0,
+               laser_motor: 0, mode: 0, speed: 0}
+    safe_limits: {mode: [0, 10]}
+    # SICHERHEIT: alle Laser-Kanaele dauerhaft 0 (7, 8, 11, 12, 13).
+    # mode muss 0-10 sein, sonst laufen interne Programme statt DMX (CH14).
+    locked_channels: [laser_red, laser_green, laser_motor, laser_red8, laser_effect]
+    laser_channels: [laser_red, laser_green, laser_motor, laser_red8, laser_effect]   # nur in der Szene Laser freigegeben
+    # Mode-Kanal CH14 laut Anleitung: 0-10 CH1 bis CH13 wirksam (DMX), 11-45 Einzelner Farbsprung, 46-80 Mischfarbensprung 1,
+    #   81-115 Mischfarbensprung 2, 116-150 Tonsteuerung 1, 151-185 Tonsteuerung 2, 186-220 Tonsteuerung 3, 221-255 Tonsteuerung 4.
+    # Nur in der Szene Laser bei "Laser-Betrieb: Sound-to-Light" wird sound_mode gesendet, sonst bleibt Mode 0 (Pi steuert per DMX).
+    sound_mode: 116        # Tonsteuerung 1 (eigenes Mikrofon)
+    auto_mode: null        # kein eigenes Auto-Programm vorgesehen (Pi steuert)
+    # Bestaetigt: Littleboyny-Anleitung gehoert zum 4in1 Derby 15ch.
+
+  buv463_uv:                     # BeamZ BUV463 LED UV, 8 Kanaele (Anleitung, bestaetigt)
+    channels: 8
+    hw_strobe: {param: strobe, lo: 60, hi: 220}            # Einzel-Strobe im AUTO-Modus: Strobe-Kanal (1-255 langsam bis schnell)
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      dimmer: Master-Dimmer für alle LEDs
+      strobe: Strobo 1 bis 255 langsam bis schnell, 0 = aus
+      auto: 0 bis 50 keine Funktion, 51 bis 200 Auto-Programme, 201 bis 255 Ton. Muss unter 51 bleiben
+      auto_speed: Geschwindigkeit der Auto-Programme
+      uv1: UV-Reihe 1
+      uv2: UV-Reihe 2
+      uv3: UV-Reihe 3
+      uv4: UV-Reihe 4
+    map: {dimmer: 1, strobe: 2, auto: 3, auto_speed: 4,
+          uv1: 5, uv2: 6, uv3: 7, uv4: 8}
+    defaults: {dimmer: 255, strobe: 0, auto: 0, auto_speed: 0}
+    # dimmer: Master fuer alle LEDs; strobe: 1-255 langsam -> schnell (0 = aus)
+    # auto (CH3): 0-50 keine Funktion, 51-200 Auto-Programme, 201-255 Ton
+    #   -> muss 0-50 bleiben, sonst laufen interne Programme
+    # uv1..uv4: je eine UV-LED-Reihe, 0-255 (Chases ueber die 4 Reihen moeglich)
+    safe_limits: {auto: [0, 50]}
+    rows: [uv1, uv2, uv3, uv4]
+
+  hazer:                         # 2 Kanaele, NIE automatisch; nur Nebelschub per Knopfdruck im Panel
+    channels: 2
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      pump: Pump Output (Nebelmenge), nur über den Nebel-Knopf
+      fan: Fan Speed (Lüfter), nur über den Nebel-Knopf
+    map: {pump: 1, fan: 2}
+    locked: true
+    manual_allowed: true
+    defaults: {pump: 0, fan: 0}
+    # Nebelschub: Werte fuer Pump Output / Fan Speed, Dauer (max. 10 s) und Mindestpause in Sekunden.
+    # Vorsicht Rauchmelder! Werte bitte am Geraet pruefen und anpassen.
+    burst: {pump: 150, fan: 100, seconds: 3, cooldown: 20}
+
+  nanoleaf_panel:                # ein Nanoleaf-Panel (Light Panels/Aurora), 3 Kanaele R, G, B; wird aus nanoleaf.json erzeugt
+    channels: 3
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      r: Rot
+      g: Grün
+      b: Blau
+    map: {r: 1, g: 2, b: 3}
+    defaults: {}
+
+  wled_drgb:                     # WLED im Modus "Single DRGB": Helligkeit + RGB
+    channels: 4
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      dimmer: Helligkeit
+      r: Rot
+      g: Grün
+      b: Blau
+    map: {dimmer: 1, r: 2, g: 3, b: 4}
+    defaults: {dimmer: 255}
+
+  wled_preset:                   # WLED im Modus "Preset": Helligkeit + Preset-ID
+    channels: 2
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      dimmer: Helligkeit
+      preset: WLED-Preset (Nummer des gespeicherten Presets)
+    map: {dimmer: 1, preset: 2}
+    defaults: {dimmer: 255, preset: 0}
+    # Preset-ID = Nummer eines in WLED gespeicherten Presets.
+    # 4 Kanaele belegt, WLED nutzt nur die ersten zwei.
+
+# Zielpositionen: "alle Bewegungen" (Vega + Docooler-Tilt) zeigen dorthin.
+# vega = (links..rechts, oben..unten) im erlaubten Bereich 0..1, bars = Tilt1, Tilt2 (80..175).
+# Alle vier Ziele vom Nutzer eingemessen. Feinjustieren im Web-Panel (Ziel waehlen, Regler, Speichern):
+# aim.json ueberschreibt diese Werte.
+aim_targets:
+  bank:                                              # Sofa
+    vega: [0.24851, 0.78906]
+    bars: [127, 127]
+    bars_per: {docooler_1: [197, 76], docooler_2: [181, 108], docooler_5: [172, 102], docooler_6: [150, 120]}
+  tisch:                                             # Werte vollstaendig
+    vega: [0.47879, 0.9728]
+    bars: [127, 127]
+    bars_per: {docooler_1: [149, 123], docooler_2: [124, 153], docooler_5: [117, 172], docooler_6: [101, 202]}
+  tuer:                                              # Werte vollstaendig
+    vega: [0.89149, 0.47432]
+    bars: [127, 127]
+    bars_per: {docooler_1: [117, 146], docooler_2: [54, 184], docooler_5: [42, 198], docooler_6: [20, 208]}
+  bar:                                               # Werte vollstaendig
+    vega: [0.65575, 0.34324]
+    bars: [127, 127]
+    bars_per: {docooler_1: [148, 122], docooler_2: [140, 135], docooler_5: [133, 144], docooler_6: [128, 154]}
+
+fixtures:
+  # Docooler-Balken (tilt_mode: same = Werte beider Haelften gleich -> in Wirklichkeit gegenlaeufiger Faecher)
+  - {name: docooler_1, nr: 1, label: Docooler 90W RGBW, type: docooler_90w, address: 1,   group: bars, dead: [g2], tilt_mode: same}   # Zone 2 Gruen (Kanal 11) leuchtet nicht: vermutlich Hardware-Defekt
+  - {name: docooler_2, nr: 2, label: Docooler 90W RGBW, type: docooler_90w, address: 21,  group: bars, tilt_mode: same}
+  - {name: docooler_5, nr: 5, label: Docooler 90W RGBW, type: docooler_90w, address: 41,  group: bars, tilt_mode: same}
+  - {name: docooler_6, nr: 6, label: Docooler 90W RGBW, type: docooler_90w, address: 61,  group: bars, tilt_mode: same}
+  # 4in1 RGBUV Washes
+  - {name: rgbuv_7, nr: 7, label: LED 15Wx3 4in1 RGBUV, type: led_4in1_rgbuv, address: 81,  group: wash}
+  - {name: rgbuv_8, nr: 8, label: LED 15Wx3 4in1 RGBUV, type: led_4in1_rgbuv, address: 101, group: wash}
+  - {name: rgbuv_10, nr: 10, label: LED 15Wx3 4in1 RGBUV, type: led_4in1_rgbuv, address: 121, group: wash}
+  - {name: rgbuv_11, nr: 11, label: LED 15Wx3 4in1 RGBUV, type: led_4in1_rgbuv, address: 141, group: wash, dead: [g, b]}   # Gruen und Blau defekt
+  # Spot, Laser, Effekte
+  - name: vega
+    nr: 4
+    label: Vega Spot 60
+    type: vega_spot_60
+    address: 161
+    group: spot
+    # Richtungsbegrenzung ("LIMITATIONS"), als Anteil am Gesamtbereich
+    # (aus dem Screenshot geschaetzt). Annahme: horizontal = Pan (links -> rechts),
+    # vertikal = Tilt (oben -> unten). MUSS am Geraet geprueft werden (phase2_test.py --move-test).
+    limits_norm: {pan: [0.378, 0.622], tilt: [0.757, 0.969]}   # Tilt-Obergrenze wegen 'Tisch' (Tilt 60,5) von 56 auf 62 angehoben
+    pan_invert: false
+    pan_mirror: true            # Test 2: links/rechts waren vertauscht (Richtung gespiegelt)
+    tilt_invert: true           # Test 1: Strahl zeigte zur Wand, Tilt gespiegelt (Rechteck oben statt unten im Raster)
+    limits_verified: true       # vom Nutzer bestaetigt (Richtung und Bereich geprueft)
+  - {name: laser, nr: 3, label: Laser KTV Colorful Animation, type: laser_ktv34,     address: 301, group: locked}   # am Geraet d301; zurueck auf 6 Kanaele: type laser_ktv, address 181, am Geraet E181
+  - {name: eyes, nr: 12, label: 21 Eyes Party Light, type: eyes_21,         address: 201, group: fx}
+  - {name: par, nr: 13, label: RGBW LED PAR (Barlicht), type: par_rgbw_8ch,    address: 221, group: ambient, fader: barlight}   # Arbeits-/Ambiente-Licht in der Bar (Glaeser, Flaschen): ruhig wie Theke und Couchtisch
+  - {name: derby, nr: 15, label: Derby 4in1 15CH, type: derby_4in1_15ch, address: 241, group: fx}
+  - {name: uv_bar, nr: 17, label: BeamZ BUV463 UV, type: buv463_uv,       address: 261, group: uv}
+  - {name: hazer, nr: 18, label: Nebel Hazer, type: hazer,           address: 281, group: locked}
+  # Ambiente: WLED-Controller, direkt per Art-Net (nicht ueber OLA)
+  - name: effektband
+    nr: 16
+    label: Effektband (WLED)
+    type: wled_preset
+    address: 401
+    group: ambient
+    target: 192.168.1.32
+    preset_drop: 32                   # strobo beim Drop (nur mit --strobe, nur wenn "Effektband blitzt synchron" aus ist)
+    preset_blitz: 35                  # Solid weiss: Blitz-Knopf, Strobo-Burst und WOW! takten damit die Helligkeit
+    # Presets laut WLED-Oberflaeche (IDs 1-39). Playlists: 21, 26, 36.
+    preset_names: {1: Austria, 2: Scanner, 3: Fairy, 4: Fire, 5: Fireworks Starburst,
+      6: Gravimeter, 7: Juggle, 8: Lightning, 9: Meteor Smooth, 10: Midnoise,
+      11: Phased, 12: Popcorn, 13: Pride 2015, 14: Rain, 15: Scan, 16: Weihnachten,
+      17: DJ Light, 18: Gravfreq, 19: Gravcenter, 20: Juggles, 21: DEMO (Playlist),
+      22: Noisefire, 23: Noisemeter, 24: Puddlepeak, 25: Ripple Peak, 26: M-Club (Playlist),
+      27: Rot BPM, 28: Blink, 29: Solid blau, 30: Ripple Peak 2, 31: Solid red,
+      32: strobo, 33: Android, 34: Solid gruen, 35: Solid weiss, 36: M-Club Effekt (Playlist),
+      37: Sparkle, 38: Karussell, 39: Disco}
+    # Soundgesteuert (AudioReactive): laut WLED-Effektdaten (/json/fxdata) am 31.10.2026 ausgelesen, 26 = Playlist nur aus solchen
+    preset_sound: [6, 10, 17, 18, 19, 20, 22, 23, 24, 25, 26, 30]
+    # Licht-Mix-Knopf -> eigenes Preset (37-39 am 30.10.2026 in WLED angelegt, beide Segmente: Solid Glitter auf Schwarz, Chase Rainbow, Colortwinkles)
+    preset_mix: {Sternenhimmel: 37, Karussell: 38, Discokugel: 39, Scanner: 2}
+    preset_scene_skip: [37, 38, 39]   # spaeter in die Rollen gekommen: feste Szenen waehlen ihr Preset wie vorher
+    # VORSCHLAG fuer die Zuordnung (bitte pruefen): Rolle -> Preset-IDs
+    preset_roles:
+      calm: [3, 14, 9, 11, 29, 37]      # ruhig, wenig Energie (37 Sparkle)
+      warm: [4, 12, 13, 38]             # warm, positiv, mittlere Energie (ohne Solid weiss; 38 Karussell)
+      party: [17, 25, 30, 19, 18, 6, 20, 24, 22, 23, 10, 27, 7, 15, 2, 39]   # 39 Disco
+      accent: [5, 8, 28, 31]            # kurze Akzente (Peak, Drop)
+      strobe: [32]                      # nur gezielt, Blitzgefahr beachten
+      idle: [26, 36]                    # Playlists, wenn keine Musik laeuft
+    preset_list: [3, 14, 9, 11, 29, 4, 12, 13, 17, 25, 30, 19, 18, 6, 20, 24, 22, 23, 10, 27, 7, 15, 2, 5, 8, 28, 31, 32, 37, 38, 39]
+  - {name: theke, nr: 14, label: Theke (WLED), type: wled_drgb,   address: 421, group: ambient, target: 192.168.1.30, on_exit: "off"}
+  - {name: couchtisch, nr: 9, label: Couchtisch (WLED), type: wled_drgb,   address: 441, group: ambient, target: 192.168.1.24, on_exit: "off"}

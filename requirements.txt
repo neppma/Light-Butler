@@ -1,0 +1,11 @@
+# Fuer die Entwicklung am Mac (Tests und Simulator brauchen nur numpy und pyyaml)
+numpy
+pyyaml
+# Nur fuer echten Betrieb am Pi (dort schon installiert):
+# sounddevice
+# mido
+# python-rtmidi
+# aubio   (optional, Beat-Erkennung)
+# pyserial   (optional, DMX direkt ueber den FTDI-USB-Adapter, dmx_usb.py)
+# LinkPython-extern   (optional, Ableton Link: Tempo ins Netz)
+# SongRec   (optional, Titelerkennung, kein Python-Paket: am Pi per snap install songrec, siehe Handbuch)

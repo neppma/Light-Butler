@@ -1,0 +1,44 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Titel bereinigen</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body.tit { padding: 12px 14px 40px; max-width: 1100px; margin: 0 auto; }
+ #thead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+ #tstat { color: var(--dim); font-size: 13px; flex: 1 1 300px; } #tstat b { color: var(--txt); }
+ #tmsg { color: #ffb35c; font-size: 13px; min-height: 18px; margin: 4px 0; }
+ #ttabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 10px; align-items: center; }
+ #ttabs button.on, #bgo { background: var(--acc); border-color: var(--acc); color: #fff; }
+ #tq { flex: 1 1 200px; min-height: 32px; }
+ .trow { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; font-size: 13px;
+   border: 1px solid var(--line); border-radius: 10px; background: var(--pan); margin-bottom: 6px; }
+ .trow.sure { box-shadow: inset 4px 0 0 #3fbf6f; } .trow.ask { box-shadow: inset 4px 0 0 #e0a43a; } .trow.done { opacity: .55; box-shadow: inset 4px 0 0 #5a8cff; }
+ .trow input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--acc); }
+ .trow s { color: var(--dim); } .tnew { min-width: 220px; width: 50%; min-height: 28px; }
+ .tinfo { color: var(--dim); font-size: 12px; margin-top: 3px; } .tinfo b { color: var(--txt); }
+ .tpath { color: var(--dim); font-size: 11px; overflow-wrap: anywhere; margin-top: 2px; opacity: .8; }
+ .why { color: #8fe0a5; } .warn { color: #ffd38a; } .ok { color: #8fe0a5; } .bad { color: #ff9a8a; }
+ .tbtns { display: flex; flex-direction: column; gap: 4px; } .tbtns button { min-height: 26px; padding: 2px 9px; font-size: 12px; }
+ .pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 6px 0 10px; font-size: 13px; color: var(--dim); } .pager b { color: var(--txt); }
+ .empty { color: var(--dim); padding: 20px 0; }
+ @media (max-width: 700px) { .trow { grid-template-columns: 26px minmax(0, 1fr); } .tbtns { grid-column: 2; flex-direction: row; } .tnew { width: 100%; min-width: 0; } }
+</style></head>
+<body class="tit">
+<div class="s2lnav" data-back="/musik" data-cur="musik" data-title="h_titles">Titel bereinigen</div>
+<p class="dim">Titel, die mit einer Nummer beginnen („01 - Lied“). Grün = sicher eine Tracknummer, vorab angehakt. Orange = hinterfragen, vielleicht gehört die Zahl zum Titel („99 Luftballons“). Den neuen Titel kannst du vorher ändern. „So lassen“ merkt sich, dass die Zahl zum Titel gehört („10 Nackte Friseusen“); das Lied kommt dann nicht wieder. Geschrieben wird nur der Titel; ist der Track frei, kommt die Nummer dorthin.</p>
+<div id="thead">
+ <div id="tstat">Lade …</div>
+ <button id="bnone" title="Alle Haken auf dieser Ansicht entfernen">Haken weg</button>
+ <button id="bgo" title="Alle angehakten Titel in die MP3 schreiben">Markierte bereinigen</button>
+</div>
+<div id="tmsg"></div>
+<div id="ttabs"><button data-f="sure" class="on">sicher</button><button data-f="ask">hinterfragen</button><button data-f="all">alle</button><button data-f="kept" title="Lieder, bei denen die Zahl zum Titel gehört">so gelassen</button>
+ <input type="search" id="tq" placeholder="Suchen: Interpret, Titel, Datei …"></div>
+<div id="tlist"></div>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/tagedit.js"></script>
+<script src="/static/sm/titles.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

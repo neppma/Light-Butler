@@ -1,0 +1,17 @@
+[Unit]
+Description=Light-Butler Lichtshow (Audio -> Art-Net/DMX)
+After=network-online.target sound.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=admin
+WorkingDirectory=/home/admin/lichtshow
+EnvironmentFile=/home/admin/lichtshow/show.conf
+ExecStart=/home/admin/venv/bin/python -u show.py $SHOW_ARGS
+Restart=always
+RestartSec=5
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

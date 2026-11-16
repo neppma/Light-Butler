@@ -1,0 +1,47 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Raumplan</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body.room { padding: 12px 14px 40px; max-width: 1100px; margin: 0 auto; }
+ #rhead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+ #rhead h1 { font-size: 20px; margin: 0 auto 0 0; }
+ #hint { color: #ffb35c; font-size: 13px; margin: 6px 0; }
+ #wrap { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+ #plan { display: block; flex: 1 1 560px; min-width: 300px; width: 100%; height: auto; max-height: 82vh; background: #0d0e16; border: 1px solid #2c2f42; border-radius: 10px; touch-action: none; user-select: none; }
+ #side { flex: 0 1 300px; min-width: 260px; }
+ .box { background: #171923; border: 1px solid #262a36; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+ .box h3 { margin: 0 0 8px; font-size: 14px; color: #9fd0ff; }
+ .row { display: flex; gap: 6px; align-items: center; margin: 6px 0; flex-wrap: wrap; }
+ .row label { flex: 1; font-size: 13px; color: #a8acba; }
+ .row input[type=number] { width: 80px; }
+ #free button { margin: 3px 3px 0 0; font-size: 13px; }
+ .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+ .dim { color: #889; font-size: 12px; }
+</style>
+</head><body class="room">
+<div class="s2lnav" data-back="/" data-cur="raum" data-title="h_room">Raumplan</div>
+<div id="rhead">
+ <label class="dim"><input type="checkbox" id="snap" checked style="min-height:0"> auf 10 cm einrasten</label>
+ <button id="bsave" title="Raumplan auf dem Light-Butler speichern">Speichern<span id="dirty"></span></button>
+</div>
+<p id="hint"></p>
+<div id="wrap">
+ <svg id="plan" xmlns="http://www.w3.org/2000/svg"></svg>
+ <div id="side">
+  <div class="box" id="sel"><h3>Gerät</h3><p class="dim">Ein Gerät im Plan antippen und ziehen. Fehlende Geräte unten antippen, sie kommen in die Mitte.</p></div>
+  <div class="box"><h3>Raum</h3>
+   <div class="row"><label>Länge (m, waagrecht)</label><input type="number" id="rw" min="1" max="40" step="0.1"></div>
+   <div class="row"><label>Breite (m, senkrecht)</label><input type="number" id="rh" min="1" max="40" step="0.1"></div>
+   <div class="row"><button id="bflipx" title="Links und rechts tauschen">Spiegeln ↔</button><button id="bflipy" title="Oben und unten tauschen">Spiegeln ↕</button></div>
+  </div>
+  <div class="box"><h3>Noch nicht im Plan</h3><div id="free"></div></div>
+  <p class="dim">Nur ein Plan: Aufs Licht wirkt er nicht. Später kann der Show-Assistent ihn nutzen.</p>
+ </div>
+</div>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/room.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

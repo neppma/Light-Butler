@@ -1,0 +1,84 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Spiegeln</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body.mir { padding: 12px 14px 40px; }
+ .box { border: 1px solid var(--line); border-radius: 12px; background: var(--pan); padding: 10px 12px; margin-bottom: 12px;
+        width: auto; max-width: none; max-height: none; overflow: visible; }
+ .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+ .primary { background: var(--acc); border-color: var(--acc); color: #fff; }
+ table { width: 100%; border-collapse: collapse; font-size: 13px; }
+ th { text-align: left; color: var(--dim); font-weight: 600; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+ td { padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+ .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+ .del { color: #ff9a9a; } .warn { color: #ffd38a; } .bad { color: #ff6b6b; } .ok { color: #8fe0a5; }
+ details.dl summary { cursor: pointer; color: var(--dim); font-size: 12px; } details.dl div { font-size: 12px; color: var(--dim); overflow-wrap: anywhere; max-height: 240px; overflow: auto; }
+ #pick { max-height: 46vh; overflow: auto; } .xdrv { display: flex; gap: 8px; width: 100%; text-align: left; margin: 3px 0; min-height: 36px; align-items: center; }
+ #bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 8px 0; } #bar i { display: block; height: 100%; background: var(--acc); width: 0; }
+ #pairs button.cur { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) inset; }
+ .sides { display: grid; grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr); gap: 8px; align-items: stretch; }
+ .side { border: 1px solid var(--line); border-radius: 10px; background: var(--pan2); padding: 10px; min-width: 0; }
+ .side .lab { font-size: 12px; color: var(--dim); letter-spacing: .04em; margin-bottom: 6px; }
+ .side select { width: 100%; min-height: 36px; }
+ .side .fold { font-size: 13px; margin-top: 8px; overflow-wrap: anywhere; }
+ .side .ej { display: flex; gap: 8px; align-items: center; margin-top: 8px; font-size: 12px; }
+ .side .info { font-size: 13px; color: var(--dim); margin-top: 6px; }
+ .arrow { display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--acc); font-weight: 700; }
+ .arrow b::before { content: "➜"; }
+ .arrow { position: relative; } .arrow.no b { color: #6b5a52; }
+ .arrow.no::after { content: "✕"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #ff5a5a; font-size: 46px; font-weight: 800; text-shadow: 0 0 6px #000; }
+ .space { height: 10px; border-radius: 5px; background: #10121a; border: 1px solid var(--line); overflow: hidden; display: flex; margin-top: 8px; }
+ .space i { display: block; height: 100%; } .space .used { background: #4b5068; } .space .add { background: var(--acc); } .space .over { background: var(--red); }
+ #dir { margin: 10px 0 2px; padding: 8px 10px; border-radius: 8px; background: rgba(74, 168, 255, .12); color: #a9d3ff; font-size: 13px; }
+ #foldbox > summary { cursor: pointer; display: inline-block; margin: 8px 0 4px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--pan2); font-weight: 600; }
+ #foldbox[open] > summary { border-color: var(--acc); }
+ #folders label { display: inline-flex; gap: 6px; align-items: center; margin: 3px 14px 3px 0; font-size: 13px; }
+ @media (max-width: 640px) {
+  .sides { grid-template-columns: minmax(0, 1fr); }
+  .arrow { font-size: 32px; } .arrow b::before { content: "⬇"; }
+ }
+ [hidden] { display: none !important; }
+</style></head>
+<body class="mir">
+<div class="s2lnav" data-back="/musik/pflege" data-cur="musik" data-title="h_mirror">Spiegeln</div>
+<p class="dim">Bringt das <b>Ziel</b> auf den Stand der <b>Quelle</b>: jeder gewählte Ordner der Quelle kommt genau so ans Ziel, was dort in diesen Ordnern zusätzlich liegt, kommt weg. Ordner, die es nur am Ziel gibt, bleiben unberührt. Nichts geht endgültig verloren: was ersetzt oder gelöscht wird, liegt danach im Papierkorb des Ziels (NAS: <b>#recycle/Spiegel-Datum</b>, Stick: <b>Spiegel-Papierkorb/Spiegel-Datum</b>, Musik-Rechner: <b>Spiegel-Papierkorb</b> im Benutzerordner). An der Quelle ändert sich nichts. Erst der <b>Probelauf</b> (rechnet nur), dann <b>Spiegeln</b>. Danach wirft <b>⏏ Auswerfen</b> den Stick aus.</p>
+<div class="box">
+ <div class="row" id="pairs"></div>
+ <div class="sides">
+  <div class="side"><div class="lab">QUELLE (wird nur gelesen)</div>
+   <select id="ssrc" aria-label="Quelle"></select>
+   <div class="fold">Ordner: <code id="fsrc">–</code> <button id="bsrc">ändern</button></div>
+   <div class="ej"><button id="ejsrc" disabled>⏏ Auswerfen</button><span class="dim" id="ejtsrc"></span></div>
+   <div class="info" id="isrc"></div></div>
+  <div class="arrow" id="arrow" aria-hidden="true"><b></b></div>
+  <div class="side"><div class="lab">ZIEL (wird angeglichen)</div>
+   <select id="sdst" aria-label="Ziel"></select>
+   <div class="fold">Ordner: <code id="fdst">–</code> <button id="bdst">ändern</button></div>
+   <div class="ej"><button id="ejdst" disabled>⏏ Auswerfen</button><span class="dim" id="ejtdst"></span></div>
+   <div class="space" id="space"></div>
+   <div class="info" id="idst"></div></div>
+ </div>
+ <div id="dir"></div>
+ <div id="pickbox" hidden><div class="dim" id="pickwhere"></div><div id="pick"></div>
+  <div class="row"><button id="pup">← zurück</button><button id="pnew" title="Im gezeigten Ordner einen neuen Ordner anlegen und gleich öffnen">＋ Neuer Ordner</button><button id="ptake" class="primary">Diesen Ordner nehmen</button><button id="pclose">Abbrechen</button></div></div>
+ <details id="foldbox"><summary id="foldsum">Ordner</summary>
+  <div class="row"><button id="fall">Alle anhaken</button><button id="fnone">Keine anhaken</button></div>
+  <div id="folders"></div></details>
+ <div class="row" id="nasrow"><span id="nasinfo" class="dim"></span><span id="left" class="dim"></span>
+  <button id="bwake" hidden title="Die NAS per Wake-on-LAN einschalten; danach verbindet der Musik-Rechner die Freigabe wieder">⏻ NAS wecken</button><span id="wake" class="dim"></span>
+  <a href="/settings#nas" class="dim" style="margin-left:auto">NAS in den Einstellungen ändern →</a></div>
+ <div id="warn"></div>
+ <div id="eta"></div>
+ <div class="row"><button id="bplan">Probelauf</button><button id="brun" class="primary" disabled>Spiegeln</button><button id="bstop" disabled>Anhalten</button><span id="last" class="dim"></span></div>
+ <div id="bar" hidden><i></i></div>
+ <div id="msg" class="dim"></div>
+</div>
+<div id="gone"></div>
+<div id="res"></div>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/mirror.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

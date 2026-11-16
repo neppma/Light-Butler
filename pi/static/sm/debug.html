@@ -1,0 +1,37 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>DMX-Debugger</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+#dbg{max-width:900px;margin:0 auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+#arm{min-height:56px;font-size:16px;flex:1}#arm.on{background:#b3261e;border-color:#b3261e;color:#fff}
+#hold{width:100%;min-height:72px;font-size:18px;touch-action:none;user-select:none;-webkit-user-select:none;background:#23263a}#hold.on{background:#000;border-color:#ffb35c;color:#ffb35c}#hold:disabled{opacity:.4}
+#warn{color:#ff8a7a;font-size:13px}#warn b{color:#ff5a4d}
+.dr{display:grid;grid-template-columns:44px minmax(90px,170px) 1fr 66px;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)}
+.dr i{font-style:normal;color:var(--dim);text-align:right;font-variant-numeric:tabular-nums}
+.dr span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.dr small{grid-column:2/-1;color:var(--dim);font-weight:400;margin-top:-4px}
+.dr input[type=range]{width:100%}.dr.nz span{color:#ffb86b}
+#rows{opacity:.45;pointer-events:none}#rows.live{opacity:1;pointer-events:auto}
+</style>
+</head><body class="play">
+<div id="dbg">
+ <div class="s2lnav" data-back="/settings" data-cur="settings" data-title="h_dmxdebug">DMX-Debugger</div>
+ <div id="plhead"><a href="/dmx"><button>DMX-Monitor</button></a></div>
+ <div class="card">
+  <p id="warn"><b>Ohne Sperren:</b> Eingeschaltet geht genau dieses Bild auf die DMX-Kette, auch auf Laser, Hazer und die Mode- und Reset-Kanäle. Alle anderen Kanäle sind 0, die Show ruht auf der DMX-Kette. Nie auf Personen richten. WLED und Nanoleaf bleiben bei der Show.</p>
+  <div class="row"><button id="arm">Debug einschalten</button><button id="zero">Alle auf 0</button></div>
+  <button id="hold" title="Solange gedrückt ist alles dunkel, danach wieder die eingestellten Werte. Auch mit der Leertaste.">Kurz dunkel (halten)</button>
+  <p class="dim" id="st">Aus. Beim Einschalten stehen alle Kanäle auf 0. BLACKOUT, Schließen der Seite und 2 s ohne Verbindung schalten ihn sofort aus.</p>
+ </div>
+ <div class="card">
+  <div class="row"><select id="fx" style="flex:1"></select></div>
+  <div id="rows"></div>
+ </div>
+</div>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/debug.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

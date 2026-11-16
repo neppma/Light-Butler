@@ -1,0 +1,77 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Favoriten</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ /* Variante B (Wunsch 14.11.2026): Genres oben als Leiste, darunter drei Spalten bis zum unteren Rand, jede scrollt fuer sich */
+ body.fav { padding: 12px 16px 12px; height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
+ body.fav.s2lplaying { padding-bottom: 80px; }
+ body.fav:has(#srcwarn) { padding-bottom: 76px; } body.fav.s2lplaying:has(#srcwarn) { padding-bottom: 140px; }   /* Hinweis Musik-Rechner unten: Spalten enden darueber */
+ .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+ .bar input[type=search] { flex: 1 1 220px; min-height: 36px; font-size: 15px; }
+ .bar select { min-height: 32px; }
+ .tog.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ #intro { margin: 2px 0 4px; font-size: 13px; }
+ #genbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--pan); padding: 6px 10px; margin: 4px 0 10px; }
+ #genbar > b { font-size: 14px; margin-right: 4px; } #genbar .n { color: var(--dim); font-size: 12px; }
+ #genres { display: contents; }
+ .gchip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 16px; background: var(--pan2); border: 1px solid var(--line); font-size: 13px; }
+ #gadd { min-height: 30px; font-size: 12.5px; }
+ .cols { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+ .col { border: 1px solid var(--line); border-radius: 12px; background: var(--pan); display: flex; flex-direction: column; min-height: 0; }
+ .col > .ch { flex: none; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 12px 6px; border-bottom: 1px solid var(--line); }
+ .col > .ch h3 { margin: 0; font-size: 15px; font-weight: 600; } .col > .ch .n { color: var(--dim); font-size: 12.5px; } .col > .ch #badj { margin-left: auto; min-height: 30px; padding: 2px 10px; font-size: 12.5px; }
+ .col > .lst { flex: 1; min-height: 0; overflow: auto; padding: 4px 10px 10px; }
+ .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; padding-top: 6px; }
+ .tile { display: block; text-align: center; min-width: 0; color: var(--txt); text-decoration: none; }
+ .tile .im { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center;
+             font-size: 26px; font-weight: 700; background: var(--pan2); }
+ .tile .im img { width: 100%; height: 100%; object-fit: cover; display: block; }
+ .tile .nm { font-size: 12.5px; font-weight: 600; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+ .tile .ct { font-size: 11px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+ .tile.gone { opacity: .5; }
+ .song { display: grid; grid-template-columns: 22px 30px 30px 34px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+ .song img { width: 34px; height: 34px; border-radius: 4px; object-fit: cover; background: var(--line); cursor: pointer; }
+ .song .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .song .s { color: var(--dim); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+ .song .p { color: var(--dim); font-variant-numeric: tabular-nums; font-size: 12px; }
+ .song.half .t { color: #cfd3e3; } .song.gone { opacity: .5; }
+ .pb { min-width: 28px; min-height: 26px; padding: 0 6px; font-size: 12px; border-radius: 6px; } .pb.on { background: var(--acc); border-color: var(--acc); color: #fff; }
+ .lnk { color: var(--blue, #6fb3ff); text-decoration: none; }
+ #more { display: block; margin: 8px auto; }
+ #msg { color: var(--dim); font-size: 13px; }
+ #msg:empty { display: none; }
+ .empty { color: var(--dim); font-size: 13px; padding: 8px 0; grid-column: 1 / -1; }
+ /* Handy und schmales iPad: untereinander, die Seite scrollt, jede Spalte hoechstens 60 % hoch */
+ @media (max-width: 820px) {
+  body.fav { height: auto; overflow: visible; padding-bottom: 90px; }
+  .cols { grid-template-columns: minmax(0, 1fr); }
+  .col > .lst { max-height: 60vh; }
+ }
+ [hidden] { display: none !important; }
+</style></head>
+<body class="fav">
+<div class="s2lnav" data-back="/musik" data-cur="favs" data-title="h_favs">Favoriten</div>
+<p class="dim" id="intro">Alles mit Herz. Herz setzen überall, wo es leer umrandet steht (Musik-DB, Alben, Interpreten, Genres, Tag bearbeiten, Hauptpanel). <b>Halbes Herz</b> = Lied eines Lieblings-Albums oder -Interpreten.</p>
+<div class="bar">
+ <input type="search" id="q" placeholder="In den Favoriten suchen (Titel, Interpret, Album, Genre)" autocomplete="off">
+ <button id="half" class="tog" title="Auch die Lieder der Lieblings-Alben und -Interpreten zeigen (halbes Herz)">auch halbe ♥</button>
+ <a class="btn" href="/musik?f=fav" title="Alle Lieder mit Herz in der Musik-Datenbank (mit allen Spalten und Filtern)">In Musik-DB zeigen</a>
+ <button id="mp3all" title="Schreibt jedem Lied mit eigenem Herz die Bewertung 5 Sterne in die MP3 (Musik-Rechner). Nur mit der Einstellung „Favoriten auch in die MP3 schreiben“">Herzen in die MP3s schreiben</button>
+</div>
+<div id="msg"></div>
+<div id="genbar"><b>Genres</b><span class="n" id="ng"></span><span id="genres"></span><select id="gadd" aria-label="Genre als Favorit dazunehmen"><option value="">+ Genre …</option></select></div>
+<div class="cols">
+ <section class="col" id="secs"><div class="ch"><h3>Lieder</h3><span class="n" id="ns"></span>
+  <button id="badj" disabled title="Alle gezeigten Lieder (mit Suche, Sortierung und halben Herzen) hinten an die Playlist des Auto-DJ anhängen; was schon drin ist, kommt nicht doppelt">Alle in den Auto-DJ</button>
+  <select id="ssort" aria-label="Sortierung der Lieder"><option value="t">zuletzt markiert</option><option value="az">A bis Z</option><option value="art">nach Interpret</option><option value="plays">meist gespielt</option></select></div>
+  <div class="lst" id="slst"><div id="songs" class="empty">Lade …</div><button id="more" hidden>weitere zeigen</button></div></section>
+ <section class="col" id="secr"><div class="ch"><h3>Interpreten</h3><span class="n" id="nr"></span></div><div class="lst"><div class="grid" id="artists"></div></div></section>
+ <section class="col" id="seca"><div class="ch"><h3>Alben</h3><span class="n" id="na"></span></div><div class="lst"><div class="grid" id="albums"></div></div></section>
+</div>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/tagedit.js"></script>
+<script src="/static/sm/favs.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

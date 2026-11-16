@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MixxxControllerPreset mixxxVersion="2.5.0" schemaVersion="1">
+    <info>
+        <name>Light-Butler Bridge</name>
+        <author>Light-Butler</author>
+        <description>Sendet den Zustand der Decks (Abspielen, Position, Tempo, Beat, Sync, Fader) als MIDI-SysEx an das Programm mixxx_bridge.py, das ihn an den Lichtsteuerungs-Pi weiterleitet. Steuert selbst nichts in Mixxx.</description>
+        <forums></forums>
+    </info>
+    <controller id="LightButler">
+        <scriptfiles>
+            <file filename="Light-Butler-Bridge-scripts.js" functionprefix="S2L"/>
+        </scriptfiles>
+        <controls/>
+        <outputs/>
+    </controller>
+</MixxxControllerPreset>

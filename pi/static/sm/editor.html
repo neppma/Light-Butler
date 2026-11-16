@@ -1,0 +1,63 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Showmanager - Editor</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+</head><body>
+<div id="app">
+ <div id="top">
+  <div class="s2lnav" data-back="/shows" data-cur="shows" data-title="h_editor" style="flex:1 0 100%;margin:0">Show-Editor</div>
+  <button id="bleft" title="Geräte und Muster ein- oder ausblenden"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+  <div class="tgroup">
+   <button class="tbtn" id="bstart" title="Zurück zum Anfang (Pos1)">⏮</button>
+   <button class="tbtn" id="bplay" title="Play / Pause (Leertaste)">▶</button>
+   <button class="tbtn" id="bstop" title="Stop: zurück zur Musiksteuerung">⏹</button>
+  </div>
+  <div id="time" title="Antippen: Zeit genau eingeben">0:00.000</div>
+  <div class="tgroup" title="Tempo und Taktanfang unten bei den Eigenschaften der Show"><span id="bpmv">120</span><span class="dim">BPM</span></div>
+  <div id="tools">
+  <div class="sep hide-s"></div>
+  <div class="tgroup">
+   <button id="bzo" title="Herauszoomen (−)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><button id="bzi" title="Hineinzoomen (+)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button id="bzf" title="Ganze Show zeigen"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg></button>
+   <select id="grid" title="Raster und Snap"></select>
+   <button id="bmarks" title="Abschnitte und Cue-Punkte des Liedes aus Mixxx ein- oder ausblenden. Solange sie sichtbar sind und ein Raster gewählt ist, rasten Clips an ihnen ein."><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4"/><path d="M6 4h12l-3 4 3 4H6"/></svg></button>
+  </div>
+  <div class="sep hide-s"></div>
+  <div class="tgroup">
+   <button id="bundo" title="Rückgängig (Strg+Z)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M4 12h10a6 6 0 0 1 6 6"/></svg></button><button id="bredo" title="Wiederholen (Strg+Y)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 7 5 5-5 5"/><path d="M20 12H10a6 6 0 0 0-6 6"/></svg></button>
+   <button id="bmulti" title="Mehrfachauswahl: Antippen wählt dazu, Ziehen zieht einen Rahmen"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="1" stroke-dasharray="3.5 3"/></svg></button>
+   <button id="bloop" title="Loop ein/aus (L): spielt den Bereich immer wieder. Bereich setzen: im Lineal oben ziehen. Nur im Editor."><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3l3 3-3 3"/><path d="M20 6H8a4 4 0 0 0-4 4v1"/><path d="M7 21l-3-3 3-3"/><path d="M4 18h12a4 4 0 0 0 4-4v-1"/></svg></button><button id="bloopx" title="Loop entfernen (Umschalt+L)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3l3 3-3 3"/><path d="M17 6H7a3 3 0 0 0-3 3v2"/><path d="M7 21l-3-3 3-3"/><path d="M4 18h6"/><path d="m15 14 6 6M21 14l-6 6"/></svg></button>
+   <button id="bkey" title="Keyframe an der Abspielposition auf der gewählten Spur (K)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 21 12l-9 9-9-9z" fill="currentColor"/></svg></button>
+   <button id="bcut" class="hide-s" title="Ausschneiden (Strg+X)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="3"/><circle cx="6" cy="17" r="3"/><path d="M8.5 8.8 20 18M8.5 15.2 20 6"/></svg></button><button id="bcopy" title="Kopieren (Strg+C)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4V6a2 2 0 0 1 2-2h9v1"/></svg></button><button id="bpaste" title="Einfügen an der Abspielposition (Strg+V)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 5a3 3 0 0 1 6 0v1H9z"/><path d="M9 13h6M9 17h6"/></svg></button><button id="bdel" title="Löschen (Entf)"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg></button>
+  </div>
+  <div class="sep hide-s"></div>
+  <div class="tgroup">
+   <button id="bsave" title="Speichern (Strg+S)">Speichern<span id="dirty"></span></button>
+   <button id="bload" title="Show laden">Laden</button>
+   <button id="bassist" title="Show-Assistent: erstellt aus Lied und Geräten einen Vorschlag, bei einer noch leeren Show direkt in ihr, sonst als neue Kopie">Assistent</button><button id="bmp3" title="MP3 importieren">MP3</button><input type="file" id="fmp3" accept=".mp3,audio/mpeg" hidden>
+  </div>
+  <img id="cover" class="cvimg" alt="" hidden><span id="title"></span>
+  <div class="spacer"></div>
+  <span id="volbox" title="Lautstärke beim Anhören im Browser (nur hier, nicht am Licht)"><span id="volic">🔊</span><input id="vol" type="range" min="0" max="1" step="0.01" value="1" title="Lautstärke"></span>
+  <span id="stemst" class="hide-s"></span>
+  <span id="syncst"></span>
+  <button id="blight" title="An: Play steuert das echte Licht, im Panel steht SHOW. Aus: nur im Browser anhören, das Licht bleibt bei AUTO.">Licht an</button>
+  <button id="blk" title="BLACKOUT: alles dunkel, geht immer vor">BLACKOUT</button>
+  <button id="bbot" title="Eigenschaften ein- oder ausblenden">▤</button>
+  <a class="rbtn" href="/shows/handbuch.pdf" download="Showmanager-Handbuch.pdf" title="Bedienungsanleitung herunterladen (PDF)" aria-label="Bedienungsanleitung herunterladen"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10.3 5.2 7.6 4.5 4 4.5v13c3.6 0 6.3.7 8 2 1.7-1.3 4.4-2 8-2v-13c-3.6 0-6.3.7-8 2z"/><path d="M12 6.5v13"/></svg></a>
+  </div>
+ </div>
+ <div id="left">
+  <div id="tabs"></div>
+  <div id="list"></div>
+ </div>
+ <div id="mid"><canvas id="base"></canvas><canvas id="over"></canvas></div>
+ <div id="bot"></div>
+</div>
+<audio id="audio" preload="auto"></audio>
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/timeline.js"></script>
+<script src="/static/sm/editor.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

@@ -1,0 +1,189 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Auto-DJ</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body.adj { padding: 12px 12px 60px; max-width: none; margin: 0; }   /* ganze Breite (Wunsch 08.11.2026, Variante B) */
+ /* zwei Spalten fuer Laptop und Tablet quer (Wunsch 07.11.2026): links Event und Mischpult, rechts die Playlist; schmaler untereinander */
+ #cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 10px; align-items: start; }
+ #cols .box { width: auto; max-height: none; overflow: visible; }   /* sm.css macht .box 560 px breit (fuer Fenster): hier volle Spaltenbreite */
+ #colR { position: sticky; top: 8px; } #colR .box { display: flex; flex-direction: column; max-height: calc(100vh - 28px); }
+ #colR #items { overflow: auto; flex: 1 1 auto; min-height: 120px; } #colR .box > :not(#items) { flex: none; }   /* nur die Liste scrollt, Kurve bleibt ganz */
+ @media (max-width: 979px) { #cols { grid-template-columns: 1fr; } #colR { position: static; } #colR .box { max-height: none; } }   /* iPad hochkant, Handy: untereinander */
+ .box { background: var(--pan); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 0 0 10px; }
+ .bh { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+ .bh h2 { font-size: 15px; margin: 0; display: flex; align-items: center; gap: 8px; }
+ .bh .ic { color: #9fd0ff; display: inline-flex; }
+ .sp { flex: 1; }
+ .dim2 { color: var(--dim); font-size: 12px; }
+ .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+ .num { width: 64px; }
+ /* 1. Event einrichten: zugeklappt nur die Zusammenfassung, aufgeklappt Schritt fuer Schritt */
+ #wiz > summary { list-style: none; cursor: pointer; } #wiz > summary::-webkit-details-marker { display: none; }
+ #wsum { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+ #wsum span { font-size: 12px; padding: 3px 9px; border-radius: 7px; background: var(--pan2); border: 1px solid var(--line); color: #dde; }
+ #wsum span.e { color: var(--dim); border-style: dashed; }
+ .gchips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; max-height: 190px; overflow: auto; }
+ .gchips button { min-height: 28px; padding: 0 10px; font-size: 12px; border-radius: 14px; } .gchips button small { color: var(--dim); margin-left: 4px; }
+ .gchips button.on { background: var(--acc); border-color: var(--acc); color: #fff; } .gchips button.on small { color: #ffe3cc; }
+ #wtog { min-height: 28px; padding: 2px 10px; font-size: 12px; }
+ #wiz[open] #wsum { display: none; }
+ .steps { display: flex; gap: 6px; margin: 12px 0 10px; flex-wrap: wrap; }
+ .steps button { min-height: 28px; padding: 2px 10px; font-size: 12px; border-radius: 14px; }
+ .steps button.on { background: var(--acc); border-color: var(--acc); color: #fff; } .steps button.done { color: #8fe0a5; }
+ .step { display: none; } .step.on { display: block; }
+ .step h3 { font-size: 15px; margin: 0 0 4px; text-transform: none; letter-spacing: 0; color: #fff; } .step p { margin: 0 0 8px; font-size: 12px; color: var(--dim); }
+ .step label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: #a8acba; margin-bottom: 8px; max-width: 520px; }
+ .step input { min-height: 34px; font-size: 14px; }
+ .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: -2px 0 8px; } .chips button { min-height: 26px; padding: 0 9px; font-size: 12px; border-radius: 13px; }
+ .wnav { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; align-items: center; }
+ #note { color: #9fd0ff; font-size: 13px; margin: 6px 0 0; min-height: 0; }
+ #err { color: #ffb35c; font-size: 13px; margin: 4px 0 0; }
+ /* 2. Mischpult */
+ #mixer { display: grid; grid-template-columns: minmax(0, 1fr) 118px minmax(0, 1fr); max-width: 980px; margin-left: auto; margin-right: auto; grid-template-areas: "a c b"; gap: 12px; align-items: center; margin-top: 10px; }
+ #deck0 { grid-area: a; } #deck1 { grid-area: b; } #center { grid-area: c; }
+ .deck { aspect-ratio: 1; border-radius: 12px; position: relative; overflow: hidden; border: 1px solid var(--line); background: #1c2233 center / cover no-repeat;
+   display: flex; flex-direction: column; justify-content: space-between; padding: 10px; min-width: 0; }
+ .deck.live { border: 2px solid var(--acc); box-shadow: 0 0 0 1px #0006; }
+ .deck .disc { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 64px; opacity: .35; pointer-events: none; }
+ .deck.hascv .disc { display: none; }
+ .ov { position: relative; background: #000a; color: #fff; border-radius: 8px; padding: 6px 9px; backdrop-filter: blur(2px); }
+ .top { display: flex; justify-content: space-between; gap: 6px; } .top .ov { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ .deck .ti { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ .deck .ar { font-size: 12px; color: #d8dbe6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 15px; }
+ .deck .meta { font-size: 11px; color: #b8bccb; min-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ .prog { position: relative; height: 8px; background: #ffffff30; border-radius: 4px; margin-top: 6px; cursor: pointer; overflow: hidden; }
+ .prog .f { position: absolute; left: 0; top: 0; bottom: 0; background: var(--acc); }
+ .prog .m { position: absolute; top: 0; bottom: 0; background: #4aa8ff88; }
+ .tm { display: flex; justify-content: space-between; font-size: 11px; color: #d8dbe6; margin-top: 3px; }
+ #center { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+ #center button { min-height: 34px; }
+ #bplay { min-height: 52px !important; font-size: 22px; }
+ #xf { position: relative; height: 26px; margin: 2px 4px 0; } #xf .rail { position: absolute; left: 0; right: 0; top: 11px; height: 4px; border-radius: 2px; background: #ffffff25; }
+ #xf .knob { position: absolute; top: 2px; width: 14px; height: 22px; margin-left: -7px; border-radius: 4px; background: #dde; transition: left .2s linear; }
+ .xl { display: flex; justify-content: space-between; font-size: 11px; color: var(--dim); margin: -2px 4px 0; }
+ #pads { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+ #pads .pad { flex: 1 1 90px; min-height: 40px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+ #pads .pad.on { background: #2f8fd4; border-color: #2f8fd4; color: #fff; } #padset, #padstop { min-height: 40px; }
+ #padcfg { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 6px; margin-top: 6px; } #padcfg select { min-height: 30px; font-size: 12px; }
+ #pstat { font-size: 13px; color: #c8cbd6; margin-top: 10px; min-height: 18px; }
+ /* 3. Playlist */
+ #curve { width: 100%; height: 80px; display: block; margin: 8px 0 6px; }
+ #axis { position: relative; height: 16px; font-size: 11px; color: var(--dim); margin: -4px 0 6px; } #axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+ #axis span:first-child { transform: none; }
+ .it { display: grid; grid-template-columns: 22px 38px minmax(0, 1fr) 30px 44px auto; gap: 8px; align-items: center; padding: 6px 4px; border-top: 1px solid var(--line); font-size: 13px; }
+ .it .clk { font-variant-numeric: tabular-nums; color: #c8cbd6; font-size: 12px; text-align: right; }
+ .it.cur { background: #e8710a26; border-radius: 6px; } .it.nx { background: #4aa8ff14; } .it.done { opacity: .5; }
+ .it .nxl { color: #9fd0ff; font-size: 11px; margin-left: 6px; }
+ .it img, .it .nocv { width: 38px; height: 38px; border-radius: 5px; object-fit: cover; background: #0003; }
+ .it .t { overflow: hidden; } .it .t div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ .it .why { color: var(--dim); font-size: 12px; }
+ .it .bt { display: flex; gap: 2px; } .it .bt button { min-width: 24px; min-height: 24px; padding: 0 4px; font-size: 11px; }
+ .tr { font-size: 11px; color: var(--dim); padding: 0 0 2px 68px; } .tr .ok { color: var(--ok); } .tr .meh { color: #ffb86b; }
+ .chip { display: inline-block; min-width: 22px; text-align: center; padding: 1px 5px; border-radius: 6px; font-weight: 700; font-size: 12px; background: var(--ec, #2a2c3d); color: #fff; }
+ .e1, .e2, .e3 { --ec: #2f8fd4; } .e4, .e5, .e6 { --ec: #d4a32f; } .e7, .e8 { --ec: #e8710a; } .e9 { --ec: #e0423a; }
+ .chip.e0 { background: #2a2c3d; color: var(--dim); font-weight: 400; }
+ #add { position: relative; } #addres { position: absolute; z-index: 5; left: 0; right: 0; top: 36px; background: var(--pan2); border: 1px solid var(--line); border-radius: 8px; max-height: 300px; overflow: auto; }
+ #addres div { padding: 6px 8px; display: flex; gap: 6px; align-items: center; font-size: 13px; border-top: 1px solid var(--line); }
+ #addres div span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+ #addres button { min-height: 24px; padding: 0 6px; font-size: 12px; }
+ @media (max-width: 640px) {      /* Handy: Decks nebeneinander, die Knoepfe darunter */
+   #mixer { grid-template-columns: 1fr 1fr; grid-template-areas: "a b" "c c"; }
+   #center { flex-direction: row; flex-wrap: wrap; justify-content: center; } #center > * { flex: 1 1 auto; } #center > #xf, #center > .xl { flex-basis: 100%; }
+   .deck .ti { font-size: 13px; } .deck .meta { display: none; }
+   .it { grid-template-columns: 20px minmax(0, 1fr) 30px 40px auto; } .it img, .it .nocv { display: none; } .tr { padding-left: 24px; }
+ }
+</style></head>
+<body class="adj">
+<div class="s2lnav" data-back="/musik" data-cur="autodj" data-title="h_autodj">Auto-DJ</div>
+
+<div id="cols"><div id="colL">
+<details class="box" id="wiz">
+ <summary>
+  <div class="bh"><h2><span class="ic">✦</span>Event einrichten</h2><span class="dim2">gilt nur für diese Sitzung</span><span class="sp"></span><button id="wtog" type="button">Ändern ▾</button></div>
+  <div id="wsum"></div>
+ </summary>
+ <div class="steps" id="steps"><button data-s="0" class="on">1 Anlass</button><button data-s="1">2 Publikum</button><button data-s="2">3 Musik</button><button data-s="3">4 Länge und Energie</button><button data-s="4">5 Vorschlag</button></div>
+ <div class="step on" data-s="0"><h3>Was für ein Event?</h3><p>Ein paar Worte genügen, Claude richtet die Auswahl danach aus.</p>
+  <label>Thema / Event<input id="wtheme" placeholder="Geburtstag 50er, Gartenfest, Après-Ski …"></label>
+  <div class="chips" data-for="wtheme"><button type="button">Geburtstag</button><button type="button">Gartenfest</button><button type="button">Après-Ski</button><button type="button">Hochzeit</button><button type="button">Silvester</button><button type="button">Weihnachtsfeier</button></div></div>
+ <div class="step" data-s="1"><h3>Wer feiert mit?</h3><p>Alter, Stimmung, wie tanzfreudig.</p>
+  <label>Zielgruppe<input id="waud" placeholder="40–60 Jahre, gemischt, tanzfreudig"></label>
+  <div class="chips" data-for="waud"><button type="button">20–35, tanzfreudig</button><button type="button">40–60, gemischt</button><button type="button">Familie mit Kindern</button><button type="button">eher ruhig, Hintergrund</button></div></div>
+ <div class="step" data-s="2"><h3>Welche Musik?</h3><p>Genres, Gruppen (🏷, Feld Gruppe im Tag, zum Beispiel Après-Ski), Plattenkisten oder Wiedergabelisten aus deiner Sammlung (nichts gewählt = alle) und was sonst wichtig ist. Gewähltes zählt zusammen: ein Lied passt, wenn es zu einem davon gehört.</p>
+  <div class="dim2" style="margin-bottom:4px">Genres antippen (keins gewählt = alle) <button type="button" id="gclr" style="min-height:22px;padding:0 8px;font-size:11px;margin-left:6px">keine</button></div>
+  <div id="gchips" class="gchips"></div><input type="hidden" id="wgen">
+  <div class="dim2" style="margin-bottom:4px">Gruppen (🏷), Wiedergabelisten (▶) und Plattenkisten <button type="button" id="kclr" style="min-height:22px;padding:0 8px;font-size:11px;margin-left:6px">keine</button></div>
+  <div id="kchips" class="gchips"><span class="dim2">Noch keine: kommen mit der Liedliste von der Mixxx-Brücke.</span></div><input type="hidden" id="wcrate">
+  <label>Sonstige Wünsche (nur für Claude)<input id="wnotes" placeholder="viel Deutsch, keine Balladen, Hits zum Mitsingen"></label>
+  <datalist id="genlist"></datalist></div>
+ <div class="step" data-s="3"><h3>Wann, wie lang und wie wild?</h3><p>Die Energie steigt über das Event vom ersten zum zweiten Wert. Mit dem Beginn stehen bei jedem Lied die Uhrzeit und unter der Energiekurve die Zeitachse.</p>
+  <div class="row"><label class="dim2" style="flex-direction:row;align-items:center;gap:6px">Beginn <input type="time" id="wstart" value="20:00" style="min-height:32px"></label>
+   <label class="dim2" style="flex-direction:row;align-items:center;gap:6px">Länge <input type="number" id="wmin" class="num" min="10" max="360" step="10" value="240"> min</label></div>
+  <div class="row"><label class="dim2" style="flex-direction:row;align-items:center;gap:6px">Energie von <input type="number" id="welo" class="num" min="1" max="9" value="4"> bis <input type="number" id="wehi" class="num" min="1" max="9" value="8"></label></div>
+  <div class="row"><label class="dim2" style="flex-direction:row;align-items:center;gap:6px" title="Leer = automatisch aus der Auswahl (unteres bis oberes Fünftel). Halbes und doppeltes Tempo zählen gleich (64 = 128).">BPM von <input type="number" id="wblo" class="num" min="60" max="200" placeholder="auto"> bis <input type="number" id="wbhi" class="num" min="60" max="200" placeholder="auto"></label></div>
+  <div class="row"><label class="dim2" style="flex-direction:row;align-items:center;gap:6px" title="Erscheinungsjahr aus Mixxx. Leer = alle Jahre. Mit Bereich zählen Lieder ohne Jahr nicht.">Jahr von <input type="number" id="wylo" class="num" min="1900" max="2099" placeholder="alle" style="width:76px"> bis <input type="number" id="wyhi" class="num" min="1900" max="2099" placeholder="alle" style="width:76px"></label></div>
+  <div class="row"><label class="dim2" style="flex-direction:row;align-items:center;gap:6px" title="Lieder mit Herz (Seite Favoriten) kommen öfter in die Playlist. Halbes Herz (Lied eines Lieblings-Albums oder -Interpreten) und Lieblings-Genres zählen halb. Die Regeln für Energie, Tempo und Tonart bleiben.">♥ Favoriten bevorzugen <select id="wfav" style="min-height:32px"><option value="0">aus</option><option value="1">etwas</option><option value="2">stark</option></select></label></div></div>
+ <div class="step" data-s="4"><h3>Playlist holen</h3><p>Claude wählt nach Anlass, Publikum und Musik aus deiner Sammlung aus, die Regeln ordnen danach fein (Energie, BPM, Tonart). Nur nach Regeln geht es ohne Internet und kostenlos.</p>
+  <div class="row"><button id="bclaude" class="on" title="Claude wählt nach Thema, Zielgruppe und Genre aus deiner Sammlung aus und schlägt die Dramaturgie vor; die Regeln ordnen danach fein (Energie, BPM, Tonart). Interpret, Titel, Genre, BPM, Tonart und Energie gehen an Anthropic.">Mit Claude vorschlagen</button>
+   <button id="brules" title="Nur nach Regeln: Genre-Filter, Energie steigend, BPM-Sprünge klein, Tonarten nach Camelot passend. Kostenlos, ohne Internet.">Nach Regeln</button>
+   <button id="breroll" title="Gleiche Wünsche, andere Auswahl">Neu würfeln</button></div>
+  <div class="row"><span id="cinfo" class="dim2"></span></div></div>
+ <div class="wnav"><button id="wback" type="button">‹ Zurück</button><button id="wnext" type="button" class="on">Weiter ›</button><span class="sp"></span><span id="err"></span></div>
+</details>
+
+<div class="box" id="playbox">
+ <div class="bh"><h2><span class="ic">🎚</span>Mischpult</h2><span class="sp"></span><span id="pos" class="dim2"></span></div>
+ <div id="mixer">
+  <div class="deck" id="deck0"><div class="disc">💿</div>
+   <div class="top"><span class="ov lab">Deck A</span><span class="ov bk">–</span></div>
+   <div class="ov"><div class="ti">–</div><div class="ar"></div><div class="meta"></div><div class="prog"><div class="m"></div><div class="f"></div></div><div class="tm"><span class="t0"></span><span class="t1"></span></div></div>
+  </div>
+  <div id="center">
+   <button id="bplay" class="on" title="Abspielen ab dem gewählten Lied (sonst ab dem ersten) / Pause">▶</button>
+   <button id="bmix" title="Jetzt zum nächsten Lied überblenden (8 Takte, auf dem nächsten Takt)">Jetzt mixen</button>
+   <div id="xf" title="Wo die Überblendung gerade steht"><div class="rail"></div><div class="knob" style="left:0%"></div></div>
+   <div class="xl"><span>A</span><span>B</span></div>
+   <button id="bstop" title="Alles anhalten">■ Stopp</button>
+  </div>
+  <div class="deck" id="deck1"><div class="disc">💿</div>
+   <div class="top"><span class="ov lab">Deck B</span><span class="ov bk">–</span></div>
+   <div class="ov"><div class="ti">–</div><div class="ar"></div><div class="meta"></div><div class="prog"><div class="m"></div><div class="f"></div></div><div class="tm"><span class="t0"></span><span class="t1"></span></div></div>
+  </div>
+ </div>
+ <div class="row">
+  <label class="dim2" title="passend: der Auto-DJ wählt selbst (Echo, wenn das Tempo nicht passt, Filter bei elektronischer Musik, sonst weich)">Übergang <select id="otrans"><option value="auto" selected>passend</option><option value="soft">weich</option><option value="filter">Filter</option><option value="echo">Echo</option><option value="brake">Bremse</option></select></label>
+  <label class="dim2">Überblendung <select id="obars"><option value="4" selected>4 Takte</option><option value="8">8 Takte</option><option value="16">16 Takte</option><option value="32">32 Takte</option></select></label>
+  <label class="dim2">Tempo angleichen bis <select id="orate"><option value="0">aus</option><option value="0.03">±3 %</option><option value="0.06" selected>±6 %</option><option value="0.08">±8 %</option></select></label>
+  <label class="dim2"><input type="checkbox" id="obass" checked> Bässe tauschen</label>
+  <label class="dim2" title="Jedes Lied wird auf dieselbe Lautheit gebracht (-14 LUFS, am Musik-Rechner gemessen): laute leiser, leise lauter, aber nie übersteuert. Wirkt ab dem nächsten Lied. Noch nicht gemessene spielen wie die Datei."><input type="checkbox" id="onorm" checked> Gleich laut</label>
+  <label class="dim2" title="Der Light-Butler bekommt Lied, Stelle, Tempo, Beat und die Analyse vom Musik-Rechner (Drops, Aufbau, Hotcues) wie von Mixxx. Oben im Panel steht dann „Auto-DJ“. Laser, Strobe und Nebel bleiben hinter ihren Freigaben."><input type="checkbox" id="olicht" checked> Licht folgt dem Auto-DJ</label>
+  <label class="dim2">🔈 <input type="range" id="ovol" min="0" max="100" value="90" style="width:110px"></label>
+ </div>
+ <div id="pads"><span class="dim2">Samples</span><button class="pad" data-k="0">–</button><button class="pad" data-k="1">–</button><button class="pad" data-k="2">–</button><button class="pad" data-k="3">–</button><button id="padstop" title="Alle Samples stoppen (Escape)">■</button><select id="pduck" title="So leise wird die Musik, solange ein Sample spielt (merkt sich dieser Browser)" style="min-height:40px"><option value="1">Musik gleich laut</option><option value="0.5">Musik etwas leiser</option><option value="0.3">Musik leiser</option><option value="0.12">Musik fast weg</option></select><button id="padset" title="Tasten belegen (Samples aus dem Ordner SAMPLES)">✎</button></div>
+ <div id="padcfg" hidden></div>
+ <div id="pstat"></div>
+ <p class="dim2" style="margin:8px 0 0">Die Lieder kommen vom Vorhör-Server am Musik-Rechner (Mixxx-Brücke oder Light-Butler Helfer). Am besten im Browser am Musik-Rechner spielen und den Ton von dort ins Mischpult geben; dieses Fenster offen lassen. Taktgenau mischt er Lieder mit Beat-Raster aus der Analyse am Musik-Rechner, sonst schätzt er den ersten Beat.</p>
+</div>
+
+</div><div id="colR">
+<div class="box" id="listbox">
+ <div class="bh"><h2><span class="ic">≡</span><span id="lhead">Playlist</span></h2><span class="sp"></span>
+  <button id="bclear" title="Die Playlist rechts leeren. Läuft gerade ein Lied, spielt es zu Ende, alles danach wird entfernt. Gemerkte Playlists bleiben.">🗑 Leeren</button>
+  <input id="sname" placeholder="Name der Playlist" style="width:160px;min-height:30px"><button id="bsave">Merken</button>
+  <select id="ssel" style="min-height:30px;max-width:190px"><option value="">Gemerkte Playlists …</option></select><button id="bload" title="Gewählte Playlist laden (die laufende wird ersetzt)">Laden</button><button id="bren" title="Gewählte Playlist umbenennen">Umbenennen</button><button id="bdel" class="danger" title="Gewählte Playlist löschen">Löschen</button><button id="bmixxx" title="Die Playlist als Datei für Mixxx am Musik-Rechner ablegen (Ordner Musik → Light-Butler Playlists). In Mixxx: Rechtsklick auf Wiedergabelisten → Wiedergabeliste importieren. Mixxx selbst bleibt unberührt.">→ Mixxx</button></div>
+ <div id="note"></div>
+ <svg id="curve" viewBox="0 0 1000 90" preserveAspectRatio="none"></svg>
+ <div id="axis"></div>
+ <div id="items"><div class="dim" style="padding:12px 0">Noch keine Playlist. Links „Event einrichten“ ausfüllen und im letzten Schritt „Mit Claude vorschlagen“ oder „Nach Regeln“ drücken.</div></div>
+ <div id="add" style="margin-top:8px"><input id="addq" type="search" placeholder="Lied hinzufügen: Titel oder Interpret suchen" style="width:100%;min-height:32px"><div id="addres" hidden></div></div>
+</div>
+
+</div></div>
+
+<div id="toast"></div>
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/autodj.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>
