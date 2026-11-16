@@ -172,14 +172,32 @@ class App:
                 p.kill()
         self.root.destroy()
 
-    def run(self, helper):
+    def run(self, home):
+        """Fenster sofort zeigen und Ereignisse bearbeiten; Kopieren und Starten erst danach (sonst meldet macOS beim
+        ersten Start, die App reagiere nicht)."""
+        self.root.after(100, lambda: self.setup(home))
+        self.root.mainloop()
+
+    def setup(self, home):
+        self.status.config(text="Programme werden eingerichtet ...")
+        self.root.update()
+        try:
+            prep = prepare(home)
+        except OSError as e:
+            prep = None
+            self.status.config(text="Fehler: %s" % e)
+        if not prep:
+            if prep is not None:
+                self.status.config(text="lichtshow/show.py fehlt in %s" % home)
+            return
+        self.port, helper = prep
+        self.status.config(text="startet ...")
         self.start_show()
         if helper:
             self.helper = child(["--helfer"], "helfer.log")
         if not os.environ.get("LB_NO_BROWSER"):            # Tests: kein Browser
-            self.root.after(4000, self.open_panel)
+            self.root.after(6000, self.open_panel)
         self.root.after(1000, self.tick)
-        self.root.mainloop()
 
 
 def main(argv=None):
@@ -193,19 +211,22 @@ def main(argv=None):
     if argv and argv[0] == "--helfer":
         os.environ.setdefault("PYTHONUTF8", "1")
         return lbe.run_script([os.path.join(home, "helfer", "helper", "helper.py")] + lbe.HELPER_ARGS + list(argv[1:]))
+    App(8080).run(home)
+    return 0
+
+
+def prepare(home):
+    """Programme nach home kopieren, erster Start (Ausgaben aus). Rueckgabe: (Port, Helfer an?) oder None."""
     src = bundle_dir()
     os.makedirs(home, exist_ok=True)
     for sub in ("lichtshow", "helfer"):
         sync(os.path.join(src, sub), os.path.join(home, sub))
     prog = os.path.join(home, "lichtshow")
     if not os.path.isfile(os.path.join(prog, "show.py")):
-        print("lichtshow/show.py fehlt in %s" % home)
-        return 1
+        return None
     lbe.first_run(prog)
     port = lbe.panel_port(lbe.show_args(prog)) or 8080
-    helper = lbe.helper_on(prog, os.path.join(home, "helfer", "helper", "helper.py"))
-    App(port).run(helper)
-    return 0
+    return port, lbe.helper_on(prog, os.path.join(home, "helfer", "helper", "helper.py"))
 
 
 if __name__ == "__main__":

@@ -27,17 +27,22 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name || github.ref }}   # von Hand: Stand des gewaehlten Zweigs
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      # Python von python.org (wie am Entwicklungs-Mac): dessen Tk zeigt das Fenster der App zuverlaessig
+      - name: Python von python.org
+        env:
+          PY_VERSION: "3.12.8"
+        run: |
+          curl -sSfL -o python.pkg "https://www.python.org/ftp/python/${PY_VERSION}/python-${PY_VERSION}-macos11.pkg"
+          sudo installer -pkg python.pkg -target /
+          PY=/Library/Frameworks/Python.framework/Versions/3.12/bin/python3
+          $PY -c "import sys, tkinter; print(sys.version, 'Tk', tkinter.Tcl().eval('info patchlevel'))"
+          $PY -m venv .venv-build
 
       - name: Pakete fuer die App
-        run: |
-          python -c "import tkinter; print('Tk', tkinter.TkVersion)"
-          python -m pip install pyinstaller numpy pyyaml sounddevice mido python-rtmidi pyserial
+        run: .venv-build/bin/python -m pip install pyinstaller numpy pyyaml sounddevice mido python-rtmidi pyserial
 
       - name: Light-Butler.app und Light-Butler.dmg bauen
-        run: python mac/app/build_app.py "${TAG:-0.0}"
+        run: .venv-build/bin/python mac/app/build_app.py "${TAG:-0.0}"
 
       - name: An das Release haengen
         if: env.TAG != ''
