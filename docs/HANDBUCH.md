@@ -457,12 +457,7 @@ bash install_mac.sh
 ```
 
 - Das Skript fragt nach der Adresse des Light-Butler, richtet die App „Light-Butler Mixxx“ und den Helfer ein und sagt am Ende, was noch von Hand zu tun ist.
-- **Windows:** Paket **Windows: Musik-Rechner (ZIP)** laden, entpacken und in der PowerShell ausführen:
-
-```
-powershell -ExecutionPolicy Bypass -File install_windows_musik.ps1
-```
-
+- **Windows:** **Light-Butler-Musik-Setup.exe** von der Projektseite auf GitHub laden (Releases), doppelklicken und installieren. Der Installer fragt nach der Adresse des Light-Butler, startet den Helfer mit Windows und legt das Symbol **Mixxx mit Light-Butler** an. Mixxx startest du immer über dieses Symbol.
 - Für Mixxx unter Windows brauchst du einmal das kostenlose Programm loopMIDI mit dem Anschluss „Light-Butler“. Details: Technische Beschreibung.
 
 ## MIDI-Controller

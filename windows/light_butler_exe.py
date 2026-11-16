@@ -72,6 +72,20 @@ def open_panel_later(port, delay=4.0, timer=None):
 
 
 HELPER_ARGS = ["127.0.0.1", "--no-apc", "--no-lumi", "--no-audio", "--no-stems"]   # APC, Lumi, Ton haengen am PC direkt
+MUSIK_ARGS = ["--no-stems"]          # Musik-Rechner (16.11.2026): Helfer mit APC, Lumi und Ton an einen anderen Light-Butler
+PI_FILE = ".light-butler-pi"         # Adresse des Light-Butler, schreibt der Installer (wie install_mac.sh und deploy.sh)
+
+
+def pi_host(home=None):
+    """Adresse des Light-Butler aus ~/.light-butler-pi (erste Zeile), sonst lightbutler.local."""
+    try:
+        with open(os.path.join(home or os.path.expanduser("~"), PI_FILE), encoding="utf-8") as f:
+            h = f.readline().strip()
+        if h and all(c.isalnum() or c in "._-" for c in h):
+            return h
+    except OSError:
+        pass
+    return "lightbutler.local"
 
 
 def helper_on(prog, helper):
@@ -104,14 +118,14 @@ def run_script(argv, run=None):
     return 0
 
 
-def start_helper(base, popen=None):
+def start_helper(base, popen=None, mode="--helfer"):
     """Musik-Teil des Helfers als eigenen Prozess ohne Fenster starten (Log %LOCALAPPDATA%\\Light-Butler\\helfer.log)."""
     log_dir = os.path.join(os.environ.get("LOCALAPPDATA") or base, "Light-Butler")
     os.makedirs(log_dir, exist_ok=True)
     exe = [sys.executable] if getattr(sys, "frozen", False) else [sys.executable, os.path.abspath(__file__)]
     log = open(os.path.join(log_dir, "helfer.log"), "a", encoding="utf-8")
     flags = 0x08000000 if sys.platform == "win32" else 0                    # CREATE_NO_WINDOW
-    return (popen or subprocess.Popen)(exe + ["--helfer"], stdout=log, stderr=subprocess.STDOUT, creationflags=flags)
+    return (popen or subprocess.Popen)(exe + [mode], stdout=log, stderr=subprocess.STDOUT, creationflags=flags)
 
 
 def main(argv=None, run=None, popen=None, timer=None):
@@ -120,6 +134,13 @@ def main(argv=None, run=None, popen=None, timer=None):
     helper = os.path.join(base, "helfer", "helper", "helper.py")
     if argv and argv[0].lower().endswith(".py") and os.path.isfile(argv[0]):
         return run_script(argv, run)
+    if argv and argv[0] == "--musik":                  # Musik-Rechner: Helfer ohne Fenster starten, dieses Fenster schliesst sich
+        start_helper(base, popen, "--helfer-musik")
+        print("Light-Butler Helfer gestartet, Ziel %s (Log: %%LOCALAPPDATA%%\\Light-Butler\\helfer.log)" % pi_host(), flush=True)
+        return 0
+    if argv and argv[0] == "--helfer-musik":
+        os.environ.setdefault("PYTHONUTF8", "1")
+        return run_script([helper, pi_host()] + MUSIK_ARGS + list(argv[1:]), run)
     if argv and argv[0] == "--helfer":
         os.environ.setdefault("PYTHONUTF8", "1")
         return run_script([helper] + HELPER_ARGS + list(argv[1:]), run)

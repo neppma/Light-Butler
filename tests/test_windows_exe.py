@@ -120,4 +120,41 @@ wf = open(os.path.join(ROOT, ".github", "workflows", "windows-setup.yml"), encod
 check("windows/build_exe.py" in wf and "windows\\light-butler.iss" in wf and "gh release upload" in wf
       and "Light-Butler-Setup.exe" in wf and "types: [published]" in wf, "GitHub baut den Installer und haengt ihn an das Release")
 check(all(x in src for x in ("COLLECT", "if available(m)")), "nur installierte Pakete einsammeln (aubio optional)")
+
+# Musik-Rechner (16.11.2026): --musik startet den Helfer ohne Fenster, --helfer-musik mit der Adresse aus ~/.light-butler-pi
+home = tempfile.mkdtemp(prefix="s2l_home_")
+check(lbe.pi_host(home) == "lightbutler.local", "ohne Datei: lightbutler.local")
+open(os.path.join(home, ".light-butler-pi"), "w").write("licht.example\n")
+check(lbe.pi_host(home) == "licht.example", "Adresse aus .light-butler-pi")
+open(os.path.join(home, ".light-butler-pi"), "w").write("a b;rm\n")
+check(lbe.pi_host(home) == "lightbutler.local", "ungueltige Adresse: Standard")
+base3 = tempfile.mkdtemp(prefix="s2l_exe_")
+os.makedirs(os.path.join(base3, "helfer", "helper"))
+open(os.path.join(base3, "helfer", "helper", "helper.py"), "w").write("# Attrappe\n")
+lbe.base_dir = lambda: base3
+_old_pi = lbe.pi_host
+lbe.pi_host = lambda home=None: "licht.example"
+try:
+    started = []
+    check(lbe.main(["--musik"], popen=lambda c, **k: started.append(c)) == 0 and started and started[0][-1] == "--helfer-musik",
+          "--musik: Helfer als eigener Prozess")
+    seen.clear()
+
+    def run_h(path, run_name):
+        seen.update(argv=list(sys.argv))
+    lbe.main(["--helfer-musik"], run=run_h)
+    check(seen["argv"][1:] == ["licht.example", "--no-stems"], "Helfer mit Adresse, APC/Lumi/Ton an: " + str(seen["argv"][1:]))
+finally:
+    lbe.pi_host = _old_pi
+    sys.argv = old_argv
+    os.chdir(cwd)
+    shutil.rmtree(base3, ignore_errors=True)
+    shutil.rmtree(home, ignore_errors=True)
+mi = open(os.path.join(ROOT, "windows", "light-butler-musik.iss"), encoding="utf-8-sig").read()
+check("PrivilegesRequired=lowest" in mi and 'Excludes: "\\lichtshow,\\LIESMICH.txt"' in mi and "OutputBaseFilename=Light-Butler-Musik-Setup" in mi,
+      "Musik-Installer: ohne Administrator, ohne lichtshow")
+check("mixxx_start.py" in mi and 'Parameters: "--musik"' in mi and ".light-butler-pi" in mi and "CreateInputQueryPage" in mi,
+      "Musik-Installer: Adresse abfragen, Helfer und Mixxx-Symbol")
+check(mi.split("AppId=")[1][:40] != iss.split("AppId=")[1][:40], "eigene AppId (beide nebeneinander installierbar)")
+check("light-butler-musik.iss" in wf and "Light-Butler-Musik-Setup.exe" in wf, "GitHub baut auch den Musik-Installer")
 finish("test_windows_exe")

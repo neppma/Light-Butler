@@ -8,7 +8,7 @@
 
 ## Download
 
-**Windows:** [Light-Butler-Setup.exe](https://github.com/neppma/Light-Butler/releases/latest/download/Light-Butler-Setup.exe) laden, doppelklicken, installieren. Danach startest du den Light-Butler über das Symbol auf dem Desktop, das Panel öffnet sich im Browser. Python ist eingebaut, Administrator-Rechte braucht es nicht. Zeigt Windows „Der Computer wurde durch Windows geschützt“, auf **Weitere Informationen** und **Trotzdem ausführen** klicken (der Installer ist nicht kostenpflichtig signiert).
+**Windows:** [Light-Butler-Setup.exe](https://github.com/neppma/Light-Butler/releases/latest/download/Light-Butler-Setup.exe) laden, doppelklicken, installieren. Danach startest du den Light-Butler über das Symbol auf dem Desktop, das Panel öffnet sich im Browser. Für einen Windows-PC als Musik-Rechner gibt es genauso [Light-Butler-Musik-Setup.exe](https://github.com/neppma/Light-Butler/releases/latest/download/Light-Butler-Musik-Setup.exe): Er fragt nach der Adresse des Light-Butler und legt das Symbol „Mixxx mit Light-Butler“ an. Python ist eingebaut, Administrator-Rechte braucht es nicht. Zeigt Windows „Der Computer wurde durch Windows geschützt“, auf **Weitere Informationen** und **Trotzdem ausführen** klicken (der Installer ist nicht kostenpflichtig signiert).
 
 Für die anderen Rechner: ZIP laden, entpacken, das Installationsskript starten. Jedes Paket hat eine `LIESMICH.txt` mit den Schritten.
 
@@ -18,7 +18,7 @@ Für die anderen Rechner: ZIP laden, entpacken, das Installationsskript starten.
 | **Windows-PC** als Licht-Rechner | [Light-Butler-Setup.exe](https://github.com/neppma/Light-Butler/releases/latest/download/Light-Butler-Setup.exe) |
 | **Mac** als Licht-Rechner | [light-butler-mac-voll.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-mac-voll.zip) |
 | **Musik-Rechner Mac** (DJ-Software Mixxx, Ton übers Netz, Musik-Datenbank) | [light-butler-mac.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-mac.zip) |
-| **Musik-Rechner Windows** | [light-butler-windows-musik.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-windows-musik.zip) |
+| **Musik-Rechner Windows** | [Light-Butler-Musik-Setup.exe](https://github.com/neppma/Light-Butler/releases/latest/download/Light-Butler-Musik-Setup.exe) |
 | **Pegelkurven-Rechner** (Windows mit NVIDIA-Grafikkarte, optional) | [light-butler-windows.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-windows.zip) |
 
 Alle Fassungen stehen unter [Releases](https://github.com/neppma/Light-Butler/releases). Du brauchst nur **einen** Licht-Rechner. Ein Musik-Rechner ist optional. Eine neue Anlage startet mit allen Ausgaben aus: Geräte im Panel unter Einstellungen → Fixtures anlegen, dann die Ausgaben einschalten. Die Schritte im Einzelnen stehen im Handbuch im Kapitel **Installation**.

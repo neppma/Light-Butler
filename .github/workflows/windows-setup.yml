@@ -1,4 +1,4 @@
-# Light-Butler-Setup.exe fuer Windows (16.11.2026): baut auf einem Windows-Rechner von GitHub die Exe (windows/build_exe.py,
+# Light-Butler-Setup.exe und Light-Butler-Musik-Setup.exe fuer Windows (16.11.2026): baut auf einem Windows-Rechner von GitHub die Exe (windows/build_exe.py,
 # PyInstaller) und daraus den Installer (windows/light-butler.iss, Inno Setup) und haengt beides an das Release.
 # Laeuft von selbst, wenn ein Release veroeffentlicht wird. Von Hand: Actions -> Windows-Installer -> Run workflow,
 # mit Tag (zum Beispiel v1.0) an ein vorhandenes Release, ohne Tag nur zum Herunterladen unter Artifacts.
@@ -44,20 +44,22 @@ jobs:
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
           if (-not (Test-Path $iscc)) { throw "Inno Setup fehlt" }
 
-      - name: Light-Butler-Setup.exe bauen
+      - name: Installer bauen (Light-Butler-Setup.exe, Light-Butler-Musik-Setup.exe)
         shell: pwsh
         run: |
           $v = "$env:TAG".TrimStart("v")
           if (-not $v) { $v = "0.0" }
-          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$v" windows\light-butler.iss
-          if ($LASTEXITCODE -ne 0) { throw "ISCC fehlgeschlagen" }
+          foreach ($iss in "windows\light-butler.iss", "windows\light-butler-musik.iss") {
+            & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$v" $iss
+            if ($LASTEXITCODE -ne 0) { throw "ISCC fehlgeschlagen: $iss" }
+          }
           Get-ChildItem windows\build\*.exe, windows\build\*.zip | Format-Table Name, Length
 
       - name: An das Release haengen
         if: env.TAG != ''
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$env:TAG" windows/build/Light-Butler-Setup.exe windows/build/light-butler-windows-exe.zip --clobber
+        run: gh release upload "$env:TAG" windows/build/Light-Butler-Setup.exe windows/build/Light-Butler-Musik-Setup.exe windows/build/light-butler-windows-exe.zip --clobber
 
       - name: Zum Herunterladen (ohne Release)
         if: env.TAG == ''
@@ -66,4 +68,5 @@ jobs:
           name: Light-Butler-Setup
           path: |
             windows/build/Light-Butler-Setup.exe
+            windows/build/Light-Butler-Musik-Setup.exe
             windows/build/light-butler-windows-exe.zip
