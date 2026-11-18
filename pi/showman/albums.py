@@ -128,6 +128,10 @@ class Albums:
                     if b_ == kp:
                         alias[a_] = child
         self.alias = alias
+        alone = {}                                           # wie artists.groups: Namen mit Zahl ihrer Lieder
+        for x in self.library() or []:
+            ka = ar.key(ar.main_name(x.get("artist") or ""))
+            alone[ka] = alone.get(ka, 0) + 1
         for g in out.values():
             g["name"] = max(g["names"].items(), key=lambda kv: (kv[1], kv[0]))[0]
             g["year"] = max(g["years"].items(), key=lambda kv: kv[1])[0] if g["years"] else 0
@@ -135,7 +139,10 @@ class Albums:
             top = max(g["arts"].items(), key=lambda kv: kv[1]) if g["arts"] else ("", 0)
             g["sampler"] = len(g["arts"]) >= 3 and top[1] * 2 <= n      # viele Interpreten, keiner mit der Mehrheit
             g["artist"] = "" if g["sampler"] else top[0]
-            g["artist_k"] = ar.key(top[0]) if top[0] and not g["sampler"] else ""
+            # Interpreten-Seite (Fehlerbericht 17.11.2026, "David Guetta, Marten Hoerger, Men Machine & Snap!"): derselbe Schluessel
+            # wie dort, also beim gemeinsamen Eintrag der erste Name, unter dem das Lied auch steht
+            parts = [q for q in ar.lead_parts(top[0], alone) if ar.key(q)] if top[0] else []
+            g["artist_k"] = (ar.key(parts[0]) if parts else ar.key(top[0])) if top[0] and not g["sampler"] else ""
             ds = {disc_of(s.get("path")) for s in g["songs"]}
             last = 999 if ds - {0} else 0                            # lose Lieder neben "Disc 1/2" ans Ende
             g["songs"].sort(key=lambda s: (disc_of(s.get("path")) or last, track_no(s.get("track")) or 999, nfc(s.get("path"))))

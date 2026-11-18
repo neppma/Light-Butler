@@ -81,9 +81,30 @@ def vorschau():
     print("social-preview.png  %d x %d  %d KB" % (W, H, os.path.getsize(p) // 1024))
 
 
+def vorschau_symbol():
+    """Vorschaubild nur mit dem Light-Butler-Symbol (1280 x 640): Symbol gross in der Mitte, Name darunter."""
+    from PIL import ImageDraw
+    W, H = 1280, 640
+    im = Image.new("RGB", (W, H), "#0f1017")
+    d = ImageDraw.Draw(im)
+    ico = Image.open(os.path.join(ROOT, "windows", "light-butler.ico"))
+    big = ico.ico.getimage(max(ico.ico.sizes())).convert("RGBA").resize((380, 380), Image.LANCZOS)
+    x, y = (W - 380) // 2, 70
+    d.rounded_rectangle((x - 10, y - 10, x + 390, y + 390), radius=92, fill="#2c3046")
+    im.paste(big, (x, y), big)
+    f = font(64, True)
+    t = "Light-Butler"
+    tw = d.textlength(t, font=f)
+    d.text(((W - tw) / 2, 495), t, font=f, fill="#ffffff")
+    p = os.path.join(ZIEL, "social-preview-symbol.png")
+    im.save(p, optimize=True)
+    print("social-preview-symbol.png  %d x %d  %d KB" % (W, H, os.path.getsize(p) // 1024))
+
+
 def main():
     os.makedirs(ZIEL, exist_ok=True)
     vorschau()
+    vorschau_symbol()
     for ziel, (name, crop, breite) in BILDER.items():
         im = Image.open(quelle(name)).convert("RGB")
         if crop:

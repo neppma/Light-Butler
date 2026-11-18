@@ -204,7 +204,13 @@ Alles auf einer Seite, im Browser von Handy, Tablet oder Computer. Oben das lauf
 
 - **Windows:** Setup-Datei doppelklicken und installieren. Python ist eingebaut, Administrator-Rechte braucht es nicht. Das Symbol auf dem Desktop startet den Light-Butler und öffnet das Panel im Browser. Zeigt Windows „Der Computer wurde durch Windows geschützt“: **Weitere Informationen** → **Trotzdem ausführen** (der Installer ist nicht kostenpflichtig signiert).
 - **Mac:** DMG öffnen, **Light-Butler** auf **Programme** ziehen und starten. Beim ersten Mal: **Systemeinstellungen** → **Datenschutz & Sicherheit** → **Dennoch öffnen** (die App hat keine bezahlte Apple-Unterschrift), dann das Mikrofon erlauben. Für Macs mit Intel-Chip: [light-butler-mac-voll.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-mac-voll.zip).
-- **Raspberry Pi und Musik-Rechner Mac:** ZIP entpacken und das Installationsskript starten, die `LIESMICH.txt` im Paket nennt die Schritte.
+- **Raspberry Pi:** mit dem Raspberry Pi Imager *Raspberry Pi OS (64 Bit)* auf die SD-Karte spielen (dort Name, WLAN und SSH eintragen), am Pi anmelden und einen Befehl einfügen – er holt das Paket und installiert alles:
+
+  ```bash
+  curl -sL https://raw.githubusercontent.com/neppma/Light-Butler/main/pi/install_online.sh | bash
+  ```
+
+- **Musik-Rechner Mac:** ZIP entpacken und das Installationsskript starten, die `LIESMICH.txt` im Paket nennt die Schritte.
 - Eine neue Anlage startet mit allen Ausgaben aus: Geräte im Panel unter Einstellungen → Fixtures anlegen, dann die Ausgaben einschalten.
 
 Für genauere Pegelkurven (Schlagzeug, Bass, Gesang getrennt) gibt es optional einen Rechenhelfer für Windows mit NVIDIA-Grafikkarte: [light-butler-windows.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-windows.zip). Alles Weitere steht im [Handbuch](docs/HANDBUCH.md), Einzelheiten in der [Technischen Beschreibung](docs/TECHNIK.md). Alle Fassungen: [Releases](https://github.com/neppma/Light-Butler/releases).

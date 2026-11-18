@@ -129,4 +129,18 @@ check(al.album_dir(M + "/A3/2012 - Parade/Disc/01.mp3") == M + "/A3/2012 - Parad
 kk = A4.key_of_path(F + "/Falco - Zuviel Hitze.mp3")
 check(kk in G4 and len(G4[kk]["songs"]) == 3 and A4.songs(al.album_key("Einzelhaft", F + "/Falco - Zuviel Hitze.mp3"))["k"] == kk,
       "Link vom losen Lied und alter Schluessel fuehren zum ganzen Album")
+# Fehlerbericht 17.11.2026: Album eines gemeinsamen Eintrags steht beim ersten Interpreten (gleicher Schluessel wie dort)
+from showman import artists as arm  # noqa: E402
+LIB2 = [{"album": "Men Machine EP", "artist": "David Guetta, Marten H\u00f8rger, Men Machine & Snap!", "name": "PWR", "path": M + "/U/Guetta/PWR.mp3"},
+        {"album": "Listen", "artist": "David Guetta", "name": "Lovers", "path": M + "/U/Guetta/Listen/01.mp3"},
+        {"album": "Simon", "artist": "Simon & Garfunkel", "name": "Boxer", "path": M + "/U/SG/01.mp3"}]
+with tempfile.TemporaryDirectory() as d2:
+    art2 = arm.Artists(d2, lambda: LIB2)
+    G2 = al.Albums(d2, lambda: LIB2, artists=art2).groups()
+    ak = {g["name"]: g["artist_k"] for g in G2.values()}
+    ag = art2.groups()
+    check(ak["Men Machine EP"] == "david-guetta" and "david-guetta" in ag and any(s["name"] == "PWR" for s in ag["david-guetta"]["songs"]),
+          "Album mit mehreren Interpreten beim ersten Namen (Interpreten-Seite)")
+    check(ak["Simon"] == "simon-garfunkel" and ak["Listen"] == "david-guetta", "Duo bleibt ganz, Einzelname unveraendert")
+
 finish("test_alben")

@@ -643,8 +643,13 @@ You find all packages under **⚙** → **Software for other computers**, in the
 ### Raspberry Pi
 
 1. Write a Raspberry Pi OS (64 bit) onto the SD card with the Raspberry Pi Imager. Enter hostname, user `admin`, Wi-Fi and SSH there.
-2. Download the package **Pi: fresh installation (ZIP)** (for a replacement **Pi: replacement with my devices (ZIP)**).
-3. Copy the ZIP onto the Pi and install it there:
+2. Log in on the Pi (`ssh admin@<name-of-the-light-butler>`) and paste this command. It fetches the package from GitHub and installs it:
+
+```
+curl -sL https://raw.githubusercontent.com/neppma/Light-Butler/main/pi/install_online.sh | bash
+```
+
+3. Without internet on the Pi or for a replacement: download the package **Pi: fresh installation (ZIP)** or **Pi: replacement with my devices (ZIP)**, copy it onto the Pi and install it there:
 
 ```
 scp light-butler-pi.zip admin@<name-of-the-light-butler>:

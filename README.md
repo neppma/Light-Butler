@@ -206,7 +206,13 @@ Everything on one page, in the browser of your phone, tablet or computer. At the
 
 - **Windows:** double-click the setup file and install. Python is built in, no administrator rights needed. The desktop icon starts Light-Butler and opens the panel in the browser. If Windows shows "Windows protected your PC": **More info** → **Run anyway** (the installer is not commercially signed).
 - **Mac:** open the DMG, drag **Light-Butler** to **Applications** and start it. The first time: **System Settings** → **Privacy & Security** → **Open Anyway** (the app has no paid Apple signature), then allow the microphone. For Macs with Intel chip: [light-butler-mac-voll.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-mac-voll.zip).
-- **Raspberry Pi and music computer Mac:** unpack the ZIP and run the install script; the `LIESMICH.txt` in the package lists the steps (German).
+- **Raspberry Pi:** write *Raspberry Pi OS (64-bit)* onto the SD card with the Raspberry Pi Imager (enter name, Wi-Fi and SSH there), log in on the Pi and paste one command – it fetches the package and installs everything:
+
+  ```bash
+  curl -sL https://raw.githubusercontent.com/neppma/Light-Butler/main/pi/install_online.sh | bash
+  ```
+
+- **Music computer Mac:** unpack the ZIP and run the install script; the `LIESMICH.txt` in the package lists the steps (German).
 - A new system starts with all outputs off: add your fixtures in the panel under Settings → Fixtures, then switch the outputs on.
 
 For more precise level curves (drums, bass, vocals separated) there is an optional helper for Windows with an NVIDIA graphics card: [light-butler-windows.zip](https://github.com/neppma/Light-Butler/releases/latest/download/light-butler-windows.zip). Everything else is in the [manual](docs/MANUAL_EN.md), details in the [technical description](docs/TECHNICAL_EN.md). All versions: [Releases](https://github.com/neppma/Light-Butler/releases).
