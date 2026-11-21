@@ -172,20 +172,30 @@ class Fixture:
         return param in self.map and param not in self.dead
 
     def preset(self, param, name):
+        pr = self.presets.get(param)
+        if (pr is None or name not in pr) and (self.tdef.get("custom") or self.extra.get("user_added")):
+            return                                   # eigene/importierte Typen ohne dieses Rad oder Fach: nichts tun
         self.set(param, self.presets[param][name])
 
     # ---- Farbzonen (Zellen, Reihen, ...) -----------------------------------
     def zones(self):
         m = self.map
-        if "r1" in m:  # Docooler: zwei Zellen
-            zs = [{"r": "r1", "g": "g1", "b": "b1", "w": "w1"},
-                  {"r": "r2", "g": "g2", "b": "b2", "w": "w2"}]
+        if "r1" in m:  # Docooler: zwei Zellen; importierte Geraete (Open Fixture Library) auch mehr (r3, g3, ...)
+            zs = []
+            i = 1
+            while f"r{i}" in m:
+                zs.append({k: f"{k}{i}" for k in ("r", "g", "b", "w", "uv") if f"{k}{i}" in m or k in ("r", "g", "b", "w")})
+                i += 1
         elif "led_r" in m:  # 21 Eyes (nur LEDs + UV)
             zs = [{"r": "led_r", "g": "led_g", "b": "led_b", "uv": "uv"}]
         elif "r" in m:  # 4in1, PAR, Derby, Ambiente
             zs = [{k: k for k in ("r", "g", "b", "w", "uv") if k in m}]
         elif "uv1" in m:  # BUV463: vier UV-Reihen
-            zs = [{"uv": f"uv{i}"} for i in (1, 2, 3, 4)]
+            zs = []
+            i = 1
+            while f"uv{i}" in m:             # BUV463 hat vier, importierte Geraete auch mehr
+                zs.append({"uv": f"uv{i}"})
+                i += 1
         else:
             zs = []
         return zs

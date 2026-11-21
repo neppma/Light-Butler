@@ -511,9 +511,11 @@ Die Seite **Fixtures** (**⚙** → **Fixtures**) zeigt jedes Gerät mit Name, N
 1. **Bearbeiten** einschalten.
 2. Name, Nummer, DMX-Adresse, Gruppe oder Ziel-IP (bei WLED) ändern.
 3. **+ Fixture** legt ein neues Gerät aus einem vorhandenen Typ an. Überschneiden sich Adressen, warnt das Panel.
-4. Für ein ganz neues Gerät legst du unter **Gerätetypen** einen eigenen Typ an, am besten mit **Kopie von** einem ähnlichen.
+4. Für ein ganz neues Gerät: unter **+ Fixture** → **Aus der Fixture-Datenbank oder Datei …** in der freien Open Fixture Library im Internet suchen (zum Beispiel „Spot 60“) oder einen Hersteller wählen, dann Gerät und Modus oder eine Gerätedatei (.json, QLC+ .qxf) laden, dann **Als Gerätetyp übernehmen**. Oder unter **Gerätetypen** selbst einen Typ anlegen, am besten mit **Kopie von** einem ähnlichen.
 5. Name und Beschreibungen gelten sofort. Adresse, Gruppe, neue und entfernte Geräte nach einem Neustart: Tippe auf **Jetzt neu starten** (das Licht ist etwa 5 Sekunden aus).
 
+- Geräte aus der Datenbank: Laser und Nebelmaschinen bleiben gesperrt, Strobe- und Programmkanäle stehen fest auf „aus“. Die Daten werden von Hand gepflegt und können Fehler haben: vor dem ersten Einsatz am Gerät prüfen.
+- **Export** (unten bei jedem aufgeklappten Gerät) speichert seinen Gerätetyp als Datei: **Light-Butler** (vollständig, lässt sich bei **Aus der Fixture-Datenbank oder Datei …** wieder einlesen, etwa auf einem zweiten Licht-Rechner), **OFL** (Open Fixture Library), **QLC+** oder **YAML**. Bei OFL und QLC+ sind die Kanäle nur grob beschrieben, Sperren und Grenzen stehen dort nur als Hinweis.
 - Die Gruppe **Ambiente** macht ein Farbgerät ruhig: weiche Übergänge, ohne Beat und ohne Blitze, zum Beispiel für ein Arbeitslicht an der Bar.
 - **Entfernen** nimmt ein Gerät heraus, **Entfernte Fixtures** holt es zurück, **Änderungen verwerfen** setzt alles zurück.
 

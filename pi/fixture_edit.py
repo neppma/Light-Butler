@@ -123,7 +123,7 @@ def allowed_groups(tname, tdef):
         return ["ambient"]
     if "tilt1" in m:
         return ["bars", "wash", "bar", "fx", "ambient"]
-    if "uv1" in m:
+    if "uv1" in m and "r1" not in m:
         return ["uv"]
     if "r1" in m or "led_r" in m or "r" in m:
         return ["wash", "bar", "fx", "ambient"]          # ambient: ruhig wie Theke und Couchtisch
@@ -136,7 +136,7 @@ def type_summary(c):
     for t, d in c["types"].items():
         if t == "nanoleaf_panel":
             continue
-        out.append({"name": t, "channels": d["channels"], "custom": bool(d.get("custom")),
+        out.append({"name": t, "channels": d["channels"], "custom": bool(d.get("custom")), "label": d.get("label", ""),
                     "groups": allowed_groups(t, d), "map": d["map"], "desc": d.get("desc", {}),
                     "defaults": d.get("defaults", {}), "limits": d.get("safe_limits", {})})
     return out
@@ -345,10 +345,108 @@ def cmd_type_save(rig, d):
         for e in base["fixtures"]:
             if e["type"] == name and int(e["address"]) + t["channels"] - 1 > 512:
                 raise ValueError(f"{e['name']} passt mit {t['channels']} Kanaelen nicht mehr in 512 Adressen")
+    prev = u["types"].get(name) or {}
+    if prev.get("ofl") or prev.get("locked") or prev.get("locked_channels"):
+        _keep_safety(prev, t)                                               # importierter Typ: Sperren und Grenzen bleiben
     u["types"][name] = t
     rig.user = u
     save_user(rig.user_path, u)
     return name
+
+
+def _keep_safety(prev, t):
+    """Beim Bearbeiten eines importierten Typs im Typ-Editor gehen Sperren, feste Grenzen und Presets nicht verloren
+    (sonst waere ein gesperrter Laser nach dem Speichern frei)."""
+    for k in ("locked", "ofl", "presets", "label", "maker"):
+        if k in prev and k not in t:
+            t[k] = copy.deepcopy(prev[k])
+    lc = [p for p in prev.get("locked_channels", []) if p in t["map"]]
+    if lc:
+        t["locked_channels"] = sorted(set(t.get("locked_channels", [])) | set(lc))
+    lim = dict(t.get("safe_limits") or {})
+    for p, (lo, hi) in (prev.get("safe_limits") or {}).items():
+        if p in t["map"]:
+            nlo, nhi = lim.get(p, (0, 255))
+            lim[p] = [max(lo, nlo), min(hi, nhi)] if max(lo, nlo) <= min(hi, nhi) else [lo, hi]
+    if lim:
+        t["safe_limits"] = lim
+    for p, (lo, hi) in lim.items():
+        if p in (t.get("defaults") or {}):
+            t["defaults"][p] = min(max(t["defaults"][p], lo), hi)
+        elif lo > 0:
+            t.setdefault("defaults", {})[p] = lo
+    if "presets" in t:
+        t["presets"] = {p: v for p, v in t["presets"].items() if p in t["map"]}
+
+
+IMPORT_KEYS = {"channels", "map", "desc", "defaults", "safe_limits", "label", "maker", "presets", "locked", "locked_channels", "ofl"}
+
+
+def check_import(t):
+    """Typ aus ofl_import.convert pruefen, bevor er gespeichert wird: nur erlaubte Felder, nie Laser-Freigabe,
+    Handbetrieb, Einzel-Strobe oder Ruhewerte (Sicherheitsregeln 2, 4, 5)."""
+    if not isinstance(t, dict) or set(t) - IMPORT_KEYS:
+        raise ValueError("Typ enthaelt unerlaubte Felder: " + ", ".join(sorted(set(t) - IMPORT_KEYS)))
+    n, m = t.get("channels"), t.get("map")
+    if not isinstance(n, int) or not 1 <= n <= 64 or not isinstance(m, dict) or sorted(m.values()) != list(range(1, n + 1)):
+        raise ValueError("Kanalliste des Typs ungueltig")
+    for p in m:
+        if not PARAM_RE.match(str(p)):
+            raise ValueError("Ungueltiger Kanalname " + str(p))
+    for k in ("defaults", "safe_limits", "presets", "desc"):
+        if k in t and not isinstance(t[k], dict):
+            raise ValueError("Feld %s ungueltig" % k)
+    for p, v in (t.get("defaults") or {}).items():
+        if p not in m or not isinstance(v, int) or not 0 <= v <= 255:
+            raise ValueError("Standardwert ungueltig: " + str(p))
+    for p, v in (t.get("safe_limits") or {}).items():
+        if p not in m or not (isinstance(v, list) and len(v) == 2 and all(isinstance(x, int) for x in v) and 0 <= v[0] <= v[1] <= 255):
+            raise ValueError("Grenze ungueltig: " + str(p))
+    for p, pr in (t.get("presets") or {}).items():
+        if p not in m or not isinstance(pr, dict) or not all(isinstance(v, int) and 0 <= v <= 255 for v in pr.values()):
+            raise ValueError("Preset ungueltig: " + str(p))
+    lc = t.get("locked_channels", [])
+    if not isinstance(lc, list) or any(p not in m for p in lc):
+        raise ValueError("Gesperrte Kanaele ungueltig")
+    if "locked" in t and t["locked"] is not True:
+        raise ValueError("Feld locked ungueltig")
+    return t
+
+
+def cmd_type_import(rig, d):
+    """Geraet aus der Open Fixture Library (oder einer Datei) als eigenen Typ speichern. Rueckgabe: (Typname, Hinweise)."""
+    import ofl_import
+    fx = d.get("fixture")
+    if not isinstance(fx, dict):
+        raise ValueError("Kein Geraet angegeben")
+    try:
+        mi = int(d.get("mode", 0))
+    except (TypeError, ValueError):
+        raise ValueError("Unbekannter Modus") from None
+    maker = str(d.get("maker") or "")[:60]
+    t, notes = ofl_import.convert(fx, mi, maker)
+    src = str(d.get("source") or "")[:120]
+    if src:
+        t["ofl"] = src
+    check_import(t)
+    u = copy.deepcopy(rig.user)
+    mode = [x for x in fx.get("modes") or [] if isinstance(x, dict) and isinstance(x.get("channels"), list)][mi]
+    taken = set(rig.base_cfg["types"]) | set(u["types"])
+    import fixture_export
+    if fixture_export.is_lb(fx):                                            # eigene Datei: urspruenglichen Namen behalten
+        base = str(fx.get("name") or "")[:28]
+        base = base if NAME_RE.match(base) else _slug("typ_" + str(fx.get("model") or "geraet"))[:28]
+        name, i = base, 2
+        while name in taken:
+            name, i = "%s_%d" % (base[:26], i), i + 1
+    else:
+        name = ofl_import.type_name(maker, fx.get("name"), mode.get("shortName") or mode.get("name"), taken)
+    if not NAME_RE.match(name):
+        raise ValueError("Typname ungueltig")
+    u["types"][name] = t
+    rig.user = u
+    save_user(rig.user_path, u)
+    return name, notes
 
 
 def cmd_type_delete(rig, name):

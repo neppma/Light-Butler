@@ -238,7 +238,8 @@ class Show:
         self.nano = [(f, 0) for f in rig.group("nano")]        # Nanoleaf-Panels (leer ohne nanoleaf.json)
         self.scenes = None
         self.zone_fx = [f for f in rig.fixtures if not f.locked and f.zones() and f.type != "wled_drgb"]
-        self.spot = [f for f in rig.fixtures if f.type == "vega_spot_60"]
+        # Moving Heads: der Vega und jedes Geraet in der Gruppe spot (zum Beispiel aus der Open Fixture Library)
+        self.spot = [f for f in rig.fixtures if f.type == "vega_spot_60" or (f.group == "spot" and not f.locked)]
         # Ambiente (ruhig, ohne Beat): WLED-Lichter und jedes Farbgeraet in der Gruppe ambient (z. B. das PAR an der Bar)
         self.rgb_amb = [f for f in rig.fixtures if f.type == "wled_drgb" or (f.group == "ambient" and f.zones())]
         self.presets = [f for f in rig.fixtures if f.type == "wled_preset"]
@@ -2010,7 +2011,7 @@ class Show:
                 self.glevel = {k: 1.0 for k, _ in GROUP_LABELS}
             if ("master" in d or "glevel" in d or "blitz_hz" in d or "beam" in d or d.get("glevel_reset")) and self.levels_dirty_t is None:
                 self.levels_dirty_t = time.monotonic()         # gespeichert wird gesammelt (Fader am APC mini senden viel)
-            if any(k in d for k in ("fx_save", "fx_delete", "fx_restore", "fx_desc", "type_save", "type_delete", "fx_reset", "restart", "nano_host", "nano_token")):
+            if any(k in d for k in ("fx_save", "fx_delete", "fx_restore", "fx_desc", "type_save", "type_import", "type_delete", "fx_reset", "restart", "nano_host", "nano_token")):
                 self._fixture_cmd(d)
             if d.get("backup"):                                # Sicherung jetzt starten (laeuft im Hintergrund)
                 self._backup_now()
@@ -2951,6 +2952,10 @@ class Show:
             nm = fe.cmd_type_save(self.rig, d["type_save"])
             self._fx_check()
             self.note = f"Typ {nm} gespeichert. Er ist jetzt beim Hinzufuegen waehlbar."
+        if "type_import" in d:
+            nm, notes = fe.cmd_type_import(self.rig, d["type_import"])
+            self._fx_check()
+            self.note = f"Typ {nm} aus der Datenbank gespeichert. Er ist jetzt beim Hinzufuegen waehlbar." + (" " + " ".join(notes[:2]) if notes else "")
         if "type_delete" in d:
             fe.cmd_type_delete(self.rig, d["type_delete"])
             self._fx_check()

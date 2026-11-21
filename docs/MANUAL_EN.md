@@ -511,9 +511,11 @@ The page **Fixtures** (**⚙** → **Fixtures**) shows every device with name, n
 1. Switch on **Edit**.
 2. Change name, number, DMX address, group or target IP (for WLED).
 3. **+ Fixture** creates a new device from an existing type. If addresses overlap, the panel warns you.
-4. For a completely new device create your own type under **Device types**, ideally with **Copy of** a similar one.
+4. For a completely new device: under **+ Fixture** → the button **… Fixture-Datenbank …** (fixture database or file) search the free Open Fixture Library on the internet (for example "Spot 60") or pick a manufacturer, then device and mode or load a device file (.json, QLC+ .qxf), then **Als Gerätetyp übernehmen** (use as device type). Or create a type yourself under **Device types**, ideally with **Copy of** a similar one.
 5. Name and descriptions apply at once. Address, group, new and removed devices after a restart: tap **Restart now** (the light is off for about 5 seconds).
 
+- Devices from the database: lasers and fog machines stay locked, strobe and program channels are fixed to "off". The data is maintained by hand and may contain errors: check it on the device before the first use.
+- **Export** (at the bottom of every expanded device) saves its device type as a file: **Light-Butler** (complete, can be read in again with **… Fixture-Datenbank …**, for example on a second light computer), **OFL** (Open Fixture Library), **QLC+** or **YAML**. With OFL and QLC+ the channels are described only roughly; locks and limits appear there only as a note.
 - The group **Ambience** makes a colour device calm: soft transitions, without beat and without flashes, for example for a work light at the bar.
 - **Remove** takes a device out, **Removed fixtures** brings it back, **Discard changes** resets everything.
 

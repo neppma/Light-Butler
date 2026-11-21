@@ -214,6 +214,8 @@ details.sg{background:#181a22;border-radius:10px;margin:6px 0;overflow:hidden}de
 .fxb th{text-align:left;font-size:12px;color:#889;font-weight:600;padding:4px 6px}
 .fxb td{padding:5px 6px;border-top:1px solid #262a36;vertical-align:top}
 .fxb small{color:#c8a050}
+.fxexp{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;font-size:13px}.fxexp span{color:#889}
+.fxexp a{color:#cfe3ff;text-decoration:none;border:1px solid #3a4256;border-radius:8px;padding:4px 10px;background:#1c2030}
 .fxb td.val{white-space:nowrap;min-width:110px}.vn{display:inline-block;width:34px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 .bar{display:inline-block;width:56px;height:7px;background:#2a2e3c;border-radius:4px;margin-left:8px;vertical-align:middle;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:#3aa0ff}
@@ -493,6 +495,7 @@ async function c(d){const r=await fetch('/api/cmd',{method:'POST',headers:{'Cont
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 let FIXOPEN=new Set(),FXEDIT=false,FXCAT=null,FXL=[],FXADD=false,FXTYPES=false,TF=null;
 const GRPL={bars:'Spider',wash:'Wash',bar:'Barlicht',fx:'Effekt (Eyes, Derby)',uv:'UV-Leiste',spot:'Moving Head',ambient:'Ambiente (WLED)',locked:'gesperrt (nie angesteuert)',nano:'Nanoleaf'};
+let FXOFL=false,FXNEWT='';
 async function loadCat(){try{const r=await fetch('/api/fxcat');FXCAT=await r.json()}catch(e){}}
 async function loadFix(){
  try{const r=await fetch('/api/fixtures');FXL=await r.json();await loadCat();renderFix()}catch(e){}}
@@ -523,13 +526,16 @@ function buildAdd(){
  const box=document.getElementById('fxaddbox');if(!FXCAT||!FXCAT.editable){box.textContent='Nicht verfügbar';return}
  const types=FXCAT.types.filter(t=>t.groups[0]!=='nano');
  box.className='fxa2';
- box.innerHTML='<div class="row"><label class="wide" style="grid-column:1/3">Gerätetyp<select id="na_type">'+types.map(t=>'<option value="'+esc(t.name)+'">'+esc(t.name)+' ('+t.channels+' Kanäle'+(t.custom?', eigener Typ':'')+')</option>').join('')+'</select></label>'+
+ box.innerHTML='<div class="ebtn" style="margin-bottom:8px"><button id="na_ofl" class="'+(FXOFL?'on':'')+'">Aus der Fixture-Datenbank oder Datei …</button></div><div id="oflbox" class="fxt" style="display:'+(FXOFL?'block':'none')+'"></div>'+
+  '<div class="row"><label class="wide" style="grid-column:1/3">Gerätetyp<select id="na_type">'+types.map(t=>'<option value="'+esc(t.name)+'"'+(t.name===FXNEWT?' selected':'')+'>'+esc(t.label?t.label+' – '+t.name:t.name)+' ('+t.channels+' Kanäle'+(t.custom?', eigener Typ':'')+')</option>').join('')+'</select></label>'+
   '<label>Name<input id="na_label" placeholder="z. B. Wash 12"></label><label>Nummer<input id="na_nr" type="number" min="0" max="999" value="'+FXCAT.next_nr+'"></label>'+
   '<label>DMX-Adresse<input id="na_addr" type="number" min="1" max="512"></label><label>Gruppe<select id="na_group"></select></label>'+
   '<label class="wide" style="grid-column:1/3">Ziel-IP (nur für Geräte mit eigener Adresse, leer = Art-Net-Gateway)<input id="na_target" placeholder="192.168.1.30"></label></div>'+
   '<div class="ebtn"><button class="ok" id="na_ok">Hinzufügen</button><button id="na_cancel">Abbrechen</button></div>';
  const upd=()=>{const t=types.find(x=>x.name===document.getElementById('na_type').value);document.getElementById('na_addr').value=FXCAT.addresses[t.name]||1;document.getElementById('na_group').innerHTML=gopts(t.groups,t.groups[0])};
  document.getElementById('na_type').onchange=upd;upd();
+ document.getElementById('na_ofl').onclick=()=>{FXOFL=!FXOFL;buildAdd()};
+ if(FXOFL&&window.OFL)OFL.open(document.getElementById('oflbox'),async d=>{const old=new Set(FXCAT.types.map(t=>t.name));await c({type_import:d});await loadCat();const nt=FXCAT.types.find(t=>!old.has(t.name));if(nt){FXNEWT=nt.name;FXOFL=false;buildAdd();const l=document.getElementById('na_label');if(l&&!l.value)l.value=nt.label||''}});
  document.getElementById('na_cancel').onclick=()=>{FXADD=false;renderFxBars()};
  document.getElementById('na_ok').onclick=()=>{
   c({fx_save:{new:true,type:document.getElementById('na_type').value,label:document.getElementById('na_label').value,nr:+document.getElementById('na_nr').value,address:+document.getElementById('na_addr').value,group:document.getElementById('na_group').value,target:document.getElementById('na_target').value.trim()}}).then(()=>{FXADD=false;loadFix()})}}
@@ -581,7 +587,9 @@ function renderFix(){
   f.channels.forEach(c2=>{
    const dcell=(ed&&c2.param)?'<textarea class="fxd" rows="'+Math.min(7,Math.max(1,Math.ceil(c2.desc.length/30)))+'" data-type="'+esc(f.type)+'" data-param="'+esc(c2.param)+'" title="Beschreibung (wirkt für alle Geräte dieses Typs)">'+esc(c2.desc)+'</textarea>'+(c2.note?'<small>'+esc(c2.note)+'</small>':''):esc(c2.desc)+(c2.note?'<br><small>'+esc(c2.note)+'</small>':'');
    t+='<tr><td>'+c2.ch+'</td><td>'+c2.dmx+'</td><td>'+(ed&&c2.param?'<small style="color:#889">'+esc(c2.param)+'</small><br>':'')+dcell+'</td><td class="val" id="v_'+f.name+'_'+c2.ch+'"><span class="vn">-</span><span class="bar"><i></i></span></td></tr>'});
-  b.innerHTML=t+'</table>';
+  let ex='';if(!nano){const u=k=>'/api/fixture_export?f='+encodeURIComponent(f.name)+'&fmt='+k;
+   ex='<div class="fxexp"><span>Export</span><a href="'+u('lb')+'" download title="Ganzer Gerätetyp mit Sperren und Grenzen, lässt sich wieder importieren">Light-Butler</a><a href="'+u('ofl')+'" download title="Open Fixture Library (JSON)">OFL</a><a href="'+u('qxf')+'" download title="QLC+ Gerätedatei">QLC+</a><a href="'+u('yaml')+'" download title="Ausschnitt wie in fixtures.yaml">YAML</a></div>'}
+  b.innerHTML=t+'</table>'+ex;
   b.querySelectorAll('.sbtest').forEach(x=>x.onclick=()=>c({solo_test:x.dataset.n}));
   const ns=b.querySelector('[data-a="nanosave"]');if(ns)ns.onclick=()=>c({nano_host:b.querySelector('[data-k="nano_host"]').value.trim()}).then(loadFix);
   const nt=b.querySelector('[data-a="nanotoken"]');if(nt)nt.onclick=()=>{const i=b.querySelector('[data-k="nano_token"]');const v=i.value.trim();i.value='';if(v)c({nano_token:v}).then(loadFix)};
@@ -1468,7 +1476,7 @@ function draw(){drawHlBtn();drawSafety();pwDraw();
 }
 async function poll(){try{const r=await fetch('/api/state');S=await r.json();draw()}catch(e){const wr=document.getElementById('warnrow');if(wr){wr.dataset.h='';wr.innerHTML=''}const se=document.getElementById('st');if(se)se.textContent='Keine Verbindung'}}
 poll();setInterval(poll,500);
-</script><script src="/static/sm/core.js"></script><script src="/static/sm/nav.js"></script></body></html>"""
+</script><script src="/static/sm/core.js"></script><script src="/static/sm/nav.js"></script><script src="/static/sm/ofl.js"></script></body></html>"""
 
 
 def make_page():
@@ -1915,6 +1923,27 @@ def fixture_catalog(rig):
             "warning": rig.user_warning, "has_changes": bool(any(rig.user.get(k) for k in ("edits", "added", "removed", "types", "desc", "nano_host")))}
 
 
+def ofl_preview(fx, maker, mode):
+    """Geraet aus der Open Fixture Library: Modi und der umgewandelte Typ des gewaehlten Modus (zum Anzeigen vor dem Speichern)."""
+    import fixture_edit as fe
+    import ofl_import
+    ms = ofl_import.modes(fx)
+    if not ms:
+        raise ValueError("Das Geraet hat keinen Modus")
+    if mode < 0:                                              # ohne Wahl: der groesste Modus, den das Licht kann (meist der volle)
+        ok = [i for i, x in enumerate(ms) if not x["matrix"] and x["channels"] <= 64]
+        mode = max(ok, key=lambda i: ms[i]["channels"]) if ok else 0
+    mode = max(0, min(len(ms) - 1, mode))
+    try:
+        t, notes = ofl_import.convert(fx, mode, maker)
+        err = ""
+    except ValueError as e:
+        t, notes, err = None, [], str(e)
+    return {"fixture": fx, "maker": maker, "name": str(fx.get("model") or fx.get("name") or "")[:80], "categories": fx.get("categories") or [],
+            "modes": ms, "mode": mode, "type": t, "notes": notes, "error": err,
+            "groups": fe.allowed_groups("", t) if t else []}
+
+
 def dmx_values(rig, names):
     """Aktuelle Ausgabewerte (nach den Sicherheitsgrenzen) der gewuenschten Fixtures."""
     bufs = rig.render_all()
@@ -2106,6 +2135,8 @@ def start(show, port):
     threading.Thread(target=sm.watch_mixxx, daemon=True).start()
     threading.Thread(target=health.watch, args=(hl,), daemon=True).start()
     threading.Thread(target=hl.stall.run, name="haenger-spuerhund", daemon=True).start()
+    import ofl_import
+    ofl_cat = ofl_import.Catalog()                           # Open Fixture Library, nur auf Knopfdruck abgefragt
 
     class H(BaseHTTPRequestHandler):
         def handle_one_request(self):
@@ -2272,8 +2303,39 @@ def start(show, port):
                 self._send(200, json.dumps(show.cfg.info()).encode(), "application/json")
             elif self.path == "/api/fixtures":
                 self._send(200, json.dumps(fixtures_info(show.rig)).encode(), "application/json")
+            elif self.path.startswith("/api/ofl/"):                           # Open Fixture Library (nur auf Knopfdruck im Fixture-Editor)
+                q = parse_qs(urlparse(self.path).query)
+                try:
+                    sub = urlparse(self.path).path
+                    if sub == "/api/ofl/search":
+                        res = ofl_cat.search(q.get("q", [""])[0], q.get("m", [""])[0])
+                    elif sub == "/api/ofl/man" and q.get("m"):
+                        res = ofl_cat.fixtures(q["m"][0])
+                    elif sub == "/api/ofl/man":
+                        res = ofl_cat.manufacturers()
+                    elif sub == "/api/ofl/fx":
+                        res = ofl_preview(ofl_cat.fixture(q.get("m", [""])[0], q.get("f", [""])[0]), q.get("m", [""])[0], -1)
+                    else:
+                        raise ValueError("nicht gefunden")
+                    self._send(200, json.dumps(res, ensure_ascii=False).encode(), "application/json")
+                except ValueError as e:
+                    self._send(400, json.dumps({"error": str(e)}, ensure_ascii=False).encode(), "application/json")
             elif self.path == "/api/fxcat":
                 self._send(200, json.dumps(fixture_catalog(show.rig)).encode(), "application/json")
+            elif self.path.startswith("/api/fixture_export"):                # Geraetetyp eines Fixtures als Datei (nur lesend)
+                q = parse_qs(urlparse(self.path).query)
+                try:
+                    import fixture_edit as fe
+                    import fixture_export
+                    fn, q_f, q_fmt = None, q.get("f", [""])[0], q.get("fmt", [""])[0]
+                    try:
+                        fn, body, ct = fixture_export.export(fe.apply_user(show.rig.base_cfg, show.rig.user), q_f, q_fmt)
+                    except ValueError:
+                        fn, body, ct = fixture_export.export(show.rig.cfg, q_f, q_fmt)   # schon entfernt, laeuft aber noch
+                except ValueError as e:
+                    self._send(400, str(e).encode("utf-8"), "text/plain; charset=utf-8")
+                    return
+                self._send(200, body, ct, {"Content-Disposition": 'attachment; filename="%s"' % fn})
             elif self.path.split("?")[0] == "/fixtures.yaml":
                 try:
                     import fixture_edit as fe
@@ -2292,6 +2354,24 @@ def start(show, port):
 
         def do_POST(self):
             if sm_post(self, sm):
+                return
+            if self.path == "/api/ofl/preview":                                  # Vorschau: Datei oder Geraet aus der Datenbank, ein Modus
+                try:
+                    n = int(self.headers.get("Content-Length", "0"))
+                    if n > 3_000_000:
+                        raise ValueError("Die Datei ist zu gross")
+                    d = json.loads(self.rfile.read(n) or b"{}")
+                    import ofl_import
+                    if "text" in d:
+                        fx, maker = ofl_import.read_file(d["text"])
+                    elif isinstance(d.get("fixture"), dict):
+                        fx, maker = d["fixture"], str(d.get("maker") or "")
+                    else:
+                        raise ValueError("Keine Datei")
+                    res = ofl_preview(fx, maker, int(d["mode"]) if isinstance(d.get("mode"), int) else -1)
+                    self._send(200, json.dumps(res, ensure_ascii=False).encode(), "application/json")
+                except (ValueError, TypeError, KeyError) as e:
+                    self._send(400, json.dumps({"error": str(e)}, ensure_ascii=False).encode(), "application/json")
                 return
             if self.path != "/api/cmd":
                 self._send(404, b"nicht gefunden", "text/plain")
