@@ -622,6 +622,20 @@
   });
   player.addEventListener('play', markRows); player.addEventListener('pause', markRows);
   player.addEventListener('ended', markRows);
+  // Hauptpanel (21.11.2026): was hier laeuft, zeigt das Panel als Quelle Lokal (Titel, Cover, Matrix); nie aufs Licht
+  let lpT = 0;
+  function localReport(force) {
+    const now = Date.now();
+    if (!force && now - lpT < 3000) return;
+    lpT = now;
+    const on = !!(cur && player.src && !player.paused && !player.ended);
+    const d = on ? { playing: true, title: cur.name || '', artist: cur.artist || '', album: cur.album || '', genre: cur.genre || '',
+      path: cur.path || '', dur: player.duration || cur.dur || 0, pos: player.currentTime || 0 } : { playing: false };
+    fetch('/api/sm/cmd', { method: 'POST', keepalive: true, body: JSON.stringify(Object.assign({ op: 'local_play' }, d)) }).catch(() => {});
+  }
+  ['play', 'pause', 'ended', 'seeked', 'emptied'].forEach(ev => player.addEventListener(ev, () => localReport(true)));
+  player.addEventListener('timeupdate', () => localReport(false));
+  window.addEventListener('pagehide', () => { if (cur && !player.paused) fetch('/api/sm/cmd', { method: 'POST', keepalive: true, body: JSON.stringify({ op: 'local_play', playing: false }) }).catch(() => {}); });
   player.addEventListener('error', () => { $('bst').textContent = 'Die MP3 kommt nicht vom Musik-Rechner (Brücke läuft? Stick eingesteckt? Pfad in Mixxx stimmt?)'; markRows(); });
   $('pos').addEventListener('input', () => { const d = player.duration || 0; if (d) player.currentTime = d * $('pos').value / 1000; });
   $('bpp').onclick = () => { if (!cur) return; if (player.paused) player.play(); else player.pause(); };

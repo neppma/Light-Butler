@@ -42,7 +42,7 @@ check("s2lnav" not in webpanel.make_page().split('<div id="setsec">')[0], "Haupt
 
 # Menue: dieselben Hauptseiten, zweite Ebene nur ueber die Einstellungen (Wunsch von Markus)
 menu = re.findall(r"\['(\w+)', '([^']+)', '(\w+)'", nav)
-check([m[0] for m in menu] == ["panel", "shows", "musik", "artists", "albums", "favs", "autodj", "raum", "stats", "health", "settings", "help", "about"], "Menue: Panel, Showmanager, Musik, Interpreten, Alben, Favoriten, Auto-DJ, Raum, Statistik, Zustand, Einstellungen, Hilfe, Ueber")
+check([m[0] for m in menu] == ["panel", "shows", "musik", "artists", "albums", "favs", "autodj", "radio", "raum", "stats", "health", "settings", "help", "about"], "Menue: Panel, Showmanager, Musik, Interpreten, Alben, Favoriten, Auto-DJ, Internetradio, Raum, Statistik, Zustand, Einstellungen, Hilfe, Ueber")
 check(not any(u in ("/fixtures", "/apc", "/lumi", "/dmx", "/dmx-debug") for _, u, _ in menu), "Fixtures, APC, Lumi und DMX nicht im Menue")
 check("history.back()" in nav and "r.origin === location.origin" in nav and "if (cameFromPanel())" in nav,
       "Pfeil: zurueck zur vorigen Seite, nur wenn sie vom Panel kam, sonst data-back (Wunsch von Markus)")

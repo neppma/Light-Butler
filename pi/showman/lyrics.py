@@ -132,6 +132,24 @@ def line_end(lines, i):
     return min(guess, lines[i + 1][0]) if i + 1 < len(lines) else guess
 
 
+def _norm_line(text):
+    t = unicodedata.normalize("NFC", str(text or "")).casefold()
+    return " ".join("".join(c if c.isalnum() else " " for c in t).split())
+
+
+def repeats(lines):
+    """Nummern der Zeilen, die im Lied mehrmals vorkommen (Refrain), fuer die Pixel-Matrix. Kurze Rufe ("oh", "yeah")
+    unter drei Woertern zaehlen nur mit, wenn ein Nachbar zum Refrain gehoert."""
+    keys = [_norm_line(x[1]) for x in lines]
+    cnt = {}
+    for k in keys:
+        if k:
+            cnt[k] = cnt.get(k, 0) + 1
+    out = {i for i, k in enumerate(keys) if k and cnt[k] >= 2 and len(k.split()) >= 3}
+    out |= {i for i, k in enumerate(keys) if k and cnt[k] >= 2 and len(k.split()) < 3 and (i - 1 in out or i + 1 in out)}
+    return out
+
+
 def line_at(lines, pos):
     """Die Zeile, die an dieser Stelle gerade dran ist; leer vor der ersten, in Pausen des Textes und nach ihrem Ende."""
     cur = ""

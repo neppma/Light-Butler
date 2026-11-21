@@ -13,6 +13,7 @@
     close: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg>',
     shows: '<svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><path d="M1 3h13v2H1zM1 7h8v2H1zM1 11h11v2H1z"/><path d="M5 1.5h1.4v12H5z" opacity=".55"/></svg>',
     musik: '<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="7.5" cy="3.5" rx="5.5" ry="2"/><path d="M2 3.5v8c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-8M2 7.5c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2"/></svg>',
+    radio: '<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1.5" y="5" width="12" height="8" rx="1.2"/><circle cx="5" cy="9" r="1.8"/><path d="M9 8h3M9 10.5h3M4 5l6-3.5"/></svg>',
     autodj: '<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7.5" cy="7.5" r="6"/><circle cx="7.5" cy="7.5" r="1.6"/><path d="M7.5 3.2a4.3 4.3 0 0 1 4.3 4.3" opacity=".6"/></svg>',
     raum: '<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.5" y="2.5" width="12" height="10" rx="1"/><path d="M8.5 2.5v4.5h5M5 12.5V9.5"/></svg>',
     stats: '<svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><rect x="1" y="8" width="3" height="6" rx="0.6"/><rect x="6" y="4" width="3" height="10" rx="0.6"/><rect x="11" y="1" width="3" height="13" rx="0.6"/></svg>',
@@ -26,11 +27,11 @@
   };
   // Menue: (Kennung, Adresse, Textschluessel); dieselbe Reihenfolge wie im Entwurf, Panel zuerst
   const MENU = [['panel', '/', 'nav_home', 'home'], ['shows', '/shows', 'h_showman'], ['musik', '/musik', 'h_music'], ['artists', '/musik/interpreten', 'h_artists'], ['albums', '/musik/alben', 'h_albums'], ['favs', '/musik/favoriten', 'h_favs'],
-                ['autodj', '/musik/autodj', 'h_autodj'], ['raum', '/raum', 'h_room'], ['stats', '/stats', 'stat_title'], ['health', '/health', 'h_health'],
+                ['autodj', '/musik/autodj', 'h_autodj'], ['radio', '/musik/radio', 'h_radio'], ['raum', '/raum', 'h_room'], ['stats', '/stats', 'stat_title'], ['health', '/health', 'h_health'],
                 ['settings', '/settings', 'h_setpage'], ['help', '/help', 'h_help'], ['about', '/about', 'h_about']];
   const DEF = {
     nav_back: ['Zurück', 'Back'], nav_home: ['Panel', 'Panel'], nav_menu: ['Menü', 'Menu'],
-    h_showman: ['Showmanager', 'Show manager'], h_music: ['Musik-Datenbank', 'Music library'], h_room: ['Raumplan', 'Room plan'], h_autodj: ['Auto-DJ', 'Auto DJ'], h_artists: ['Interpreten', 'Artists'], h_albums: ['Alben', 'Albums'], h_favs: ['Favoriten', 'Favourites'], h_missing: ['Fehlt mir', 'Missing songs'], h_damaged: ['Beschädigte Dateien', 'Damaged files'],
+    h_showman: ['Showmanager', 'Show manager'], h_radio: ['Internetradio', 'Internet radio'], h_music: ['Musik-Datenbank', 'Music library'], h_room: ['Raumplan', 'Room plan'], h_autodj: ['Auto-DJ', 'Auto DJ'], h_artists: ['Interpreten', 'Artists'], h_albums: ['Alben', 'Albums'], h_favs: ['Favoriten', 'Favourites'], h_missing: ['Fehlt mir', 'Missing songs'], h_damaged: ['Beschädigte Dateien', 'Damaged files'],
     stat_title: ['Statistik', 'Statistics'], h_health: ['Zustand', 'Health'], h_setpage: ['Einstellungen', 'Settings'],
     h_help: ['Hilfe', 'Help'], h_about: ['Über Light-Butler', 'About Light-Butler'],
   };

@@ -28,6 +28,8 @@ from . import marks_bulk
 from . import covers
 from . import artists as artists_mod
 from . import albums as albums_mod
+from . import radio as radio_mod
+from . import local_play
 from . import favorites as fav_mod
 from . import stars as stars_mod
 from . import missing as missing_mod
@@ -127,6 +129,10 @@ class ShowManager:
         self.favs = fav_mod.Favorites(self.store.base, self.artists.library, artists=self.artists, albums=self.albums)   # Favoriten (14.11.2026)
         self.missing = missing_mod.Missing(self.store.base, self.artists.library)                  # Merkliste Fehlt mir (14.11.2026)
         self.favs.stars = self.stars                                                    # 5 Sterne = Favorit, auch hier gesetzte
+        self.radio = radio_mod.Radio(self.store.base, opener=lambda req, timeout: (self.artist_opener or urllib.request.urlopen)(req, timeout=timeout))
+        show.radio = self.radio                                                         # Internetradio (21.11.2026): Titel -> Licht-Stil, Matrix
+        self.local = local_play.LocalPlay()
+        show.local = self.local                                                         # Musik-DB spielt im Browser (21.11.2026): nur Anzeige
         show.lyric_cache = ly.LyricCache(os.path.join(self.store.base, "_liedtexte.sqlite"))  # "_": zaehlt nicht als Show, shows/ bleibt beim Einspielen unberuehrt
         self.lyric_bulk = ly.LyricBulk(show.lyric_cache, lambda: show.mixxx.library() if getattr(show, "mixxx", None) is not None else [])
         self.lyric_bulk.resume()
@@ -622,6 +628,11 @@ class ShowManager:
             cache.store(title, dur, y["lines"], y.get("plain") or "")
         return {"lyrics": self.store.save_lyrics(name, y), "from": "lrclib"}
 
+    def _lib_item(self, path):
+        link = self.show.mixxx
+        lib = link.library_full() if link is not None and hasattr(link, "library_full") else []
+        return next((x for x in lib if x.get("path") == path), {})
+
     def _lib_path(self, title, dur):
         """Pfad am Mac zu Titel und Laenge (Mixxx-Bibliothek), '' wenn unbekannt."""
         link = self.show.mixxx
@@ -670,6 +681,96 @@ class ShowManager:
         if not path:
             path = self._lib_path(title, dur)
         return self.covers.for_path(path) if path else None
+
+    def radio_op(self, op, d):
+        r = self.radio
+        if op == "radio_report":                  # Helfer: Zustand und Titelfeld
+            return r.report(d)
+        if op == "radio_countries":
+            return {"countries": r.countries()}
+        if op == "radio_tags":
+            return {"tags": r.tags()}
+        if op == "radio_search":
+            return {"stations": r.search(d.get("cc") or "", d.get("tag") or "", d.get("q") or "")}
+        if op == "radio_slot_set":
+            r.slot_set(d.get("n"), d.get("st"))
+        elif op == "radio_slot_clear":
+            r.slot_clear(d.get("n"))
+        elif op == "radio_fav":
+            r.fav(d.get("st"), bool(d.get("on")))
+        elif op == "radio_play":
+            r.play(d.get("st"), d.get("slot"))
+        elif op == "radio_stop":
+            r.stop()
+        elif op == "radio_vol":
+            r.volume(d.get("v") if isinstance(d.get("v"), (int, float)) else 0.8)
+        else:
+            raise ValueError("unbekannter Befehl")
+        return r.state()
+
+    def matrix_song_text(self, song):
+        """Pixel-Matrix, Laufschrift: Interpret, Titel, Album zum laufenden Lied (Bibliothek, Internetradio oder Show)."""
+        rs = song.get("radio")
+        if rs:
+            return {"artist": rs.get("artist") or "", "title": rs.get("title") or "", "album": ""}
+        if song.get("path"):                       # Musik-DB im Browser: der Pfad ist bekannt
+            x = self._lib_item(song["path"])
+            return {"artist": x.get("artist") or song.get("artist") or "", "title": x.get("title") or song.get("title") or "",
+                    "album": x.get("album") or song.get("album") or ""}
+        title, dur = song.get("title") or "", song.get("dur") or 0
+        if song.get("show"):
+            try:
+                mx = (self.store.load(song["show"]).get("mixxx") or {})
+                title, dur = mx.get("title") or song["show"], mx.get("dur") or 0
+            except (ValueError, OSError):
+                title = song["show"]
+        path = self._lib_path(title, dur) if title else ""
+        link = self.show.mixxx
+        lib = link.library_full() if path and link is not None and hasattr(link, "library_full") else []
+        x = next((x for x in lib if x.get("path") == path), {})
+        return {"artist": x.get("artist") or "", "title": x.get("title") or title, "album": x.get("album") or ""}
+
+    def matrix_pictures(self, song):
+        """Pixel-Matrix (wled_matrix.py): Bilder zum laufenden Lied, nacheinander [("titel"|"interpret"|"album", JPEG)].
+        Nur, was es schon gibt (Cover der Lieder am Pi oder vom Musik-Rechner, Interpreten-Bild); ein gleiches Bild nur einmal.
+        Laeuft im eigenen Faden der Matrix, nie im Takt der Show."""
+        out = []
+
+        def add(kind, img):
+            if img and not any(img == x[1] for x in out):
+                out.append((kind, bytes(img)))
+        if song.get("show"):
+            add("titel", self.cover(show=song["show"]))
+        rs = song.get("radio")
+        if rs:                                     # Internetradio: Cover (iTunes), Interpret (falls in der Sammlung), Senderlogo
+            add("titel", self.radio.cover(rs.get("artist") or "", rs.get("title") or ""))
+            name = artists_mod.main_name(rs.get("artist") or "")
+            for k in dict.fromkeys(k for k in (artists_mod.key(name), artists_mod.key(artists_mod.split_first(name)[0])) if k):
+                pa = self.artists.path(k)
+                if os.path.isfile(pa):
+                    with open(pa, "rb") as f:
+                        add("interpret", f.read())
+                    break
+            add("sender", self.radio.logo(rs.get("uuid") or ""))
+            return out
+        path = song.get("path") or (self._lib_path(song.get("title") or "", song.get("dur") or 0) if song.get("title") else "")
+        if path and not out:
+            add("titel", self.covers.for_path(path))
+        link = self.show.mixxx
+        lib = link.library_full() if link is not None and hasattr(link, "library_full") else []
+        x = next((x for x in lib if x.get("path") == path), {}) if path else {}
+        name = artists_mod.main_name(x.get("artist") or "")
+        for k in dict.fromkeys(k for k in (artists_mod.key(name), artists_mod.key(artists_mod.split_first(name)[0])) if k):
+            p = self.artists.path(k)
+            if os.path.isfile(p):
+                with open(p, "rb") as f:
+                    add("interpret", f.read())
+                break
+        if path and str(x.get("album") or "").strip():
+            first = (self.albums.songs(self.albums.key_of_path(path)).get("songs") or [{}])[0].get("path")
+            if first:
+                add("album", self.covers.for_path(first))
+        return out
 
     PROG_FILE = "_programme_stick.json"
 
@@ -1181,6 +1282,10 @@ class ShowManager:
             return dict(self.favs.state(), conf=self.fav_conf(), n=n)
         if op == "stars_ack":                     # Musik-Rechner: in seine Warteschlange fuer Mixxx uebernommen
             return {"n": self.stars.ack(d.get("items") if isinstance(d.get("items"), list) else [])}
+        if op == "local_play":                    # Musik-DB: Lied im Browser (Hauptpanel Quelle Lokal, Matrix), nie aufs Licht
+            return {"local": self.local.report(d)}
+        if op.startswith("radio_"):               # Internetradio (Seite /musik/radio, 21.11.2026)
+            return self.radio_op(op, d)
         if op == "missing_add":                   # Merkliste Fehlt mir: Lied (Interpret, Titel, Album) oder Suchtext
             self.missing.add(d.get("a"), d.get("t"), d.get("al"), d.get("q"))
             return self.missing.state()
@@ -1507,6 +1612,8 @@ def handle_get(h, mgr):
         return _static(h, "cd.html")
     if path == "/musik/defekt":                   # Beschaedigte Dateien finden und reparieren (Musik-Rechner, 14.11.2026)
         return _static(h, "defekt.html")
+    if path == "/musik/radio":                    # Internetradio (21.11.2026)
+        return _static(h, "radio.html")
     if path == "/musik/fehlt":                    # Merkliste Fehlt mir (14.11.2026)
         return _static(h, "fehlt.html")
     if path == "/software":                       # Systemschema mit Download-Symbolen (Wunsch 15.11.2026)
@@ -1685,6 +1792,23 @@ def handle_get(h, mgr):
             link = mgr.show.mixxx
             x = next((x for x in (link.library_full() if link is not None and hasattr(link, "library_full") else []) if x.get("path") == p), {})
             _json(h, {"r": mgr.stars.eff(p, x.get("rating") or 0)})
+        elif path == "/api/sm/radio":                        # Internetradio: Plaetze, Favoriten, Zustand, Eingang am Licht-Rechner
+            cur = str(getattr(getattr(mgr.show, "src", None), "dev_name", "") or "")
+            _json(h, dict(mgr.radio.state(), input=cur, net=cur == "Musik-Rechner (Netzwerk)", sim=not cur))
+        elif path == "/api/sm/radio_want":                   # Helfer am Musik-Rechner: welcher Sender spielen soll
+            _json(h, mgr.radio.want_info())
+        elif path in ("/api/sm/radio_logo", "/api/sm/radio_cover"):
+            if path.endswith("logo"):
+                img = mgr.radio.logo((q.get("u") or [""])[0])
+            else:
+                sg = mgr.radio.song()
+                img = mgr.radio.cover(sg["artist"], sg["title"]) if sg else None
+            if img is None:
+                h._send(404, b"kein Bild", "text/plain", {"Cache-Control": "max-age=30"})
+            else:
+                ct = ("image/png" if img[:4] == b"\x89PNG" else "image/gif" if img[:3] == b"GIF" else "image/webp" if img[:4] == b"RIFF"
+                      else "image/x-icon" if img[:4] == b"\x00\x00\x01\x00" else "image/jpeg")
+                h._send(200, img, ct, {"Cache-Control": "max-age=3600" if path.endswith("logo") else "no-cache"})
         elif path == "/api/sm/missing":                      # Merkliste Fehlt mir (ohne das, was inzwischen da ist)
             _json(h, mgr.missing.state())
         elif path == "/api/sm/favs":                         # Favoriten: was ein Herz hat (alle Seiten)

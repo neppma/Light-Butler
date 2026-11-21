@@ -315,6 +315,7 @@ If a red notice appears at the top, the music computer is unreachable or the mus
 1. Tap **▶** next to a song. The music comes directly from the music computer.
 2. At the bottom a bar appears with pause, position for jumping, time and volume. **✕** closes it.
 3. With the tick **Ab Hauptteil** (from the main part) the song starts where you can judge it well, for example at the chorus.
+4. While a song from the music library plays, the main page shows it with the source **Local**, with cover plus time; the pixel matrix shows pictures plus scrolling text for it. It has no effect on the light.
 
 ### Energy, key and BPM
 
@@ -411,6 +412,15 @@ The music comes from the music computer. Ideally play the Auto-DJ in the browser
 
 With the tick **Licht folgt dem Auto-DJ** (light follows the Auto-DJ, default on) the light works as with Mixxx, the top shows **Auto-DJ Deck A** or **B**. Laser, strobe and fog stay behind their permissions.
 
+## Internet radio
+
+With the round **radio** button at the top of the main page (or menu **☰** → **Internet radio**) you listen to radio stations from the internet, with the light running to it.
+
+- **Find stations:** choose country, genre or name, then **Suchen** (search). **♡** marks favourites, **+** puts a station on one of the **12 preset slots**. Tapping a slot plays it, **Bearbeiten** (edit) empties slots.
+- **Playback** runs on the music computer in the **Light-Butler helper**, at the volume from the page. It also sends the sound to the Light-Butler; you may close the page.
+- **For the light** the Light-Butler needs the input **Musik-Rechner (Netzwerk)** (music computer, network); the page offers to switch.
+- If the station sends **artist and title**, you see them with a cover (on the page, at the top of the main page; the mouse over it enlarges it), the light takes the matching **style**, and the pixel matrix shows cover and station logo. Other texts (programme, news) are shown as info only. Traffic news and radio text are not available over the internet.
+
 ## DJ software and music computer
 
 ### Mixxx
@@ -439,7 +449,7 @@ If the music plays on the music computer (for example Spotify, YouTube), the Hel
 brew install blackhole-2ch
 ```
 
-2. In the app **Audio MIDI Setup** create a **Multi-Output Device**: tick your speakers plus "BlackHole 2ch", the same rate everywhere (44100 Hz).
+2. In the app **Audio MIDI Setup** create a **Multi-Output Device**: tick your speakers plus "BlackHole 2ch", tick **Drift Correction** for BlackHole, the same rate everywhere (44100 Hz). Without drift correction the sound to the Light-Butler can break off after a while, even though you still hear it on the Mac.
 3. Choose this device in System Settings under **Sound → Output**.
 4. If macOS asks for **microphone access** for the Helper: allow it.
 5. In the panel under **Audio input** choose the input **Musik-Rechner (Netzwerk)** (music computer, network).
@@ -541,6 +551,7 @@ Under **⚙** → **General settings** → **Connections** you see all network d
 
 - **WLED:** in WLED the **transition time must be 0**, and presets must have no transition of their own, otherwise the strip does not flash on the beat.
 - **Nanoleaf:** you change address and key under **Fixtures** → **Edit**. If the panels cannot keep up with strobe, lower the **strobe limit for Nanoleaf**.
+- **Pixel matrix:** a WLED with a 2D matrix (for example 32 × 32 LEDs) shows patterns of its own to the music: plasma, rings on the beat, level, sparks, tunnel, plus snake (tunnel with curves), grid (tiles flash on the beat), scanner (bars shoot across), explosion (ring of sparks on every kick), kaleidoscope, glitch (picture briefly disturbed). **Auto** changes with the music: scanner in the build-up, explosion with grid at the drop, otherwise another pattern each phrase (all in turn, the scanner too). If dark areas look brighter on the matrix than in the preview, raise **Contrast (gamma)** (default 2.2). **Follows loudness** (default 70 %) makes quiet passages darker, loud ones fully bright, as fast as the music; 0 = off. **Lyrics** (default off): if the song has lyrics with times (like the line in the main panel), the matrix shows the sung line as scrolling text or word by word, only in the chorus (lines that occur several times in the song) or always. Under **Settings** → **Pixel matrix** you enter the address (or **Im Netz suchen**, search network: all WLEDs in the network in a list, matrices first, the size is taken over), see a preview and switch **Send** on. The **test picture** checks rotation and wiring. While a song plays, the matrix now and then shows the cover, the artist picture, the album cover for a few seconds each (only those that exist), then the effect returns. A **scrolling text** with artist, title, album comes with it: A one big line, B three small lines, C cover with a band, D word by word on the beat, **Auto** a different one of the four each time (choice, speed on the page pixel matrix). During silence the matrix goes dark. The state of the pictures (no song, loaded, no picture) is shown on the page below the preview. Off by default; without strobe permission the music triggers something new at most twice a second. If the matrix does not answer (switched off, unplugged), sending pauses until it is back; with sending off it is neither checked nor reported.
 
 ### HomeMatic (Home)
 
@@ -578,7 +589,7 @@ The gear **⚙** at the top opens the page **Settings**. It has two large expand
 | --- | --- |
 | **General settings** | connections, home, backup, MIDI controller, audio input plus output, fog, track recognition and panel |
 | **Settings (auto detection)** | how AUTO reads the music: silence, kick and beat, energy, phases, levels, strobe, laser, scene automation, ambience, Mixxx prediction |
-| **Devices** | Fixtures, room plan, APC mini · Mapping, ROLI Lumi · Mapping |
+| **Devices** | Fixtures, room plan, pixel matrix, APC mini · Mapping, ROLI Lumi · Mapping |
 | **Tools** | DMX monitor, DMX debugger |
 | **Software for other computers** | system diagram and downloads of the installation packages |
 

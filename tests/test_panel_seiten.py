@@ -15,7 +15,7 @@ blk = p[gen:auto]
 check(all(i in blk for i in ('id="sysbox"', 'id="homebox"', 'id="bkbox"', 'id="midibox"', 'id="audiobox"', 'id="genset"')),
       "allgemein: Verbindungen, Haus, Sicherung, MIDI, Audio und Platz fuer die Gruppe Panel")
 check('id="setlist"' in p[auto:fxl], "Auto-Erkennung: Liste der Einstellungen im zweiten Bereich")
-check("(GEN_GROUPS.includes(g.group)&&gen?gen:box).appendChild(d)" in p and "const GEN_GROUPS=['Ausgabe','Haus','Nebel','Titelerkennung','Panel'];" in p,
+check("(GEN_GROUPS.includes(g.group)&&gen?gen:box).appendChild(d)" in p and "const GEN_GROUPS=['Ausgabe','Haus','Nebel','Titelerkennung','Panel','Pixel-Matrix'];" in p,
       "Gruppen Ausgabe, Haus, Nebel, Titelerkennung und Panel stehen unter den allgemeinen Einstellungen")
 import settings
 groups = {getattr(settings, n) for n in ("G_OUT", "G_HOME", "G_FOG", "G_PANEL")}

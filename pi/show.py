@@ -39,6 +39,7 @@ from audio import Analyzer, Simulator, key_label, meter_label
 import laser_show
 from scenes import COLORS as SCENE_COLORS
 from showman.lyrics import line_end as lyric_end
+from showman.lyrics import repeats as lyric_repeats
 from genre_style import GENRE_STYLE, STYLES, GenreStyles, genre_style  # noqa: F401  (Genre-Stile aus Mixxx)
 from scenes import (CYCLE_BEATS, COLOR_LABELS, KIND_LABELS, MIX_BUTTONS, MIX_LABELS, MOVE_LABELS, SPEEDS, Scene, SceneEngine,
                     default_scenes, fine_speed, load_scenes, save_scenes, scene_from_dict)
@@ -194,6 +195,7 @@ class Show:
         self.glevel = {k: 1.0 for k, _ in GROUP_LABELS}     # Helligkeit je Lichtgruppe (Gruppen-Fader), 1.0 = voll
         self.lyric_tap = None                               # von Hand angetippte Stelle: (Lied, Stelle, Zeit)
         self.lyric_cache = None                             # Liedzeilen je Lied aus Mixxx (showman.lyrics.LyricCache), vom Showmanager gesetzt
+        self.mlyr = None                                    # Pixel-Matrix, Liedtext: (Zeit der Abfrage, Quelle) alle 0,25 s
         self.solo_i = 0                                     # AUTO "Geraete der Reihe nach": wer gerade dran ist
         self._nano_fx = None                                # gerade gewaehlter Effekt des Nanoleaf (Showmanager)
         self.mx = None                                      # letzter Stand der Mixxx-Vorhersage
@@ -210,6 +212,9 @@ class Show:
                             if settings_file else None)     # Dimmer und Blitze pro Sekunde ueber den Neustart
         self.levels_dirty_t = None                          # seit wann ungespeicherte Aenderung
         self.wled_woken = False                             # WLED nach dem Start einmal eingeschaltet (Output.wake_wled)
+        self.matrix = None                                  # Pixel-Matrix per DDP (wled_matrix.Matrix, main setzt sie)
+        self.radio = None                                   # Internetradio (showman/radio.Radio, setzt der Showmanager)
+        self.local = None                                   # Musik-DB spielt im Browser (showman/local_play.LocalPlay), nur Anzeige
         self.cfg.seed("energy_bias", energy_bias)
         self.cfg.seed("flash_every", flash_every)
         if hasattr(src, "silence_db"):
@@ -722,6 +727,8 @@ class Show:
                 self.blitz_f += 1
         if self.output is not None:                            # Ausgabe sendet genau dieses Bild (kein Doppeln oder Auslassen)
             self.output.notify()
+        if self.matrix is not None:                            # Pixel-Matrix (wled_matrix.py): eigenes Ziel, liest nur den Zustand
+            self._matrix_tick(now, dt, f, new_beats, new_kicks, new_hats, frozen)
         self.build_prog = clamp01((now - self.build_start) / 10.0) if self.state == "build" else 0.0
         self._write_log(f, now)
         self._fog_tick()
@@ -1005,7 +1012,8 @@ class Show:
         """Titelerkennung (nur Anzeige, wirkt nie aufs Licht): neu erkannte Lieder kommen in die Liste auf /stats."""
         if self.titles is None:
             return
-        new = self.titles.tick(now, self.cfg["songrec_on"] > 0.5, self.cfg["songrec_every"], not f.silent, self._mixxx_has_title())
+        radio = self.radio is not None and self.radio.song() is not None       # Titel kommt vom Internetradio: kein Shazam noetig
+        new = self.titles.tick(now, self.cfg["songrec_on"] > 0.5, self.cfg["songrec_every"], not f.silent, self._mixxx_has_title() or radio)
         if new:
             if new["genre"]:
                 self.live_genres[new["genre"]] = self.live_genres.get(new["genre"], 0) + 1
@@ -1045,6 +1053,9 @@ class Show:
             if self.cfg["mixxx_genre_style"] < 0.5:
                 return None
             return self.gstyles.style_of_groups(m.get("grp")) or self.gstyles.style(m.get("genre"))   # Gruppe (Weihnachten) vor Genre
+        rs = self.radio.song() if self.radio is not None and not self._mixxx_has_title() else None
+        if rs and rs.get("genre") and self.cfg["radio_style"] >= 0.5:      # Internetradio: Genre zum Titelfeld (iTunes)
+            return self.gstyles.style(rs["genre"])
         song = self.titles.song if self.titles is not None and self.titles.active else None
         if song and self.cfg["songrec_style"] >= 0.5:
             return self.gstyles.style(song["genre"])
@@ -1079,6 +1090,44 @@ class Show:
     def _base_tier(self):
         """Stufe nach der Musik, oder die per Tempo-Knopf vorgegebene (Langsam = 1, Mittel = 2, Schnell = 3)."""
         return AUTO_SPEED_TIER.get(self.auto_speed, self.tier) if self.sc is None else self.tier
+
+    def _matrix_tick(self, now, dt, f, new_beats, new_kicks, new_hats, frozen):
+        """Zustand der Show fuer die Pixel-Matrix. Liest nur, aendert nichts am uebrigen Licht."""
+        c = "hue"
+        if self.auto_rainbow or self.auto_color == "rainbow":
+            c = "rainbow"
+        elif self.auto_color in ("white", "uv", "multi"):
+            c = self.auto_color
+        st = self.state
+        if st == "drop" and now - self.state_t >= max(0.8, self.cfg["drop_len_s"]):
+            st = "normal"
+        quiet = f.silent or self.override is not None or frozen
+        s = {"t": now, "dt": dt, "bpm": self.bpm, "beat": bool(new_beats) and not quiet, "kick": bool(new_kicks) and not quiet,
+             "hat": bool(new_hats) and not quiet and self.cfg["hat_amount"] > 0, "level": self.level_s,
+             "bass": f.bass, "mid": f.mid, "high": f.high, "hue": self.hue, "cmode": c, "state": st, "tier": self.eff_tier(),
+             "build_p": self.build_prog, "phrase": self.step // (8 * max(1, self.bar_len)), "strobe": bool(self.strobe),
+             "override": self.override, "frozen": frozen, "master": self.master * self.loud_k,
+             "dark": self.sc is not None and self.sc.special == "laser",
+             "master_raw": self.master,                            # Matrix mit eigener Huellkurve: ohne loud_k
+             "loud": (1.0 if self.loud_ref is None or f.silent else      # 1 = so laut wie die lauten Teile, 0 = pm_loud_db leiser
+                      clamp01(1.0 - (self.loud_ref - f.db_short) / max(1.0, self.cfg["pm_loud_db"])))}
+        m = self.mx or {}
+        if self.showman is not None and self.showman.active() and self.showman.doc_name:
+            s["song"] = {"show": self.showman.doc_name}            # Bilder zum Lied: Show mit eigener MP3
+        elif m.get("connected") and m.get("deck") is not None and m.get("title"):
+            s["song"] = {"title": m["title"], "dur": m.get("dur") or 0}
+        elif self.local is not None and self.local.song() is not None:
+            s["song"] = self.local.song()                          # Musik-DB im Browser: Bilder und Text ueber den Pfad
+        elif self.radio is not None and self.radio.song() is not None:
+            rs = self.radio.song()
+            s["song"] = {"title": rs["artist"] + " - " + rs["title"] + ("" if rs.get("done") else " (sucht)"), "radio": rs}   # Cover kommt nach
+        if self.cfg["pm_lyrics"] > 0.5:
+            s["lyric"] = self._matrix_lyric(now)
+        try:
+            self.matrix.tick(s, self.cfg)
+        except Exception as e:                                  # noqa: BLE001  die Matrix darf die Show nie anhalten
+            self.note = f"Pixel-Matrix: {e}"
+            self.matrix = None
 
     def eff_tier(self):
         """Wirksame Stufe: Break = ruhig, Build/Drop = Peak."""
@@ -1153,6 +1202,8 @@ class Show:
     def close(self):
         if self.levels_dirty_t is not None:
             self._levels_save()
+        if self.matrix is not None:                             # Dienstende: Matrix schwarz
+            self.matrix.close()
         if self.fog_hm_on:                                      # Dienstende: Nebelschub sofort aus
             self.fog_hm_on = False
             try:
@@ -1305,6 +1356,30 @@ class Show:
         elif "offset" in song:
             pos = song["offset"] + now - song["pos_t"]
         return {"src": "live", "name": name, "dur": 0.0, "lines": e["lines"], "plain": e["plain"], "pos": pos}
+
+    def _matrix_lyric(self, now):
+        """Pixel-Matrix (21.11.2026): die gesungene Zeile mit Anfang, Ende, Stelle und ob sie zum Refrain gehoert
+        (Zeile kommt im Lied mehrmals vor). Fragt die Quelle hoechstens alle 0,25 s, dazwischen laeuft die Stelle weiter."""
+        if self.mlyr is None or not (0 <= now - self.mlyr[0] < 0.25):
+            try:
+                src = self._lyric_source(now)
+            except Exception:                                   # noqa: BLE001  Liedtext haelt die Matrix nie auf
+                src = None
+            if src and src["pos"] is not None and src["lines"]:
+                key = (src["name"], len(src["lines"]))
+                rep = self.mlyr[3] if self.mlyr is not None and self.mlyr[2] == key else lyric_repeats(src["lines"])
+                self.mlyr = (now, src, key, rep)
+            else:
+                self.mlyr = (now, None, None, None)
+        t0, src, _, rep = self.mlyr
+        if src is None:
+            return None
+        s = dict(src, pos=src["pos"] + (now - t0))
+        i = self._lyric_index(s)
+        if i < 0:
+            return None
+        return {"text": s["lines"][i][1], "t0": s["lines"][i][0], "t1": lyric_end(s["lines"], i), "pos": s["pos"],
+                "chorus": i in rep, "i": i}
 
     @staticmethod
     def _lyric_index(s):
@@ -1926,6 +2001,11 @@ class Show:
                     self.cfg.set(k, v)
             if "reset" in d:
                 self.cfg.reset(None if d["reset"] == "all" else d["reset"])
+            if "matrix_ip" in d:                               # Adresse der Pixel-Matrix (matrix.json), leer = keine
+                if self.matrix is None:
+                    raise ValueError("Pixel-Matrix nicht verfuegbar")
+                h = self.matrix.set_host(d["matrix_ip"])
+                self.note = f"Pixel-Matrix: {h}" if h else "Pixel-Matrix: keine Adresse"
             if "solo_test" in d:                               # Einzel-Strobe eines Fixtures 3 s lang ausprobieren
                 if not self.strobe:
                     raise ValueError("Zuerst die Strobe-Erlaubnis einschalten (Knopf STROBE erlaubt oben)")
@@ -2786,6 +2866,8 @@ class Show:
                 "style_man": self.style_man or "auto", "style_eff": self._style_key() or "",
                 "master": round(self.master, 2), "strobe": self.strobe,
                 "sm_show": self.showman.doc_name if self.showman is not None and self.showman.active() else "",
+                "radio": self.radio.panel() if self.radio is not None else None,
+                "local": self.local.panel() if self.local is not None else None,
                 "dmx_debug": bool(getattr(self.output, "debug", None) is not None and self.output.debug.is_armed()),
                 "glevel": {k: round(v, 2) for k, v in self.glevel.items()},
                 "bpm": round(self.manual_bpm or self._bpm_show(), 1), "bpm_manual": self.manual_bpm is not None,
@@ -3625,6 +3707,9 @@ def main():
     from dmx import make_sender as _mk
     out = Output(rig, lambda ip: _mk(rig, ip, a.dry_run))
     show.output = out
+    from wled_matrix import Matrix                              # Pixel-Matrix (Einstellung pm_on, Standard aus)
+    show.matrix = Matrix(os.path.join(os.path.dirname(os.path.abspath(a.settings)), "matrix.json") if a.settings else None,
+                         dry=a.dry_run)
     if not a.simulate:                                          # Titelerkennung: im Panel einschalten, sonst ruht sie
         from songrec_id import TitleFinder
         show.titles = TitleFinder(a.rate, cmd=a.songrec_cmd)

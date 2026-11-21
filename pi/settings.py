@@ -32,6 +32,7 @@ G_SONG = "Titelerkennung"
 G_SCAUTO = "Szenen-Automatik"
 G_FOG = "Nebel"
 G_VEGA = "Moving-Head-Strahl"
+G_MATRIX = "Pixel-Matrix"
 
 DEFS = [
     # ---- Eingang und Stille -----------------------------------------------------------------
@@ -343,6 +344,8 @@ DEFS = [
       0.0, 0.0, 1.0, 1.0, "switch:Aus|An"),
     P(G_SONG, "songrec_every", "Abstand der Anfragen", "So oft fragt der Light-Butler nach dem Titel, solange Musik laeuft. Kuerzer findet neue Lieder schneller, schickt aber mehr Anfragen und kann von Shazam gebremst werden.",
       40.0, 20.0, 300.0, 5.0, "s"),
+    P(G_SONG, "radio_style", "Internetradio: Licht-Stil nach Genre", "An: Schickt ein Sender Interpret und Titel mit, sucht der Light-Butler das Genre (iTunes) und waehlt danach den Licht-Stil, wie bei Mixxx. Stil von Hand und Mixxx gehen vor.",
+      1.0, 0.0, 1.0, 1.0, "switch:aus|an"),
     P(G_SONG, "songrec_style", "Erkanntes Genre gibt den Stil vor", "An: Das Genre des erkannten Liedes gibt in AUTO den Stil vor (Farbpalette, Bewegung, Energie, weisse Blitze nur seltener), genau wie das Genre aus Mixxx. Zuordnung in der Tabelle Genre-Stile. Ein Stil von Hand und Mixxx gehen vor. Wirkt nur mit eingeschalteter Titelerkennung.",
       1.0, 0.0, 1.0, 1.0, "switch:Aus|An"),
     P(G_SONG, "energy_write", "Geschaetzte Energiestufe in die MP3 schreiben", "Lieder ohne Stufe im Tag bekommen am Musik-Rechner eine geschaetzte Stufe (im Panel mit Wellenlinie, zum Beispiel E6~). An: Die Mixxx-Bruecke schreibt sie in die MP3-Datei (ID3-Feld EnergyLevel, dazu der Vermerk geschaetzt). Die Musik selbst und die Zuordnung der Shows bleiben gleich. Eine vorhandene Stufe im Tag wird nie ueberschrieben. Aus: Die Schaetzung bleibt nur im Light-Butler. Mixxx zeigt das Feld nicht an.",
@@ -379,6 +382,35 @@ DEFS = [
       0.0, 0.0, 100.0, 1.0, "%"),
     P(G_AMB, "amb_idle", "Ambiente: Grundhelligkeit", "Theke, Couchtisch und Barlicht (Gruppe ambient) leuchten nie dunkler als das, auch in Stille und Pausen. Sie blinken nie mit; beim Strobe gehen sie fuer den Kontrast aus. 0 = Ambiente darf ganz dunkel werden.",
       0.25, 0.0, 0.6, 0.05, ""),
+    # ---- Pixel-Matrix (WLED, DDP) ----------------------------------------------------------------
+    P(G_MATRIX, "pm_on", "Pixel-Matrix ansteuern", "An: Der Light-Butler rechnet eigene Muster fuer eine WLED-Matrix (Adresse auf der Seite Pixel-Matrix) und schickt sie 40-mal pro Sekunde per DDP (UDP 4048). Aufs uebrige Licht wirkt das nie. Aus: nichts wird gesendet, WLED zeigt nach kurzer Zeit wieder sein eigenes Programm.",
+      0.0, 0.0, 1.0, 1.0, "switch:aus|an"),
+    P(G_MATRIX, "pm_pattern", "Pixel-Matrix: Muster", "Auto waehlt nach der Musik (Ruhe: Plasma, Break: Kaleidoskop, Aufbau: Scanner ueber dem Tunnel, Drop: Explosion und Strobo-Raster, je Phrase ein anderes Muster). Schlange: Tunnel mit Kurven. Raster: Kacheln blitzen auf den Beat. Scanner: Balken schiessen durchs Bild. Explosion: Funkenring bei jedem Kick. Kaleidoskop: gespiegelte Blume, dreht sich im Takt. Glitch: Bild wird kurz gestoert. Testbild: oben links rot, oben rechts gruen, unten links blau, Pfeil nach oben, damit Drehung und Reihenfolge stimmen.",
+      0.0, 0.0, 12.0, 1.0, "switch:Auto|Plasma|Ringe|Pegel|Funken|Tunnel|Testbild|Schlange|Raster|Scanner|Explosion|Kaleidoskop|Glitch"),
+    P(G_MATRIX, "pm_bright", "Pixel-Matrix: Helligkeit", "Hoechste Helligkeit der Matrix. Der General Dimmer wirkt zusaetzlich. Viele LEDs ziehen viel Strom: die Stromgrenze in WLED bleibt gueltig.",
+      0.5, 0.05, 1.0, 0.05, ""),
+    P(G_MATRIX, "pm_w", "Pixel-Matrix: Breite", "LEDs je Zeile (wie in WLED unter 2D eingestellt).", 32.0, 4.0, 64.0, 1.0, "LEDs"),
+    P(G_MATRIX, "pm_h", "Pixel-Matrix: Hoehe", "Anzahl der Zeilen.", 32.0, 4.0, 64.0, 1.0, "LEDs"),
+    P(G_MATRIX, "pm_rot", "Pixel-Matrix: Drehung", "Steht das Testbild schief, hier drehen.", 0.0, 0.0, 3.0, 1.0, "switch:0°|90°|180°|270°"),
+    P(G_MATRIX, "pm_pics", "Pixel-Matrix: Bilder zum Lied", "An: Laeuft ein Lied, blendet die Matrix nacheinander Cover, Bild des Interpreten und Album-Cover ein (nur was es gibt), danach kommt wieder der Effekt. Nicht im Aufbau und beim Drop.",
+      1.0, 0.0, 1.0, 1.0, "switch:aus|an"),
+    P(G_MATRIX, "pm_text", "Pixel-Matrix: Laufschrift", "Interpret, Titel und Album als Laufschrift, in derselben Folge wie die Bilder zum Lied. A: eine grosse Zeile. B: drei kleine Zeilen (Titel, Interpret, Album). C: Cover mit Laufband unten. D: Wort fuer Wort im Takt. Auto: jedes Mal eine andere der vier.",
+      1.0, 0.0, 5.0, 1.0, "switch:aus|A: eine Zeile|B: drei Zeilen|C: Cover mit Laufband|D: Wort für Wort|Auto"),
+    P(G_MATRIX, "pm_lyrics", "Pixel-Matrix: Liedtext", "Gibt es zum Lied einen Liedtext mit Zeiten (wie die Zeile im Hauptpanel), zeigt die Matrix die gesungene Zeile: als Laufschrift oder Wort fuer Wort. Refrain = nur Zeilen, die im Lied mehrmals vorkommen. Der Effekt laeuft gedaempft dahinter weiter.",
+      0.0, 0.0, 4.0, 1.0, "switch:aus|Refrain: Laufschrift|Refrain: Wort für Wort|immer: Laufschrift|immer: Wort für Wort"),
+    P(G_MATRIX, "pm_text_px", "Pixel-Matrix: Tempo der Laufschrift", "So viele Pixel laeuft die Schrift je Beat weiter (im Takt der Musik).",
+      8.0, 2.0, 16.0, 1.0, "px/Beat"),
+    P(G_MATRIX, "pm_pic_s", "Pixel-Matrix: Dauer je Bild", "So lange steht jedes Bild.", 4.0, 2.0, 15.0, 0.5, "s"),
+    P(G_MATRIX, "pm_pic_every", "Pixel-Matrix: Bilder wieder nach", "Nach so viel Effekt kommen die Bilder wieder. 0 = nur am Anfang des Liedes.",
+      60.0, 0.0, 600.0, 10.0, "s"),
+    P(G_MATRIX, "pm_gamma", "Pixel-Matrix: Kontrast (Gamma)", "LEDs leuchten anders als ein Bildschirm: ohne Korrektur (1,0) sind dunkle Stellen an der Matrix viel heller als in der Vorschau. 2,2 passt zur Vorschau; hoeher = dunkle Stellen noch dunkler. Ist in WLED selbst eine Gamma-Korrektur fuer Echtzeit-Daten an, hier 1,0 waehlen.",
+      2.2, 1.0, 3.0, 0.1, ""),
+    P(G_MATRIX, "pm_loud", "Pixel-Matrix: Helligkeit folgt Lautstaerke", "Staerke der eigenen Huellkurve: leise Stellen werden dunkler, laute ganz hell, schnell wie die Musik (nicht wie das uebrige Licht ueber eine Sekunde). 0 = aus, dann gilt nur die allgemeine Einstellung Helligkeit folgt Lautstaerke.",
+      0.7, 0.0, 1.0, 0.05, ""),
+    P(G_MATRIX, "pm_loud_db", "Pixel-Matrix: Bereich der Huellkurve", "So viel leiser als die lauten Teile des Liedes ist ganz dunkel (bis auf einen Rest).",
+      18.0, 6.0, 30.0, 1.0, "dB"),
+    P(G_MATRIX, "pm_serp", "Pixel-Matrix: Schlangenlinie", "An: jede zweite Zeile laeuft andersherum (Verkabelung im Zickzack). Nur noetig, wenn das Testbild zerrissen aussieht.",
+      0.0, 0.0, 1.0, 1.0, "switch:aus|an"),
 ]
 
 

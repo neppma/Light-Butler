@@ -1,0 +1,54 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Pixel-Matrix</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body { padding: 12px 16px 40px; max-width: 760px; margin: 0 auto; font-size: 14px; line-height: 1.5; }
+ .card { background: var(--pan); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 10px 0; }
+ #pv { display: block; width: 100%; max-width: 384px; aspect-ratio: 1; margin: 0 auto; background: #000; border-radius: 6px; image-rendering: pixelated; }
+ .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+ .row label { min-width: 110px; color: #aab; font-size: 13px; }
+ .pat { display: flex; flex-wrap: wrap; gap: 6px; }
+ .pat button.on, .seg button.on { outline: 2px solid #ff9a3c; }
+ .seg { display: flex; gap: 6px; }
+ input[type=text] { flex: 1; min-width: 160px; }
+ #st { font-size: 13px; color: #99a; text-align: center; margin-top: 6px; }
+ .dim { color: #889; font-size: 12px; }
+</style></head>
+<body>
+<div class="s2lnav" data-back="/settings" data-cur="settings" data-title="h_matrix">Pixel-Matrix</div>
+
+<div class="card">
+ <canvas id="pv" width="32" height="32"></canvas>
+ <div id="st">…</div>
+</div>
+
+<div class="card">
+ <div class="row"><label data-en="Send">Senden</label>
+  <div class="seg"><button id="off" data-en="off">aus</button><button id="on" data-en="on">an</button></div></div>
+ <div class="row"><label data-en="Address">Adresse</label>
+  <input type="text" id="ip" placeholder="192.168.0.50" autocomplete="off" spellcheck="false"><button id="ipsave" data-en="Save">Speichern</button></div>
+ <div class="row"><label data-en="Find">Suchen</label>
+  <button id="scan" data-en="Search network">Im Netz suchen</button><select id="found" style="display:none;flex:1;min-width:0"></select></div>
+ <div class="dim" id="scanst"></div>
+ <div class="dim" data-en="IP address of a WLED with a 2D matrix. In WLED nothing has to be set up: it shows the picture as soon as it arrives (DDP, UDP 4048) and returns to its own program a few seconds after the end.">IP-Adresse einer WLED mit 2D-Matrix. In WLED muss nichts eingestellt werden: Sie zeigt das Bild, sobald es kommt (DDP, UDP 4048), und kehrt wenige Sekunden nach dem Ende zu ihrem eigenen Programm zurück.</div>
+</div>
+
+<div class="card">
+ <div class="row"><label data-en="Pattern">Muster</label><div class="pat" id="pat"></div></div>
+ <div class="row"><label data-en="Scrolling text">Laufschrift</label><div class="seg" id="txt"></div></div>
+ <div class="row"><label data-en="Lyrics">Liedtext</label><div class="seg" id="lyr"></div></div>
+ <div class="row"><label data-en="Text speed">Tempo Schrift</label><input type="range" id="tpx" min="2" max="16" step="1" style="flex:1"><span id="tpxv" class="dim"></span></div>
+ <div class="row"><label data-en="Brightness">Helligkeit</label><input type="range" id="br" min="5" max="100" step="5" style="flex:1"><span id="brv"></span></div>
+ <div class="row"><label data-en="Contrast (gamma)">Kontrast (Gamma)</label><input type="range" id="gm" min="1" max="3" step="0.1" style="flex:1"><span id="gmv"></span></div>
+ <div class="row"><label data-en="Follows loudness">Folgt Lautstärke</label><input type="range" id="ld" min="0" max="1" step="0.05" style="flex:1"><span id="ldv"></span></div>
+ <div class="row"><label data-en="Size">Größe</label>
+  <input type="number" id="w" min="4" max="64" style="width:70px"> × <input type="number" id="h" min="4" max="64" style="width:70px"> <span class="dim">LEDs</span></div>
+ <div class="row"><label data-en="Rotation">Drehung</label><div class="seg" id="rot"></div></div>
+ <div class="row"><label data-en="Zigzag">Schlangenlinie</label><div class="seg"><button id="s0" data-en="off">aus</button><button id="s1" data-en="on">an</button></div></div>
+ <div class="dim" data-en="Check with the test picture: top left red, top right green, bottom left blue, arrow pointing up. Without strobe permission beat, kick and hi-hat trigger something new at most twice a second.">Mit dem Testbild prüfen: oben links rot, oben rechts grün, unten links blau, Pfeil nach oben. Ohne Strobe-Erlaubnis lösen Beat, Kick und Hi-Hat höchstens zweimal pro Sekunde etwas Neues aus.</div>
+</div>
+<script src="/static/sm/nav.js"></script>
+<script src="/static/sm/matrix.js"></script>
+</body></html>

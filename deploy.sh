@@ -105,11 +105,22 @@ case "$1" in
     # Einspielen in einem Befehl (Wunsch 07.11.2026): nur das sudo-Passwort und das Beenden der Mixxx-App bleiben bei dir
     need_rsync
     echo "== 1/4 Was sich am Pi aendert =="
-    CHANGED="$(rsync -ain "${EXCL[@]}" pi/ "$PI:$DEST/" 2>/dev/null | awk '$1 ~ /^[<>c]f/ {print $2}')"
-    PROG="$(echo "$CHANGED" | grep -E '\.(py|yaml|service|sh)$' | grep -v '^static/' || true)"
+    # Vergleich mit dem Pi; schlaegt er fehl (Verbindung hakt), sicherheitshalber neu starten (Fehlerbericht 21.11.2026:
+    # Fehler wurde verschluckt, "keine Programmdateien", der Pi lief mit dem alten Programm weiter)
+    if RAW="$(rsync -ain "${EXCL[@]}" pi/ "$PI:$DEST/" 2>/dev/null)"; then
+      CHANGED="$(echo "$RAW" | awk '$1 ~ /^[<>c]f/ {print $2}')"
+      PROG="$(echo "$CHANGED" | grep -E '\.(py|yaml|service|sh)$' | grep -v '^static/' || true)"
+    else
+      PROG="(Vergleich mit dem Pi nicht moeglich, sicherheitshalber Neustart)"
+    fi
     if [ -n "$PROG" ]; then echo "Programmdateien:"; echo "$PROG" | sed 's/^/  /'; else echo "keine Programmdateien (nur Seiten oder nichts): kein Neustart noetig"; fi
     echo; echo "== 2/4 Kopieren auf den Pi (mit Tests) =="
     bash "$0" push
+    if [ -z "$PROG" ]; then
+      # Laeuft am Pi noch ein aelteres Programm als die Dateien dort (zum Beispiel von einem anderen Chat nur kopiert)?
+      STALE="$(ssh "$PI" 'p=$(systemctl show -p MainPID --value lichtshow 2>/dev/null); [ -n "$p" ] && [ "$p" != 0 ] && find '"$DEST"' -maxdepth 2 -name "*.py" -newermt "$(ps -o lstart= -p $p)" -print 2>/dev/null | head -5' 2>/dev/null || true)"
+      if [ -n "$STALE" ]; then PROG="$STALE"; echo; echo "Am Pi laeuft noch ein aelteres Programm als diese Dateien:"; echo "$STALE" | sed 's/^/  /'; fi
+    fi
     if [ -n "$PROG" ]; then
       echo; echo "== 3/4 Pi neu starten (das Licht ist ca. 5 s aus; sudo-Passwort am Pi eintippen) =="
       bash "$0" restart

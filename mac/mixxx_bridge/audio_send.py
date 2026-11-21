@@ -31,6 +31,7 @@ RATE = 44100                  # wie die Analyse am Pi
 FRAMES = 256                  # Bilder je Paket: 1024 Byte bei Stereo, passt ohne Fragmentierung in ein UDP-Paket
 HEAD = struct.Struct("<4sIIBB2x")
 HINT = "blackhole"
+STALL_S = 3.0                 # so lange ohne Block von Core Audio: Eingang neu oeffnen
 WIN_HINTS = ("cable output", "stereomix", "stereo mix", "line in", "line-in", "line-eingang", "leitungseingang")
 
 
@@ -75,7 +76,7 @@ def packets(x, seq):
 
 
 class AudioSender:
-    def __init__(self, pi_host, port=NET_PORT, hint=None, sd_mod=None, sock=None, log=print, paused=None):
+    def __init__(self, pi_host, port=NET_PORT, hint=None, sd_mod=None, sock=None, log=print, paused=None, mute=None):
         self.pi, self.sd, self.sock, self.log = (pi_host, port), sd_mod, sock, log
         self.hints = (hint.lower(),) if hint else default_hints()
         self.addr, self.addr_t = None, -99.0
@@ -83,21 +84,31 @@ class AudioSender:
         self.seq, self.rest = 0, None
         self.sent = 0
         self.paused = paused                          # Funktion: True = ein anderes Programm (Helfer) schickt den Ton
+        self.mute = mute                              # Funktion: True = Internetradio schickt gerade selbst; Eingang bleibt
+                                                      # offen (kein Oeffnen/Schliessen in Core Audio beim Senderwechsel)
         self.lock = threading.Lock()
         self._run = False
+        self.last_cb = None                           # wann Core Audio zuletzt einen Block geliefert hat
+        self.restarts = 0
+
+    def resolve(self):
+        """Adresse des Pi nachschlagen. Nie im Ton-Faden (Fehlerbericht 21.11.2026: Ton zum Pi riss ab, eine haengende
+        Namensabfrage hielt den Core-Audio-Faden auf); der Ton nimmt immer die zuletzt bekannte Adresse."""
+        try:
+            self.addr = (socket.gethostbyname(self.pi[0]), self.pi[1])
+        except OSError:
+            pass
+        self.addr_t = time.monotonic()
 
     def _target(self):
-        now = time.monotonic()
-        if self.addr is None or now - self.addr_t > 30.0:
-            self.addr_t = now
-            try:
-                self.addr = (socket.gethostbyname(self.pi[0]), self.pi[1])
-            except OSError:
-                pass
+        if self.addr is None and not self._run:        # ohne Faden (Tests, Radio): einmal hier
+            self.resolve()
         return self.addr
 
     def feed(self, block, rate):
         """Ein Block vom Audiogeraet (float32 [n, Kanaele]) -> umrechnen -> Pakete an den Pi."""
+        if self.mute is not None and self.mute():
+            return
         x = np.asarray(block, dtype=np.float32)
         if x.ndim == 1:
             x = x[:, None]
@@ -115,6 +126,7 @@ class AudioSender:
                 return
 
     def _callback(self, indata, frames, t, status):
+        self.last_cb = time.monotonic()
         self.feed(indata, self.dev_rate)
 
     def connect(self):
@@ -131,6 +143,7 @@ class AudioSender:
                     ch = min(2, d["max_input_channels"])
                     self.stream = self.sd.InputStream(device=i, channels=ch, samplerate=rate, blocksize=1024,
                                                       dtype="float32", callback=self._callback)
+                    self.last_cb = time.monotonic()
                     self.stream.start()
                     self.name, self.dev_rate = d["name"], rate
                     self.log(f"Ton: {self.name} ({rate} Hz) geht an {self.pi[0]}:{self.pi[1]}")
@@ -158,6 +171,8 @@ class AudioSender:
     def _loop(self):
         told, last_try = False, -99.0
         while self._run:
+            if self.addr is None or time.monotonic() - self.addr_t > 30.0:
+                self.resolve()
             if self.paused is not None and self.paused():          # Helfer laeuft: Ton schickt er
                 if self.stream is not None:
                     self.stop_stream()
@@ -174,6 +189,11 @@ class AudioSender:
             elif not self.stream.active:              # Geraet weg (zum Beispiel BlackHole entfernt)
                 self.log("Ton: Eingang beendet, suche neu")
                 self.stop_stream()
+            elif self.last_cb is not None and time.monotonic() - self.last_cb > STALL_S:
+                self.restarts += 1                     # Core Audio liefert nichts mehr, obwohl der Eingang offen ist
+                self.log("Ton: %s liefert seit %.0f s nichts, oeffne neu" % (self.name, time.monotonic() - self.last_cb))
+                self.stop_stream()
+                last_try = -99.0
             time.sleep(1.0)
 
     def stop_stream(self):

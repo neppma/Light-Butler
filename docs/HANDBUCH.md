@@ -315,6 +315,7 @@ Steht oben ein roter Hinweis, ist der Musik-Rechner nicht erreichbar oder der Mu
 1. **▶** bei einem Lied antippen. Die Musik kommt direkt vom Musik-Rechner.
 2. Unten erscheint eine Leiste mit Pause, Position zum Springen, Zeit und Lautstärke. **✕** schließt sie.
 3. Mit dem Haken **Ab Hauptteil** beginnt das Lied dort, wo man es gut beurteilen kann, zum Beispiel beim Refrain.
+4. Solange ein Lied aus der Musik-Datenbank spielt, zeigt die Hauptseite es mit der Quelle **Lokal**, mit Cover und Zeit; die Pixel-Matrix zeigt Bilder und Laufschrift dazu. Aufs Licht wirkt das nicht.
 
 ### Energie, Tonart und BPM
 
@@ -411,6 +412,15 @@ Die Musik kommt vom Musik-Rechner. Am besten spielst du den Auto-DJ im Browser a
 
 Mit dem Häkchen **Licht folgt dem Auto-DJ** (Standard an) arbeitet das Licht wie mit Mixxx, oben steht **Auto-DJ Deck A** oder **B**. Laser, Strobe und Nebel bleiben hinter ihren Freigaben.
 
+## Internetradio
+
+Über den runden Knopf mit dem **Radio** oben auf der Hauptseite (oder Menü **☰** → **Internetradio**) hörst du Radiosender aus dem Internet, und das Licht läuft dazu.
+
+- **Sender finden:** Land, Genre oder Name wählen, **Suchen**. Mit **♡** markierst du Favoriten, mit **+** legst du einen Sender auf einen der **12 Programmplätze**. Antippen eines Platzes spielt ihn, **Bearbeiten** leert Plätze.
+- **Gespielt** wird am Musik-Rechner vom **Light-Butler Helfer**, mit der Lautstärke von der Seite. Er schickt den Ton auch an den Light-Butler; die Seite darf man schließen.
+- **Fürs Licht** muss am Light-Butler der Eingang **Musik-Rechner (Netzwerk)** gewählt sein; die Seite bietet das Umschalten an.
+- Schickt der Sender **Interpret und Titel** mit, siehst du sie mit Cover (auf der Seite und oben auf der Hauptseite, Maus darüber vergrößert), das Licht nimmt den passenden **Stil**, und die Pixel-Matrix zeigt Cover und Senderlogo. Andere Texte (Sendung, Nachrichten) stehen nur als Info da. Verkehrsfunk und Radiotext gibt es über das Internet nicht.
+
 ## DJ-Software und Musik-Rechner
 
 ### Mixxx
@@ -439,7 +449,7 @@ Läuft die Musik am Musik-Rechner (zum Beispiel Spotify, YouTube), schickt der H
 brew install blackhole-2ch
 ```
 
-2. Im Programm **Audio-MIDI-Setup** ein **Gerät mit mehreren Ausgängen** anlegen: deine Lautsprecher und „BlackHole 2ch“ anhaken, überall dieselbe Rate (44100 Hz).
+2. Im Programm **Audio-MIDI-Setup** ein **Gerät mit mehreren Ausgängen** anlegen: deine Lautsprecher und „BlackHole 2ch“ anhaken, bei BlackHole die **Driftkorrektur** anhaken, überall dieselbe Rate (44100 Hz). Ohne Driftkorrektur kann der Ton zum Light-Butler nach einer Weile abreißen, obwohl du am Mac weiter hörst.
 3. In den Systemeinstellungen unter **Ton → Ausgabe** dieses Gerät wählen.
 4. Fragt macOS nach dem **Mikrofon-Zugriff** für den Helfer: erlauben.
 5. Im Panel unter **Audio-Eingang** den Eingang **Musik-Rechner (Netzwerk)** wählen.
@@ -541,6 +551,7 @@ Unter **⚙** → **Einstellungen allgemein** → **Verbindungen** siehst du all
 
 - **WLED:** In WLED muss die **Übergangszeit auf 0** stehen, und Presets dürfen keinen eigenen Übergang enthalten, sonst blitzt der Streifen nicht im Takt.
 - **Nanoleaf:** Adresse und Schlüssel änderst du unter **Fixtures** → **Bearbeiten**. Kommen die Panels beim Strobe nicht mit, die **Strobe-Grenze: Nanoleaf** senken.
+- **Pixel-Matrix:** Eine WLED mit 2D-Matrix (zum Beispiel 32 × 32 LEDs) zeigt eigene Muster zur Musik: Plasma, Ringe auf den Beat, Pegel, Funken, Tunnel, dazu Schlange (Tunnel mit Kurven), Raster (Kacheln blitzen im Takt), Scanner (Balken schießen durchs Bild), Explosion (Funkenring bei jedem Kick), Kaleidoskop und Glitch (Bild kurz gestört). **Auto** wechselt nach der Musik: im Aufbau Scanner, beim Drop Explosion und Raster, sonst je Phrase ein anderes Muster (alle der Reihe nach, auch der Scanner). Wirken dunkle Stellen an der Matrix heller als in der Vorschau, stellst du **Kontrast (Gamma)** höher (Standard 2,2). **Folgt Lautstärke** (Standard 70 %) macht leise Stellen dunkler und laute ganz hell, schnell wie die Musik; 0 = aus. **Liedtext** (Standard aus): Gibt es zum Lied einen Liedtext mit Zeiten (wie die Zeile im Hauptpanel), zeigt die Matrix die gesungene Zeile als Laufschrift oder Wort für Wort, nur im Refrain (Zeilen, die im Lied mehrmals vorkommen) oder immer. Unter **Einstellungen** → **Pixel-Matrix** gibst du die Adresse ein (oder **Im Netz suchen**: alle WLEDs im Netz in einer Auswahl, Matrizen zuerst, die Größe wird übernommen), siehst eine Vorschau und schaltest **Senden** ein. Mit dem **Testbild** prüfst du Drehung und Verkabelung. Läuft ein Lied, blendet die Matrix ab und zu für ein paar Sekunden das Cover, das Bild des Interpreten und das Album-Cover ein (nur was es gibt), danach kommt wieder der Effekt. Dazu läuft eine **Laufschrift** mit Interpret, Titel und Album: A eine große Zeile, B drei kleine Zeilen, C Cover mit Laufband, D Wort für Wort im Takt, **Auto** jedes Mal eine andere der vier (Wahl und Tempo auf der Seite Pixel-Matrix). Bei Stille wird die Matrix dunkel. Was mit den Bildern ist (kein Lied, geladen, kein Bild), steht auf der Seite unter der Vorschau. Standard ist aus; ohne Strobe-Erlaubnis löst die Musik höchstens zweimal pro Sekunde etwas Neues aus. Antwortet die Matrix nicht (ausgeschaltet, ausgesteckt), pausiert das Senden, bis sie wieder da ist; mit Senden aus wird sie weder geprüft noch gemeldet.
 
 ### HomeMatic (Haus)
 
@@ -578,7 +589,7 @@ Das Zahnrad **⚙** oben öffnet die Seite **Einstellungen**. Sie hat zwei groß
 | --- | --- |
 | **Einstellungen allgemein** | Verbindungen, Haus, Sicherung, MIDI-Controller, Audio-Eingang sowie Ausgabe, Nebel, Titelerkennung und Panel |
 | **Einstellungen (Auto-Erkennung)** | wie AUTO die Musik deutet: Stille, Kick und Beat, Energie, Phasen, Stufen, Strobe, Laser, Szenen-Automatik, Ambiente, Mixxx-Vorhersage |
-| **Geräte** | Fixtures, Raumplan, APC mini · Belegung, ROLI Lumi · Belegung |
+| **Geräte** | Fixtures, Raumplan, Pixel-Matrix, APC mini · Belegung, ROLI Lumi · Belegung |
 | **Technik** | DMX-Monitor, DMX-Debugger |
 | **Software für andere Rechner** | Systemschema und Downloads der Installationspakete |
 

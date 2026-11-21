@@ -5,6 +5,7 @@ helper.py - "Light-Butler Helfer": APC mini mk2 und Ton vom MacBook an den Light
   * APC am Mac: Tasten und Fader per UDP 9021 an den Pi, LED-Farben zurueck (apc_relay.py)
   * ROLI LUMI Keys am Mac: Noten per UDP 9023 an den Pi (apc_relay.lumi_relay)
   * Ton vom Mac: Kopie des Systemtons ueber BlackHole per UDP 9022 an den Pi, Eingang "Mac (Netzwerk)" (audio_send.py)
+  * Internetradio (radio_play.py): Sender, den das Panel waehlt, spielen und per UDP 9022 an den Pi schicken (BlackHole ruht dann)
   * Liedliste ohne Mixxx (LibraryPart): Mixxx-Lieder aus der letzten Kopie der Datenbank (~/Light-Butler-Daten/mixxxdb.sqlite) und die
     MP3s im Musikordner (folder_lib.py) per UDP 9020 an die Musik-Datenbank am Pi, Vorhoeren auf Port 9025, Energie und
     Tonart schaetzen, Aufbau und Drops im Hintergrund analysieren. Derselbe Teil wie in der Mixxx-Bruecke (mixxx_bridge.Forwarder),
@@ -237,6 +238,7 @@ def main(argv=None):
     ap.add_argument("--no-library", action="store_true", help="keine Liedliste, kein Vorhoeren, keine Schaetzung ohne Mixxx")
     ap.add_argument("--no-analysis", action="store_true", help="Aufbau und Drops nicht im Hintergrund analysieren")
     ap.add_argument("--no-stems", action="store_true", help="Pegelkurven-Waechter nicht starten")
+    ap.add_argument("--no-radio", action="store_true", help="Internetradio nicht abspielen")
     ap.add_argument("--db", default=os.path.join(S2L, "mixxxdb.sqlite"), help="Kopie der Mixxx-Datenbank (von der App Light-Butler Mixxx)")
     ap.add_argument("--analysis-dir", default=os.path.join(S2L, "analysis"), help="Ordner der Analysen (wie die Mixxx-Bruecke)")
     ap.add_argument("--music-root", default=None, help="Musikordner (Reserve, der Ordner aus dem Panel geht vor; Standard MUSIC_ROOT aus config.sh)")
@@ -257,9 +259,16 @@ def main(argv=None):
             r = lumi_relay(a.pi, a.lumi_port, log=log)
             if r.start():
                 parts.append(r)
+        radio = None
+        if not a.no_radio:                                 # Internetradio (Seite /musik/radio): spielt und schickt den Ton selbst
+            from radio_play import RadioPlayer
+            radio = RadioPlayer(a.pi, port=a.audio_port, log=log)
+            if radio.start():
+                parts.append(radio)
         if not a.no_audio:
             from audio_send import AudioSender
-            s = AudioSender(a.pi, a.audio_port, hint=a.audio_device, log=log)
+            s = AudioSender(a.pi, a.audio_port, hint=a.audio_device, log=log,
+                            mute=(radio.playing if radio is not None else None))
             if s.start():
                 parts.append(s)
         if not a.no_library:
@@ -299,4 +308,10 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    code = main()
+    sys.stdout.flush()
+    sys.stderr.flush()
+    # Fehlerbericht 21.11.2026: ein in Core Audio haengender Ton-Faden hielt den Prozess nach "beendet" am Leben (PortAudio
+    # raeumt beim normalen Ende auf und wartet dabei ewig). Der naechste Start hielt ihn fuer laufend und ging wieder aus.
+    # Darum hart beenden, wenn alles aufgeraeumt und die Prozessdatei weg ist.
+    os._exit(code or 0)
