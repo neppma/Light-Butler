@@ -16,7 +16,8 @@ for n in sorted(os.listdir(SM)):
 
 for name, t in texte.items():
     fremd = [m for m in re.findall(r"<a [^>]*>", t) if ("_blank" in m or "target=" in m) and "S.reach_url" not in m
-             and 'target="lb_spotify"' not in m]          # Ausnahme (Wunsch 14.11.2026): Spotify-Suche im eigenen Fenster
+             and 'target="lb_spotify"' not in m      # Ausnahme (Wunsch 14.11.2026): Spotify-Suche im eigenen Fenster
+             and 'class="seclink extlink"' not in m]   # Ausnahme (24.11.2026): eigene Links zu Geraeten im Heimnetz          # Ausnahme (Wunsch 14.11.2026): Spotify-Suche im eigenen Fenster
     check(not fremd, f"{name}: kein Panel-Link mit neuem Tab {fremd[:2]}")
     rest = t.replace("window.open('', 'lb_autodj')", "").replace("window.open('','lb_autodj')", "")
     check("window.open(" not in rest, f"{name}: kein window.open (Ausnahme: das eigene Auto-DJ-Fenster)")

@@ -35,7 +35,7 @@ Light-Butler macht das Licht und auf Wunsch auch die Musik von allein. Du kümme
 - **Feine Wirkungen:** Helligkeit folgt der Lautstärke, Hi-Hat-Funkeln, Beat-Puls, Geräte der Reihe nach.
 - **40 Szenen** mit Szenen-Editor und Sofort-Knöpfe: STROBE, WOW! (aufbauender Strobo), SMOKE (Nebel), FREEZE, BLINDER, BLACKOUT und Laser. Alle außer AUTO wirken nur, solange du sie drückst.
 - **Titelerkennung** über Shazam: Titel und Interpret auch ohne DJ-Software, das Genre wählt den Licht-Stil.
-- **Liedtexte** laufen live zur Musik im Panel mit.
+- **Liedtexte** laufen live zur Musik im Panel mit. Zeilen in anderer Schrift (arabisch, chinesisch …) blendet der Haken **Liedtext nur in lateinischer Schrift** (Einstellungen allgemein → Titelerkennung, an) aus. Mit dem Haken **Schnittstelle: nur Refrain** (dort, aus) bekommen andere Geräte nur den Refrain statt des ganzen Textes.
 
 **Showmanager**
 
@@ -160,7 +160,7 @@ Alle außer AUTO sind **Taster**: Sie wirken nur, solange du drückst.
 
 - Bricht die Verbindung ab (Handy gesperrt, WLAN weg), lässt der Light-Butler einen gedrückten Knopf nach 1,5 Sekunden selbst los.
 - Darunter wählst du die **Blitze/s** (1 bis 10). Ohne Strobe-Erlaubnis sind die schnellen Stufen abgedunkelt.
-- **General Dimmer** stellt die Gesamthelligkeit ein. **Gruppen ▾** klappt je Lichtgruppe einen eigenen Regler auf (zum Beispiel Spider, Washes, Moving Head, Ambiente, Nanoleaf).
+- **General Dimmer** stellt die Gesamthelligkeit ein. **Gruppen ▾** klappt je Lichtgruppe einen eigenen Regler auf (zum Beispiel Spider, Washes, Moving Head, Ambiente, Nanoleaf). Der Regler **API** wirkt auf kein Licht, er dämpft nur die Helligkeit, die andere Geräte über die Schnittstelle bekommen, etwa ein Dashboard am Fernseher.
 
 ### Speed und Stil
 
@@ -419,6 +419,8 @@ Mit dem Häkchen **Licht folgt dem Auto-DJ** (Standard an) arbeitet das Licht wi
 - **Sender finden:** Land, Genre oder Name wählen, **Suchen**. Mit **♡** markierst du Favoriten, mit **+** legst du einen Sender auf einen der **12 Programmplätze**. Antippen eines Platzes spielt ihn, **Bearbeiten** leert Plätze.
 - **Gespielt** wird am Musik-Rechner vom **Light-Butler Helfer**, mit der Lautstärke von der Seite. Er schickt den Ton auch an den Light-Butler; die Seite darf man schließen.
 - **Fürs Licht** muss am Light-Butler der Eingang **Musik-Rechner (Netzwerk)** gewählt sein; die Seite bietet das Umschalten an.
+- **Ton: dieses Gerät** (Schalter neben Stopp, je Gerät gemerkt): Dann spielt der Browser selbst, zum Beispiel am Fernseher, und der Musik-Rechner bleibt still. Titel, Cover und Stil gibt es trotzdem. Hängt das Gerät am **Line-In** des Light-Butler, stellt der Haken darunter den Eingang beim Abspielen auf Line-In und danach wieder zurück. Manche Geräte starten den Ton erst nach einem Tipp auf **▶ Ton hier starten**.
+- **📺 Fernseher-Ansicht** (Knopf bei den Programmplätzen, je Gerät gemerkt): zeigt nur, was läuft, und die Programmplätze, groß und mit den Pfeiltasten und OK der Fernbedienung wählbar. Der Ton spielt dann immer auf diesem Gerät mit Line-In. Am Fernseher schaltet sie sich beim ersten Aufruf von selbst ein; **↩ Normale Ansicht** schaltet zurück.
 - Schickt der Sender **Interpret und Titel** mit, siehst du sie mit Cover (auf der Seite und oben auf der Hauptseite, Maus darüber vergrößert), das Licht nimmt den passenden **Stil**, und die Pixel-Matrix zeigt Cover und Senderlogo. Andere Texte (Sendung, Nachrichten) stehen nur als Info da. Verkehrsfunk und Radiotext gibt es über das Internet nicht.
 
 ## DJ-Software und Musik-Rechner
@@ -538,6 +540,8 @@ Auf der Seite **Raumplan** (Menü **☰**) zeichnest du ein, wo deine Geräte im
 3. Ein Gerät antippen, um Lage, Blickrichtung und Länge (bei LED-Streifen) genau einzustellen. **+ Stück** fügt einem Streifen ein weiteres Stück hinzu.
 4. **Speichern**.
 
+Auch die **Pixel-Matrix** und die **API-Anzeige** (ein Fernseher oder Bildschirm, der Takt und Liedtext über die Schnittstelle zeigt) lassen sich einzeichnen. Sie sind nur Anzeigen: aufs Licht und auf den Show-Assistenten wirken sie nicht.
+
 ### Verbindungen und Ausgänge
 
 Unter **⚙** → **Einstellungen allgemein** → **Verbindungen** siehst du alle Netzwerk-Geräte und ob sie erreichbar sind. Ein Tipp auf die Adresse öffnet ihre Weboberfläche.
@@ -579,6 +583,15 @@ Mit dem **DMX-Debugger** (**⚙** → **Technik**) setzt du jeden DMX-Kanal einz
 - Der Taster **Kurz dunkel** (oder die Leertaste) setzt alle Kanäle auf 0, solange du hältst.
 - BLACKOUT geht immer vor. Der Debugger geht beim Schließen der Seite und nach 2 Sekunden ohne Verbindung aus.
 
+### Eichstück
+
+Das **Eichstück** (**⚙** → **Technik**) prüft, wie gut der Light-Butler Musik erkennt.
+
+- Es ist ein Prüfstück von 3 Minuten mit festen Abschnitten: Stille, Musik ohne Beat, Beat, Break, Aufbau, Drop und ein weicher Beat.
+- Spiel es auf dem Gerät ab, dessen Ton zum Light-Butler kommt, in normaler Lautstärke und ohne andere Musik dazu.
+- Die Seite zeigt laufend, was erkannt wird, und am Ende je Abschnitt, wie viel davon richtig war.
+- Mit demselben Stück lassen sich Einstellungen vorher und nachher vergleichen.
+
 ## Einstellungen
 
 Das Zahnrad **⚙** oben öffnet die Seite **Einstellungen**. Sie hat zwei große aufklappbare Bereiche und darunter Links zu weiteren Seiten.
@@ -590,7 +603,8 @@ Das Zahnrad **⚙** oben öffnet die Seite **Einstellungen**. Sie hat zwei groß
 | **Einstellungen allgemein** | Verbindungen, Haus, Sicherung, MIDI-Controller, Audio-Eingang sowie Ausgabe, Nebel, Titelerkennung und Panel |
 | **Einstellungen (Auto-Erkennung)** | wie AUTO die Musik deutet: Stille, Kick und Beat, Energie, Phasen, Stufen, Strobe, Laser, Szenen-Automatik, Ambiente, Mixxx-Vorhersage |
 | **Geräte** | Fixtures, Raumplan, Pixel-Matrix, APC mini · Belegung, ROLI Lumi · Belegung |
-| **Technik** | DMX-Monitor, DMX-Debugger |
+| **Eigene Links** | Knöpfe zu eigenen Geräten im Heimnetz, zum Beispiel einem Dashboard am Fernseher: Adresse und Port eintragen (oder eine ganze Adresse mit Pfad einfügen), **Weiter**, Namen vergeben, **Speichern**. Der Knopf öffnet die Seite in einem neuen Tab, **✕** entfernt ihn |
+| **Technik** | DMX-Monitor, DMX-Debugger, Eichstück |
 | **Software für andere Rechner** | Systemschema und Downloads der Installationspakete |
 
 - Jede Änderung wirkt sofort und bleibt gespeichert.
@@ -612,6 +626,8 @@ Die ganze Automatik hängt am Musiksignal.
 4. Zu leise: **Verstärkung (Software)** erhöhen. Zu laut (rotes **ÜBERSTEUERT**): am Mischpult leiser stellen.
 
 Verwende einen Line-Eingang, keinen Mikrofon-Eingang.
+
+**Bluetooth:** Der Licht-Rechner kann Musik auch per Bluetooth empfangen, wie ein Lautsprecher. Unter **Audio-Eingang** → **Bluetooth-Empfänger** **Sichtbar machen** drücken (3 Minuten), am Handy „Light-Butler“ koppeln und oben den Eingang **Bluetooth** wählen. Einmal vorher einrichten: der Hinweis dort nennt den Befehl. Damit die Musik vom Handy trotzdem zu hören ist, wähle darunter bei **Ton weiterleiten an** eine Ausgabe des Licht-Rechners (Kopfhörer-Anschluss oder USB-Soundkarte ins Mischpult). Dasselbe gibt es für den Ton vom Musik-Rechner: **Ton vom Musik-Rechner weiterleiten an**, falls der Musik-Rechner nicht am Mischpult hängt. Auch ein **Bluetooth-Lautsprecher** geht als Ausgabe: unter **Geräte suchen** finden, **Koppeln**, dann steht er in der Liste. Weil er etwas später spielt, lässt sich unter Einstellungen allgemein → Ausgabe die **Licht-Verzögerung** in Millisekunden einstellen (etwa 150 bis 250). Kommt der Bluetooth-Ton abgehackt und hängt der Licht-Rechner am Kabel, drücke dort **WLAN trennen** (Bluetooth und WLAN teilen sich den Funk).
 
 ### Die wichtigsten Schalter
 

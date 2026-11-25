@@ -22,7 +22,9 @@ check(abs(level(rig, sh, "theke", amb=0.5) - 0.5) < 1e-9, "Theke folgt Ambiente"
 # Jeder Regler hat Geraete
 used = {sw.GROUP_KEYS.get(f.group) for f in rig.fixtures} | {f.extra.get("fader") for f in rig.fixtures}
 for key, label in sw.GROUP_LABELS:
-    if key != "nano":
+    if key == "api":                              # API (23.11.2026): daempft nur /api/takt, nie ein Geraet
+        check(key not in used, "Regler API steuert kein Geraet")
+    elif key != "nano":
         check(key in used, f"Regler {label} steuert mindestens ein Geraet")
 # Ausgabe: Licht-Kanaele am Barlicht
 rig, sh = build(seed=2)

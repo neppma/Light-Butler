@@ -18,6 +18,8 @@ import urllib.parse
 import urllib.request
 import zlib
 
+from . import latin
+
 API = "https://lrclib.net/api/search"
 AGENT = "Light-Butler Lichtsteuerung"
 LINE_MAX_S = 12.0             # laenger steht eine Zeile nie, auch wenn der naechste Eintrag spaeter kommt
@@ -198,7 +200,8 @@ class LyricCache:
         if not row:
             return None
         v = json.loads(zlib.decompress(row[0]).decode("utf-8"))
-        return v if isinstance(v, dict) else {"lines": v, "plain": ""}
+        v = v if isinstance(v, dict) else {"lines": v, "plain": ""}
+        return {"lines": latin.lines(v.get("lines") or []), "plain": latin.plain(v.get("plain") or "")}   # Anzeige: lyrics_latin (gespeichert bleibt alles)
 
     def lookup(self, title, dur):
         """Zeilen aus der Datei, [] = gesucht und keine Zeiten gefunden, None = noch nie gesucht."""

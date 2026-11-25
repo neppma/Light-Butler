@@ -42,7 +42,7 @@ pk, _ = packets(y[:FRAMES * 10], 100)
 for p in pk[:4] + pk[5:]:                                       # Paket 104 fehlt
     n.receive(p, ("192.168.1.50", 5000))
 n.receive(pk[2], ("192.168.1.50", 5000))                        # doppelt/zu spaet
-check(all(b.shape == (512, 2) for b in blocks) and len(blocks) == (9 * FRAMES) // 512, "Bloecke wie von der Soundkarte (512 Samples)")
+check(all(b.shape == (512, 2) for b in blocks) and len(blocks) == (10 * FRAMES) // 512, "Bloecke wie von der Soundkarte (512 Samples), das fehlende Paket aufgefuellt (23.11.2026)")
 check(n.lost == 1 and n.status()["src"] == "192.168.1.50" and n.status()["alive"], "verlorene Pakete gezaehlt, Absender bekannt")
 
 # Senderwechsel (Fehlerbericht 01.11.2026): erst die Mixxx-App mit hohen Laufnummern, dann der frisch gestartete Helfer

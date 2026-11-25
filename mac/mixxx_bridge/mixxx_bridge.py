@@ -26,6 +26,11 @@ import urllib.request
 import unicodedata
 import zlib
 
+try:
+    import pi_addr                                      # erreichbare Adresse des Pi (Kabel/WLAN)
+except ImportError:                                     # alte Installation ohne die Datei
+    pi_addr = None
+
 PI_PORT = 9020
 DEFAULT_PORT = "Light-Butler" if sys.platform == "win32" else "IAC"     # Windows: virtueller Anschluss von loopMIDI
 SYSEX_ID = (0x7D, 0x53)          # nicht-kommerzielle Kennung + 'S', wie im Mixxx-Mapping
@@ -204,6 +209,8 @@ def send_udp(sock, data, addr):
     if time.monotonic() < _pi_retry:
         return
     try:
+        if pi_addr is not None:                         # Pi mit Kabel und WLAN: die Adresse, die antwortet (25.11.2026)
+            addr = (pi_addr.best(addr[0]), addr[1])
         sock.sendto(data, addr)
     except OSError as e:
         _pi_retry = time.monotonic() + PI_RETRY_S

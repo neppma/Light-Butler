@@ -24,6 +24,7 @@ def net_alias(name):
     """Alten Namen des Netzwerk-Eingangs auf den neuen abbilden."""
     return NET_NAME if name in OLD_NET_NAMES else name
 NET_PORT = 9022
+FILL_MAX_PKTS = 40        # verlorene Pakete bis zu dieser Zahl (rund 0,23 s) werden aufgefuellt, mehr = neu ansetzen
 MAGIC = b"S2LA"
 HEAD = struct.Struct("<4sIIBB2x")
 
@@ -44,12 +45,16 @@ def parse(pkt, rate):
 
 
 class NetAudioIn:
-    def __init__(self, deliver, rate=44100, hop=512, port=NET_PORT, sock=None):
+    def __init__(self, deliver, rate=44100, hop=512, port=NET_PORT, sock=None, out=None):
         self.deliver, self.rate, self.hop, self.port = deliver, rate, hop, port
+        self.out = out                         # bt_audio.PassThrough: Ton zusaetzlich an eine Ausgabe (25.11.2026)
+                                               # deliver None = nur weiterleiten (Eingang ist ein anderer)
         self.sock = sock
         self.buf = None
         self.last_seq, self.last_addr = None, None
+        self.last_x = None                     # letztes Paket, zum Auffuellen von Luecken
         self.src, self.t, self.packets, self.lost, self.error = "", None, 0, 0, ""
+        self.filled = 0                        # aufgefuellte Bilder (Proben je Kanal)
         self.channels = 2
         self._run = False
         self._thread = None
@@ -107,8 +112,15 @@ class NetAudioIn:
             if gap == 0 or gap > 0x7FFFFFFF:                  # doppelt oder zu spaet: verwerfen
                 return
             self.lost += gap - 1
+            if 1 < gap <= FILL_MAX_PKTS + 1 and self.last_x is not None and self.last_x.shape[1] == x.shape[1]:
+                x = np.concatenate([self.concealment(gap - 1, x.shape[0]), x])
         self.last_seq, self.last_addr = seq, addr
+        self.last_x = x[-max(1, min(len(x), 256)):]
         self.src, self.t, self.packets = addr[0], now, self.packets + 1
+        if self.out is not None:                               # dieselben Samples (mit Ersatz fuer Luecken) an die Ausgabe
+            self.out.write((np.clip(x, -1.0, 32767 / 32768.0) * 32768.0).astype("<i2").tobytes(), self.rate, x.shape[1])
+        if self.deliver is None:
+            return
         if self.buf is None or self.buf.shape[1] != x.shape[1]:
             self.buf = x[:0]
             self.channels = x.shape[1]
@@ -119,6 +131,19 @@ class NetAudioIn:
         if len(self.buf) > self.hop * 8:                       # Rueckstau (sollte nie passieren)
             self.buf = self.buf[-self.hop:]
 
+    def concealment(self, n_pkts, frames):
+        """Ersatz fuer verlorene Pakete (Eichstueck 23.11.2026: rund 1 % ging verloren, ohne Ersatz lief die Musik am
+        Licht-Rechner zu schnell, das Tempo war 1,5 % zu hoch, jede Luecke war ein harter Sprung): das letzte Paket
+        wiederholt, bei laengeren Luecken leiser (hoechstens auf 30 %), so viele Bilder wie fehlen. So bleibt die Zeit richtig und es knackt kaum."""
+        n = n_pkts * frames
+        last = self.last_x
+        rep = np.tile(last, (n // len(last) + 1, 1))[:n]
+        t = np.arange(n, dtype=np.float32) / self.rate
+        fade = np.maximum(0.3, 1.0 - t / 0.2)[:, None]       # kurze Luecken fast voll (kein Pegelsprung), lange leiser
+        self.filled += n
+        return (rep * fade).astype(np.float32)
+
     def status(self):
         alive = self.t is not None and time.time() - self.t < 2.0
-        return {"alive": alive, "src": self.src, "packets": self.packets, "lost": self.lost, "error": self.error}
+        return {"alive": alive, "src": self.src, "packets": self.packets, "lost": self.lost, "filled": self.filled,
+                "error": self.error}

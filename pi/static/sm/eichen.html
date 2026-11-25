@@ -1,0 +1,59 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Eichstück</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><meta name="theme-color" content="#171923">
+<link rel="stylesheet" href="/static/sm/sm.css">
+<style>
+ body { padding: 12px 16px 40px; max-width: 980px; margin: 0 auto; font-size: 14px; line-height: 1.45; }
+ .card { background: var(--pan); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 10px 0; }
+ h2 { font-size: 16px; margin: 18px 0 6px; }
+ .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+ .row button { min-height: 40px; padding: 0 18px; border-radius: 8px; font-weight: 600; }
+ #start { background: #2f8f4e; border: 0; color: #fff; }
+ #stop:disabled, #start:disabled { opacity: .45; }
+ #state { min-height: 22px; color: var(--dim); }
+ table { border-collapse: collapse; width: 100%; font-size: 13px; }
+ th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+ th { color: var(--dim); font-weight: 600; }
+ td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+ tr.cur td { background: #26304a; }
+ .ok { color: #3fbf6f; } .bad { color: #ff6b6b; } .mid { color: #e8a33a; } .dim { color: var(--dim); }
+ .strip { display: grid; grid-template-columns: 92px 1fr; gap: 3px 8px; align-items: center; font-size: 12px; }
+ .cells { display: flex; height: 14px; border-radius: 3px; overflow: hidden; background: #10121a; }
+ .cells i { flex: 1 1 0; min-width: 0; }
+ .c-ok { background: #2f8f4e; } .c-bad { background: #b03a3a; } .c-grace { background: #5a4a26; } .c-none { background: #2a2d3c; }
+ .secs { display: flex; height: 18px; font-size: 10px; color: #cfd3e6; }
+ .secs span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; border-left: 1px solid #10121a; padding-left: 2px; background: #2c3146; }
+ .secs span.sil { background: #1b1d28; color: #889; }
+ #live td { padding: 3px 6px; }
+ .scroll { overflow-x: auto; }
+</style></head>
+<body>
+<div class="s2lnav" data-back="/settings" data-cur="settings" data-title="h_eichen">Eichstück</div>
+
+<div class="card">
+ <p style="margin:0 0 6px" data-en="A test piece of 3 minutes with fixed sections: silence, music without a beat, beat 120 BPM, break, build-up, drop, soft beat 95 BPM. The page plays it, reads what the Light-Butler detects every quarter second and compares it with what is right.">Ein Prüfstück von 3 Minuten mit festen Abschnitten: Stille, Musik ohne Beat, Beat 120 BPM, Break, Aufbau, Drop, weicher Beat 95 BPM. Die Seite spielt es ab, liest jede Viertelsekunde mit, was der Light-Butler erkennt, und vergleicht es mit dem, was richtig ist.</p>
+ <p style="margin:0" class="dim" data-en="Play it on the device whose sound reaches the Light-Butler (music computer over the network, or a device on Line-In), at normal volume, with nothing else playing. Mixxx and the Auto-DJ should be quiet, otherwise their tempo counts.">Abspielen auf dem Gerät, dessen Ton zum Light-Butler kommt (Musik-Rechner über das Netz oder ein Gerät am Line-In), in normaler Lautstärke, sonst nichts dazu. Mixxx und Auto-DJ sollen still sein, sonst zählt deren Tempo.</p>
+</div>
+
+<div class="row">
+ <button id="start" data-en="▶ Start from the beginning">▶ Von vorn starten</button>
+ <button id="stop" disabled data-en="■ Stop">■ Stopp</button>
+ <span id="state"></span>
+</div>
+
+<h2 data-en="Now">Jetzt</h2>
+<div class="card scroll"><table id="live"></table></div>
+
+<h2 data-en="Course">Verlauf</h2>
+<div class="card scroll"><div id="secs" class="secs"></div><div id="strips" class="strip" style="margin-top:6px"></div>
+ <div class="dim" style="margin-top:6px;font-size:12px" data-en="Each cell is one second. Green right, red wrong, brown: just after a change (the detection may take a few seconds there), grey: no target value.">Jede Zelle ist eine Sekunde. Grün richtig, rot falsch, braun: kurz nach einem Wechsel (dort darf die Erkennung ein paar Sekunden brauchen), grau: kein Sollwert.</div></div>
+
+<h2 data-en="Result per section">Ergebnis je Abschnitt</h2>
+<div class="card scroll"><table id="res"></table>
+ <div class="row" style="margin-top:10px"><button id="dl" disabled data-en="Download measurements (JSON)">Messwerte herunterladen (JSON)</button><span id="sent" class="dim"></span></div></div>
+
+<script src="/static/sm/core.js"></script>
+<script src="/static/sm/eichen.js"></script>
+<script src="/static/sm/nav.js"></script>
+</body></html>

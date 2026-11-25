@@ -21,6 +21,8 @@ from collections import deque, namedtuple
 
 import numpy as np
 
+from beat_clarity import BeatClarity
+
 Features = namedtuple(
     "Features",
     "level bass mid high bpm centroid db_short db_long silent beat_count kick_count mode key_conf key meter meter_conf hat_count",
@@ -207,6 +209,9 @@ class Analyzer:
         self.t = 0.0
         self.last_kick = -1.0
         self.beat_count = self.kick_count = 0
+        self.clar = BeatClarity(self.dt)
+        self.bpm_fine = 0.0
+        self.beat_clarity = 0.0                          # 0..1, um 0,6 bei deutlichem Beat, Einleitung ohne Beat unter 0,15
         self.weak_beats = 0                              # Beats mit geringer Sicherheit (aubio im Rauschen), zaehlen nicht als Musik
         self.bpm = 0.0
         self.db_short = self.db_long = -60.0
@@ -249,6 +254,11 @@ class Analyzer:
         self._stream = None
         self._thread = None
         self._net = None                                 # Eingang "Mac (Netzwerk)" (audio_net.py), sonst None
+        self._bt = None                                  # Eingang "Bluetooth" (bt_audio.py, 24.11.2026), sonst None
+        self._bt_fwd = None                              # nur Weiterleitung, wenn der Eingang nicht Bluetooth ist
+        self._pt = None                                  # bt_audio.PassThrough (Weiterleitung an eine Ausgabe)
+        self._net_fwd = None                             # dasselbe fuer den Ton vom Musik-Rechner (LAN)
+        self._pt_net = None
 
     def _c(self, key, default):
         return self.cfg[key] if self.cfg is not None else default
@@ -268,11 +278,16 @@ class Analyzer:
         self.ring = np.roll(self.ring, -self.hop)
         self.ring[-self.hop:] = mono
         spec = np.abs(np.fft.rfft(self.ring * self.window)) / self.win
-        n = {k: self.gains[k](float(spec[m].mean())) for k, m in self.masks.items()}
+        raw = {k: float(spec[m].mean()) for k, m in self.masks.items()}
+        n = {k: self.gains[k](raw[k]) for k in raw}
+        raw["level"] = rms
+        self.raw_lvl = raw                                   # ungewichtete Pegel je Band (nur fuer /api/takt, pegel/baender)
         level = self.gain_rms(rms)
 
         self.acc_hist.append(0.6 * n["bass"] + 0.4 * level)
         audible = db > self._c("silence_db", self.silence_db)
+        self.beat_clarity = self.clar.feed(spec * self.win, audible)   # wie deutlich ein Schlag da ist (beat_clarity.py)
+        self.bpm_fine = self.clar.bpm                     # feines Tempo aus denselben Anschlaegen (0 = keins)
         self.silent_for = 0.0 if audible else self.silent_for + self.dt
         if self.silent_for > 10.0 and self.meter_est.acc:    # lange Stille: neuer Song, Takt neu erkennen
             self.meter_est.reset()
@@ -398,6 +413,8 @@ class Analyzer:
             self.channel = d.get("channel", "mix") if d.get("channel") in ("mix", "left", "right") else "mix"
             from audio_net import net_alias
             self.saved_device = net_alias(d.get("device") or "")
+            self.bt_out = str(d.get("bt_out") or "")[:80]
+            self.net_out = str(d.get("net_out") or "")[:80]
         except (OSError, ValueError, TypeError):
             pass
 
@@ -409,12 +426,120 @@ class Analyzer:
         try:
             tmp = self.audio_file + ".tmp"
             with open(tmp, "w", encoding="utf-8") as f:
-                json.dump({"device": stable_name(self.dev_name), "gain_db": self.gain_db, "channel": self.channel}, f, indent=1)
+                json.dump({"device": stable_name(self.dev_name), "gain_db": self.gain_db, "channel": self.channel,
+                           "bt_out": self.bt_out, "net_out": self.net_out}, f, indent=1)
             os.replace(tmp, self.audio_file)
         except OSError:
             pass
 
     saved_device = ""
+    bt_out = ""                                          # Bluetooth-Ton weiterleiten an diese Ausgabe (plughw:...), "" = aus
+    net_out = ""                                         # Ton vom Musik-Rechner (LAN) weiterleiten, "" = aus
+
+    # ---- Bluetooth-Ton an eine Ausgabe weitergeben (25.11.2026) -----------------------------------------------
+    bt_out_opts = {}                                     # Tests: runner fuer list_outputs, spawn fuer PassThrough
+
+    def bt_outputs(self):
+        import bt_audio
+        now = time.time()
+        cache = getattr(self, "_outs_cache", None)
+        if cache is None or now - cache[0] > 5.0:
+            cache = (now, bt_audio.list_outputs(self.bt_out_opts.get("runner", bt_audio.run),
+                                                names=lambda mac: bt_audio.manager().name_of(mac)))
+            self._outs_cache = cache
+        return cache[1]
+
+    def set_bt_out(self, dev):
+        dev = str(dev or "")
+        if dev and dev not in [o["dev"] for o in self.bt_outputs()]:
+            raise ValueError("Ausgabe nicht gefunden")
+        self.bt_out = dev
+        self._save_audio_cfg()
+        self._bt_sync()
+
+    def _bt_sync(self):
+        """Weiterleitung einrichten: bei Eingang Bluetooth liest _bt, sonst ein eigener Leser nur fuer die Ausgabe
+        (bluez-alsa gibt den Ton nur einem Leser)."""
+        import bt_audio
+        if self.bt_out and self._pt is None:
+            self._pt = bt_audio.PassThrough(spawn=self.bt_out_opts.get("spawn"), **{k: v for k, v in self.bt_out_opts.items() if k in ("runner", "connector")})
+        if self._pt is not None:
+            self._pt.set_dev(self.bt_out)
+        if self._bt is not None:
+            self._bt.out = self._pt
+        want = bool(self.bt_out) and self._bt is None and (bool(self.bt_opts) or bt_audio.available()[1])
+        if want and self._bt_fwd is None:
+            self._bt_fwd = bt_audio.BtAudioIn(None, self.rate, self.hop, out=self._pt, **self.bt_opts)
+            self._bt_fwd.start()
+        elif not want and self._bt_fwd is not None:
+            self._bt_fwd.stop()
+            self._bt_fwd = None
+
+    def bt_out_info(self):
+        st = self._pt.status() if self._pt is not None and self.bt_out else {"dev": "", "active": False, "error": "", "dropped": 0}
+        return dict(st, dev=self.bt_out, outs=self.bt_outputs())
+
+    def set_net_out(self, dev):
+        dev = str(dev or "")
+        if dev and dev not in [o["dev"] for o in self.bt_outputs()]:
+            raise ValueError("Ausgabe nicht gefunden")
+        self.net_out = dev
+        self._save_audio_cfg()
+        self._net_sync()
+
+    def _net_sync(self):
+        """Wie _bt_sync fuer den Ton vom Musik-Rechner: ist der Eingang ein anderer, lauscht ein eigener Empfaenger auf
+        UDP 9022 nur fuer die Weiterleitung (nur ein Programm kann den Port belegen)."""
+        import bt_audio
+        from audio_net import NetAudioIn
+        if self.net_out and self._pt_net is None:
+            self._pt_net = bt_audio.PassThrough(spawn=self.bt_out_opts.get("spawn"), **{k: v for k, v in self.bt_out_opts.items() if k in ("runner", "connector")})
+        if self._pt_net is not None:
+            self._pt_net.set_dev(self.net_out)
+        if self._net is not None:
+            self._net.out = self._pt_net
+        want = bool(self.net_out) and self._net is None
+        if want and self._net_fwd is None:
+            fwd = NetAudioIn(None, self.rate, self.hop, port=self.net_port, out=self._pt_net)
+            try:
+                fwd.start()
+                self._net_fwd = fwd
+                self._net_fwd_err = ""
+            except ValueError as e:
+                self._net_fwd_err = str(e)
+        elif not want and self._net_fwd is not None:
+            self._net_fwd.stop()
+            self._net_fwd = None
+
+    _net_fwd_err = ""
+
+    def net_out_info(self):
+        st = (self._pt_net.status() if self._pt_net is not None and self.net_out
+              else {"dev": "", "active": False, "error": "", "dropped": 0})
+        if self.net_out and not st["error"] and self._net is None and self._net_fwd is None and self._net_fwd_err:
+            st = dict(st, error=self._net_fwd_err)
+        return dict(st, dev=self.net_out, outs=self.bt_outputs())
+
+    def fwd_state(self):
+        """Weiterleitung des gewaehlten Eingangs fuer die Anzeige oben: {"kind": bt|hdmi|line, "active", "name"} oder None."""
+        from bt_audio import BT_NAME
+        from audio_net import NET_NAME
+        if self.dev_name == BT_NAME:
+            dev, pt = self.bt_out, self._pt
+        elif self.dev_name == NET_NAME:
+            dev, pt = self.net_out, self._pt_net
+        else:
+            return None
+        if not dev:
+            return None
+        name = next((o["name"] for o in self.bt_outputs() if o["dev"] == dev), dev)
+        kind = "bt" if dev.startswith("bt:") else "hdmi" if "hdmi" in dev.lower() else "line"
+        st = pt.status() if pt is not None else {"active": False, "error": ""}
+        return {"kind": kind, "active": bool(st["active"]), "error": bool(st.get("error")), "name": name}
+
+    def _out_sync(self):
+        self._bt_sync()
+        self._net_sync()
 
     @staticmethod
     def find_device(name_part, rate=None, sd=None):
@@ -450,6 +575,10 @@ class Analyzer:
                             "current": d["name"] == self.dev_name})
         out.append({"index": -1, "name": NET_NAME, "stable": NET_NAME, "channels": 2, "rate": self.rate,
                     "current": self.dev_name == NET_NAME})              # Ton vom MacBook ueber das Netzwerk
+        from bt_audio import BT_NAME, available
+        if available()[0] or self.dev_name == BT_NAME:                  # Pi als Bluetooth-Empfaenger (24.11.2026)
+            out.append({"index": -2, "name": BT_NAME, "stable": BT_NAME, "channels": 2, "rate": self.rate,
+                        "current": self.dev_name == BT_NAME})
         return out
 
     def audio_info(self):
@@ -457,8 +586,9 @@ class Analyzer:
         now = time.time()
         return {"devices": self.list_devices(), "current": self.dev_name,
                 "channels": self.dev_channels, "rate": self.rate, "gain_db": self.gain_db, "channel": self.channel,
-                "hw": hw_controls(card), "error": self.error, "running": self._stream is not None or self._net is not None,
+                "hw": hw_controls(card), "error": self.error, "running": self._stream is not None or self._net is not None or self._bt is not None,
                 "net": self._net.status() if self._net is not None else None,
+                "bt": self._bt.status() if self._bt is not None else None,
                 "clip": now - self.clip_t < 3.0}
 
     def level(self):
@@ -476,8 +606,9 @@ class Analyzer:
         from audio_net import NET_NAME
         if sd is None:
             import sounddevice as sd
+        from bt_audio import BT_NAME
         with self.cfg_lock:
-            net = self.device == NET_NAME
+            net = self.device in (NET_NAME, BT_NAME)
             name = self.dev_name
             if not net:
                 self._close_stream()
@@ -514,9 +645,10 @@ class Analyzer:
 
     def _switch(self, name):
         from audio_net import NET_NAME, net_alias
+        from bt_audio import BT_NAME
         name = net_alias(name)
-        if name == NET_NAME:                                # Ton vom Mac: kein Geraet zu pruefen
-            idx = NET_NAME
+        if name in (NET_NAME, BT_NAME):                     # Ton vom Mac oder Bluetooth: kein Geraet zu pruefen
+            idx = name
             prev_dev, prev_name, prev_ch = self.device, self.dev_name, self.dev_channels
             self._close_stream()
             try:
@@ -562,6 +694,9 @@ class Analyzer:
         if self._net is not None:
             self._net.stop()
             self._net = None
+        if self._bt is not None:
+            self._bt.stop()
+            self._bt = None
         if self._stream:
             try:
                 self._stream.stop()
@@ -577,21 +712,41 @@ class Analyzer:
         except queue.Empty:
             pass
 
+    bt_opts = {}                                         # Tests: runner/opener fuer BtAudioIn
     net_port = 9022                                      # UDP-Port fuer "Mac (Netzwerk)" (Tests: 0 = beliebig)
 
     def start(self):
         from audio_net import NET_NAME, NetAudioIn
         from audio_net import net_alias
+        from bt_audio import BT_NAME, BtAudioIn, manager
         self.device = net_alias(self.device) if isinstance(self.device, str) else self.device   # alter Name (--device "Mac (Netzwerk)")
         if not self.dev_name and self.saved_device:         # gespeicherte Wahl hat Vorrang vor --device
-            idx = NET_NAME if self.saved_device == NET_NAME else self.find_device(self.saved_device, self.rate)
+            idx = self.saved_device if self.saved_device in (NET_NAME, BT_NAME) else self.find_device(self.saved_device, self.rate)
             if idx is not None:
                 self.device = idx
         if self.device == NET_NAME:                         # Ton vom MacBook (UDP 9022) statt Soundkarte
+            if self._net_fwd is not None:                   # der Empfaenger nur fuer die Weiterleitung gibt den Port ab
+                self._net_fwd.stop()
+                self._net_fwd = None
             self._net = NetAudioIn(lambda b: self._callback(b, len(b), None, None), self.rate, self.hop, port=self.net_port)
             self._net.start()
+            self._out_sync()
             self.dev_name, self.dev_channels = NET_NAME, 2
             print(f"Audio: {NET_NAME} | UDP {self._net.port} | {self.rate} Hz | Block {self.hop}")
+            self._run = True
+            self._thread = threading.Thread(target=self._loop, daemon=True)
+            self._thread.start()
+            return
+        if self.device == BT_NAME:                          # Pi als Bluetooth-Empfaenger (bt_audio.py)
+            if self._bt_fwd is not None:                    # der Leser nur fuer die Weiterleitung gibt den Ton ab
+                self._bt_fwd.stop()
+                self._bt_fwd = None
+            self._bt = BtAudioIn(lambda b: self._callback(b, len(b), None, None), self.rate, self.hop,
+                                 names=lambda mac: manager().name_of(mac), **self.bt_opts)
+            self._out_sync()
+            self._bt.start()
+            self.dev_name, self.dev_channels = BT_NAME, 2
+            print(f"Audio: {BT_NAME} | {self.rate} Hz | Block {self.hop}")
             self._run = True
             self._thread = threading.Thread(target=self._loop, daemon=True)
             self._thread.start()
@@ -612,9 +767,22 @@ class Analyzer:
         self._stream.start()
         self._thread = threading.Thread(target=self._loop, daemon=True)
         self._thread.start()
+        self._out_sync()
 
     def stop(self):
         self._close_stream()
+        if self._bt_fwd is not None:
+            self._bt_fwd.stop()
+            self._bt_fwd = None
+        if self._pt is not None:
+            self._pt.close()
+            self._pt = None
+        if self._net_fwd is not None:
+            self._net_fwd.stop()
+            self._net_fwd = None
+        if self._pt_net is not None:
+            self._pt_net.close()
+            self._pt_net = None
 
     def poll(self, now=None):
         with self.lock:

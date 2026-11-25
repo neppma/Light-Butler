@@ -346,6 +346,7 @@ a.sedit{text-decoration:none;display:inline-flex;align-items:center}
 #syssum .dot{margin-right:8px}
 body.nohints [data-tx$="_hint"],body.nohints .scnote,body.nohints .hint{display:none!important}
 details.sec{margin-top:16px}details.sec>summary{font-size:17px;font-weight:700;color:#8ad;letter-spacing:.3px}.secbody{padding:4px 8px 10px}
+.mlform{display:flex;gap:6px;margin-top:8px}.mlform input{flex:1 1 auto;min-width:0;padding:10px;border-radius:8px;border:1px solid #333a4d;background:#12141c;color:#dde;font:inherit}.mlform button{flex:0 0 auto;padding:0 14px;border-radius:8px}.mlrow{display:flex;gap:6px;align-items:stretch}.mlrow .seclink{flex:1 1 auto}.mldel{margin-top:8px;flex:0 0 44px;border-radius:10px}
 .secgrp{margin:22px 4px 6px;font-size:13px;color:#889;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.secgrp+.seclink{margin-top:0}.seclink{display:block;margin-top:8px;padding:12px 14px;border-radius:10px;background:#1c1f2c;color:#8ad;font-size:17px;font-weight:700;text-decoration:none}
 #apcsec{display:none}body.vapc #apcsec{display:block}body.vapc>*:not(#apcsec):not(#toast):not(script){display:none!important}
 .apchead{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}.apchead .seg{margin-left:auto}#apcconn{font-size:13px}
@@ -455,7 +456,7 @@ body.vfx>*:not(#fxsec):not(#toast):not(script){display:none!important}
 <details id="autobox" class="sg sec"><summary data-tx="h_settings">Einstellungen (Auto-Erkennung)</summary><div class="secbody">
 <div id="setbar"><button onclick="if(confirm(TXT.set_all_q[LANG==='de'?0:1]))c({reset:'all'}).then(loadSet)" data-tx="set_all">Alle auf Standard</button><span id="setnote" data-tx="set_note">Änderungen wirken sofort und bleiben gespeichert.</span></div>
 <div id="setlist"></div></div></details>
-<div class="secgrp" data-tx="nav_devices">Geräte</div><a id="fxlink" class="seclink" href="/fixtures"><span data-tx="h_fixtures">Fixtures</span> →</a><a class="seclink" href="/raum"><span data-tx="h_room">Raumplan</span> →</a><a class="seclink" href="/matrix"><span data-tx="h_matrix">Pixel-Matrix</span> →</a><a class="seclink" href="/apc"><span data-tx="apc_title">APC mini · Belegung</span> →</a><a class="seclink" href="/lumi"><span data-tx="lumi_title">ROLI Lumi · Belegung</span> →</a><div class="secgrp" data-tx="nav_tech">Technik</div><a class="seclink" href="/dmx"><span data-tx="sys_dmxmon">DMX-Monitor</span> →</a><a class="seclink" href="/dmx-debug"><span data-tx="h_dmxdebug">DMX-Debugger</span> →</a><div class="secgrp" data-tx="nav_soft">Software für andere Rechner</div><a class="seclink" href="/software"><span data-tx="h_software">Systemschema und Downloads</span> →</a><div style="font-size:12px;color:#889;margin:0 2px 6px" data-tx="sw_hint">Welcher Teil gehört auf welchen Rechner? Im Schema das Symbol antippen, dann kommt das passende Paket.</div><a class="seclink" href="/download/light-butler-mac.zip" download><span data-tx="dl_mac">Mac: Mixxx-Brücke und Helfer (ZIP)</span> ⬇</a><a class="seclink" href="/download/light-butler-windows.zip" download><span data-tx="dl_win">Windows: Pegelkurven (ZIP)</span> ⬇</a><a class="seclink" href="/download/light-butler-windows-voll.zip" download><span data-tx="dl_win_full">Windows: ganzer Light-Butler (ZIP)</span> ⬇</a><a class="seclink" href="/download/light-butler-windows-exe.zip" download><span data-tx="dl_win_exe">Windows: Light-Butler.exe ohne Python (ZIP)</span> ⬇</a><a class="seclink" href="/download/light-butler-mac-voll.zip" download><span data-tx="dl_mac_full">Mac: ganzer Light-Butler (ZIP)</span> ⬇</a><a class="seclink" href="/download/light-butler-pi.zip" download><span data-tx="dl_pi">Pi: frische Installation (ZIP)</span> ⬇</a><a class="seclink" href="/download/light-butler-pi-ersatz.zip" download><span data-tx="dl_pi_own">Pi: Ersatzgerät mit meinen Geräten (ZIP)</span> ⬇</a><a class="seclink" href="/download/backup" download><span data-tx="dl_backup">Jüngste Sicherung des Light-Butler (ZIP)</span> ⬇</a><div style="font-size:12px;color:#889;margin:4px 2px 0" data-tx="dl_hint">Für einen neuen Rechner: entpacken, LIESMICH.txt lesen, das Installationsskript richtet alles samt Python-Paketen ein.</div><div style="font-size:12px;color:#889;margin:4px 2px 0" data-tx="dl_pi_hint">Neuer Raspberry Pi (Pi OS 64 Bit): ZIP auf den Pi kopieren, entpacken, bash install_pi.sh. Ohne persönliche Daten; das Ersatzgerät enthält zusätzlich deine Geräte mit ihren Adressen. Startet mit allen Ausgaben aus.</div><div style="font-size:12px;color:#889;margin:4px 2px 0" data-tx="dl_backup_hint">Die Sicherung entsteht jede Nacht um 04:30 am Light-Butler. Zum Aufheben auf einem anderen Gerät, ohne Nanoleaf-Token und Claude-Schlüssel.</div><div class="secgrp" data-tx="h_about">Über Light-Butler</div><a class="seclink" href="/about"><span data-tx="h_about">Über Light-Butler</span> →</a></div>
+<div class="secgrp" data-tx="nav_devices">Geräte</div><a id="fxlink" class="seclink" href="/fixtures"><span data-tx="h_fixtures">Fixtures</span> →</a><a class="seclink" href="/raum"><span data-tx="h_room">Raumplan</span> →</a><a class="seclink" href="/matrix"><span data-tx="h_matrix">Pixel-Matrix</span> →</a><a class="seclink" href="/apc"><span data-tx="apc_title">APC mini · Belegung</span> →</a><a class="seclink" href="/lumi"><span data-tx="lumi_title">ROLI Lumi · Belegung</span> →</a><div class="secgrp" data-tx="mylinks">Eigene Links</div><div id="mylinks"></div><div class="mlform"><input id="ml_host" placeholder="IP-Adresse oder ganze Adresse, z. B. 192.168.1.31" inputmode="url" autocomplete="off"><input id="ml_port" placeholder="Port" inputmode="numeric" autocomplete="off" style="width:76px;flex:0 0 76px"><button id="ml_next" onclick="mlNext()" data-tx="ml_next">Weiter</button></div><div class="mlform" id="ml_namerow" style="display:none"><input id="ml_name" placeholder="Name, z. B. TV-Dashboard" maxlength="30" autocomplete="off"><button onclick="mlSave()" data-tx="ml_save">Speichern</button></div><div id="ml_msg" style="font-size:12px;color:#889;margin:4px 2px 0" data-tx="ml_hint">Ein Gerät im Heimnetz mit eigener Webseite (zum Beispiel ein Dashboard am Fernseher): Adresse und Port eintragen (oder eine ganze Adresse mit Pfad einfügen, zum Beispiel http://localhost:8123/party-sender.html; localhost ist das Gerät, auf dem du tippst), Weiter, Namen vergeben. Der Knopf öffnet die Seite in einem neuen Tab.</div><div class="secgrp" data-tx="nav_tech">Technik</div><a class="seclink" href="/dmx"><span data-tx="sys_dmxmon">DMX-Monitor</span> →</a><a class="seclink" href="/dmx-debug"><span data-tx="h_dmxdebug">DMX-Debugger</span> →</a><a class="seclink" href="/eichen"><span data-tx="h_eichen">Eichstück: Erkennung prüfen</span> →</a><div class="secgrp" data-tx="nav_soft">Software für andere Rechner</div><a class="seclink" href="/software"><span data-tx="h_software">Systemschema und Downloads</span> →</a><div style="font-size:12px;color:#889;margin:0 2px 6px" data-tx="sw_hint">Welcher Teil gehört auf welchen Rechner? Im Schema das Symbol antippen, dann kommt das passende Paket.</div><a class="seclink" href="/download/light-butler-mac.zip" download><span data-tx="dl_mac">Mac: Mixxx-Brücke und Helfer (ZIP)</span> ⬇</a><a class="seclink" href="/download/light-butler-windows.zip" download><span data-tx="dl_win">Windows: Pegelkurven (ZIP)</span> ⬇</a><a class="seclink" href="/download/light-butler-windows-voll.zip" download><span data-tx="dl_win_full">Windows: ganzer Light-Butler (ZIP)</span> ⬇</a><a class="seclink" href="/download/light-butler-windows-exe.zip" download><span data-tx="dl_win_exe">Windows: Light-Butler.exe ohne Python (ZIP)</span> ⬇</a><a class="seclink" href="/download/light-butler-mac-voll.zip" download><span data-tx="dl_mac_full">Mac: ganzer Light-Butler (ZIP)</span> ⬇</a><a class="seclink" href="/download/light-butler-pi.zip" download><span data-tx="dl_pi">Pi: frische Installation (ZIP)</span> ⬇</a><a class="seclink" href="/download/light-butler-pi-ersatz.zip" download><span data-tx="dl_pi_own">Pi: Ersatzgerät mit meinen Geräten (ZIP)</span> ⬇</a><a class="seclink" href="/download/backup" download><span data-tx="dl_backup">Jüngste Sicherung des Light-Butler (ZIP)</span> ⬇</a><div style="font-size:12px;color:#889;margin:4px 2px 0" data-tx="dl_hint">Für einen neuen Rechner: entpacken, LIESMICH.txt lesen, das Installationsskript richtet alles samt Python-Paketen ein.</div><div style="font-size:12px;color:#889;margin:4px 2px 0" data-tx="dl_pi_hint">Neuer Raspberry Pi (Pi OS 64 Bit): ZIP auf den Pi kopieren, entpacken, bash install_pi.sh. Ohne persönliche Daten; das Ersatzgerät enthält zusätzlich deine Geräte mit ihren Adressen. Startet mit allen Ausgaben aus.</div><div style="font-size:12px;color:#889;margin:4px 2px 0" data-tx="dl_backup_hint">Die Sicherung entsteht jede Nacht um 04:30 am Light-Butler. Zum Aufheben auf einem anderen Gerät, ohne Nanoleaf-Token und Claude-Schlüssel.</div><div class="secgrp" data-tx="h_about">Über Light-Butler</div><a class="seclink" href="/about"><span data-tx="h_about">Über Light-Butler</span> →</a></div>
 <div id="hlsec" class="stsec"><div class="s2lnav" data-back="/" data-cur="health" data-title="hl_title">Zustand des Light-Butler</div>
 <div id="hlhead"></div><div id="hlbody" class="stgrid"></div></div>
 <div id="statsec" class="stsec"><div class="s2lnav" data-back="/" data-cur="stats" data-title="stat_title">Statistik</div>
@@ -868,7 +869,7 @@ if(document.body.classList.contains('vset')){loadMusicRoot();loadMusicExcl();loa
 if(document.body.classList.contains('vset')&&location.hash==='#audio')setTimeout(openAudio,300);   // vom Pegelmeter gekommen
 if(document.body.classList.contains('vset')&&(location.hash==='#nas'||location.hash==='#musik'))setTimeout(()=>{['genbox','sysbox'].forEach(id=>{const d=document.getElementById(id);if(d)d.open=true});
  const r=document.getElementById(location.hash==='#nas'?'mnasrow':'mrootrow');if(r){r.scrollIntoView({block:'center'});r.style.outline='2px solid #f0a030';r.style.borderRadius='8px';setTimeout(()=>{r.style.outline=''},4000)}},300);   // Spiegel-Seite: direkt zur NAS (11.11.2026)
-const GL=[['bar','Spider'],['wash','Washes'],['barlight','PAR Barlicht'],['fx','Eyes und Derby'],['uv','UV-Leiste'],['spot','Moving Head'],['amb','Ambiente'],['nano','Nanoleaf']];
+const GL=[['bar','Spider'],['wash','Washes'],['barlight','PAR Barlicht'],['fx','Eyes und Derby'],['uv','UV-Leiste'],['spot','Moving Head'],['amb','Ambiente'],['nano','Nanoleaf'],['api','API']];
 (()=>{const b=document.getElementById('glbody');let h='';
  GL.forEach(([k,l])=>{h+='<div class="glit"><span>'+l+'</span><input type="range" id="gl_'+k+'" min="0" max="100" value="100"><b id="glv_'+k+'">100</b></div>'});
  h+='<button class="glreset" id="gl_reset">Alle auf 100 %</button>';b.innerHTML=h;
@@ -880,6 +881,20 @@ function drawGL(){if(!S.glevel)return;let n=0;
  GL.forEach(([k])=>{const v=Math.round((S.glevel[k]??1)*100);if(v!==100)n++;const s=document.getElementById('gl_'+k),o=document.getElementById('glv_'+k);
   if(s&&document.activeElement!==s){s.value=v;o.textContent=v}if(o)o.classList.toggle('mod',v!==100)});
  document.getElementById('glmod').innerHTML=n?n+'<span class="glw"> '+tr('gl_mod')+'</span>':''}   // Hinweis am Knopf, auch bei geschlossenem Fenster
+async function loadLinks(){   // eigene Links zu Geraeten im Heimnetz (Einstellungen, 24.11.2026)
+ const b=document.getElementById('mylinks');if(!b)return;
+ try{const D=await (await fetch('/api/links')).json();
+  b.innerHTML=D.links.map((l,i)=>'<div class="mlrow"><a class="seclink extlink" href="'+esc(l.url)+'" target="_blank" rel="noopener">'+esc(l.name)+' <small style="color:#889;font-weight:400">'+esc(l.url.replace(/^https?:[/][/]/,'').replace(/[/]$/,''))+'</small></a><button class="mldel" title="Link entfernen" onclick="mlDel('+i+')">✕</button></div>').join('')}catch(e){}}
+function mlNext(){const h=document.getElementById('ml_host').value.trim();if(!h){document.getElementById('ml_host').focus();return}
+ document.getElementById('ml_namerow').style.display='';document.getElementById('ml_name').focus()}
+async function mlSave(){const m=document.getElementById('ml_msg');
+ const d={host:document.getElementById('ml_host').value.trim(),port:document.getElementById('ml_port').value.trim(),name:document.getElementById('ml_name').value.trim()};
+ try{const r=await fetch('/api/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({link_add:d})});const j=await r.json();
+  if(!r.ok){m.textContent=j.error||'Fehler';m.style.color='#ff8a8a';return}
+  ['ml_host','ml_port','ml_name'].forEach(id=>{document.getElementById(id).value=''});document.getElementById('ml_namerow').style.display='none';
+  m.style.color='#889';m.textContent=(d.name||d.host)+' gespeichert: der Knopf oben öffnet die Seite.';loadLinks()}catch(e){m.textContent='Keine Verbindung';m.style.color='#ff8a8a'}}
+async function mlDel(i){if(!confirm('Diesen Link entfernen?'))return;await c({link_del:i});loadLinks()}
+if(document.body.classList.contains('vset'))loadLinks();
 async function loadBackup(){
  const box=document.getElementById('bkbox');if(!box||!box.open)return;
  try{const r=await fetch('/api/backups');const B=await r.json();const b=document.getElementById('bkbody');
@@ -924,6 +939,8 @@ function renderAudio(){
  AUD.devices.forEach(d=>{h+='<option value="'+esc(d.name)+'"'+(d.current?' selected':'')+'>'+esc(d.name)+' ('+d.channels+' Kanäle, '+d.rate+' Hz)</option>'});
  h+='</select><button id="aud_scan" style="margin:6px 0 4px" title="Neu eingesteckte Soundkarten (zum Beispiel USB) finden, ohne den Dienst neu zu starten. Der Ton setzt dabei kurz aus.">Geräte neu suchen</button>';
  if(AUD.net){const n=AUD.net;h+='<div style="font-size:13px;margin:4px 0 6px;color:'+(n.alive?'#9fd0ff':'#ffb86b')+'">'+(n.alive?'<span class="dot ok"></span>Empfängt vom Musik-Rechner ('+esc(n.src)+')'+(n.lost?' · '+n.lost+' Pakete verloren':''):(n.error?esc(n.error):'Wartet auf Ton vom Musik-Rechner: am Mac App „Light-Butler Mixxx“ starten, Ton über BlackHole ausgeben'))+'</div>'}
+ if(AUD.bt){const n=AUD.bt;h+='<div style="font-size:13px;margin:4px 0 6px;color:'+(n.alive?'#9fd0ff':'#ffb86b')+'">'+(n.alive?'<span class="dot ok"></span>Empfängt über Bluetooth'+(n.src?' von '+esc(n.src):'')+(n.rate&&n.rate!==AUD.rate?' ('+n.rate+' Hz, umgerechnet)':''):n.error?esc(n.error):n.connected?'Verbunden'+(n.src?' mit '+esc(n.src):'')+': am Gerät Musik abspielen':'Noch kein Ton über Bluetooth: am Handy „Light-Butler“ als Ausgabe wählen und Musik abspielen')+'</div>'}
+ h+='<div id="wlanbox" style="margin:6px 0 4px"></div><div id="netoutbox" style="margin:6px 0 4px"></div><div id="btbox" style="margin:6px 0 10px;border-top:1px solid #2a2f45;padding-top:8px"></div>';
  if(AUD.error)h+='<div style="color:#ff6b5a;font-size:13px;margin-bottom:6px">'+esc(AUD.error)+'</div>';
  h+='<div class="mnum"><span>Pegel <b id="aud_rms">-</b> · Spitze <b id="aud_pk">-</b><span class="clipb" id="aud_clip">ÜBERSTEUERT</span></span><span id="aud_alive"></span></div>';
  h+='<div class="meter" id="aud_bar">'+Array.from({length:LEDS},(_,i)=>'<i class="'+ledZone(i)+'"></i>').join('')+'</div>';
@@ -947,13 +964,46 @@ function renderAudio(){
  b.innerHTML=h;
  document.querySelectorAll('#aud_rec button').forEach(bt=>bt.onclick=()=>c({rec:bt.dataset.v==='1'}).then(()=>setTimeout(loadAudio,300)));
  const rd=document.getElementById('aud_recdel');if(rd)rd.onclick=()=>{if(confirm('Alle Debug-Aufnahmen am Light-Butler löschen?'))c({rec_del:true}).then(()=>setTimeout(loadAudio,300))};
- recStat(AUD.rec);
+ recStat(AUD.rec);btLoad();
  document.getElementById('aud_scan').onclick=e=>{e.target.disabled=true;e.target.textContent='Suche …';c({audio:{rescan:true}}).then(()=>setTimeout(loadAudio,300)).catch(()=>loadAudio())};
  document.getElementById('audev').onchange=e=>{const v=e.target.value;c({audio:{device:v}}).then(()=>setTimeout(loadAudio,300))};
  const g=document.getElementById('aud_gain');g.oninput=()=>{document.getElementById('aud_gv').textContent=g.value+' dB'};g.onchange=()=>{c({audio:{gain_db:+g.value}})};
  document.querySelectorAll('#aud_ch button').forEach(bt=>bt.onclick=()=>{c({audio:{channel:bt.dataset.v}}).then(()=>{document.querySelectorAll('#aud_ch button').forEach(x=>x.classList.toggle('on',x===bt))})});
  document.querySelectorAll('.aud_hw').forEach(s=>{const i=+s.dataset.i;s.oninput=()=>{document.getElementById('aud_hv'+i).textContent=s.value+' %'};s.onchange=()=>c({audio:{hw:{control:AUD.hw[i].name,percent:+s.value}}})});
 }
+let BTS=null;
+async function btLoad(){const el=document.getElementById('btbox');if(!el)return;try{BTS=await (await fetch('/api/bt')).json()}catch(e){return}if(document.activeElement&&['bt_out','net_out'].includes(document.activeElement.id))return;btDraw()}
+function outSel(id,O,title,hint){if(!O)return '';let h='<div style="margin-top:8px"><label style="font-size:13px;color:#aab">'+title+'</label><div style="font-size:12px;color:#99a;margin:2px 0 4px">'+hint+'</div><select id="'+id+'"><option value="">Nicht weiterleiten</option>'+
+  O.outs.map(o=>'<option value="'+esc(o.dev)+'"'+(o.dev===O.dev?' selected':'')+'>'+esc(o.name)+'</option>').join('')+
+  (O.dev&&!O.outs.some(o=>o.dev===O.dev)?'<option value="'+esc(O.dev)+'" selected>'+(O.dev.startsWith('bt:')?'Bluetooth-Lautsprecher '+esc(O.dev.slice(3))+' (nicht verbunden)':esc(O.dev)+' (nicht gefunden)')+'</option>':'')+'</select>';
+  if(O.dev)h+=' <span style="font-size:13px">'+(O.active?'<span class="dot ok"></span>spielt':'<span style="color:#889">wartet auf Ton</span>')+'</span>';
+  if(O.error)h+='<div style="font-size:13px;color:#ff6b5a;margin-top:4px">'+esc(O.error)+'</div>';
+  return h+'</div>'}
+function btDraw(){const el=document.getElementById('btbox');if(!el||!BTS)return;const B=BTS;
+ const bc=o=>c({bt:o}).then(()=>setTimeout(btLoad,400)).catch(()=>btLoad());
+ const wb=document.getElementById('wlanbox'),W=B.wlan;if(wb){wb.innerHTML=W&&W.tool?'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px"><span style="flex:1">WLAN des Licht-Rechners: '+(W.on?'<b style="color:#9fd0ff">verbunden</b>':W.on===false?'<b style="color:#ffb86b">getrennt</b>':'?')+(W.cable?' · Kabel verbunden':' · <span style="color:#ffb86b">kein Kabel</span>')+'</span><button id="wlan_tg"'+((!W.want_off&&!W.cable)||!W.allowed?' disabled':'')+'>'+(W.want_off?'WLAN wieder verbinden':'WLAN trennen')+'</button></div><div style="font-size:12px;color:#99a;margin:2px 0">Bluetooth und WLAN teilen sich einen Funkchip. Hängt der Licht-Rechner am Kabel, macht das Trennen des WLAN den Bluetooth-Ton sauberer (der Funk bleibt an, sonst stürzt Bluetooth ab). Geht nur mit Kabel; ist das Kabel 20 s weg, verbindet er das WLAN von selbst wieder.'+(W.allowed?'':' Noch nicht erlaubt: bluetooth_setup.sh noch einmal ausführen.')+'</div>'+(W.msg?'<div style="font-size:13px;color:#9fd0ff">'+esc(W.msg)+'</div>':'')+(W.error?'<div style="font-size:13px;color:#ff6b5a">'+esc(W.error)+'</div>':''):'';
+  const tg=document.getElementById('wlan_tg');if(tg)tg.onclick=()=>{if(!W.want_off&&!confirm('WLAN-Verbindung des Licht-Rechners trennen? Er bleibt über das Kabel erreichbar. Ist das Panel über WLAN offen, kurz warten und die Seite neu laden.'))return;c({wlan:{on:!!W.want_off}}).then(()=>setTimeout(btLoad,1500)).catch(()=>setTimeout(btLoad,3000))}}
+ const ne=document.getElementById('netoutbox');if(ne){const N=B.net_out;ne.innerHTML=N&&(N.outs.length||N.dev)?outSel('net_out',N,'Ton vom Musik-Rechner weiterleiten an','Der Licht-Rechner spielt den Ton vom Musik-Rechner (LAN) über diese Ausgabe ab, zum Beispiel wenn der Musik-Rechner nicht am Mischpult hängt. Läuft auch, wenn oben ein anderer Eingang gewählt ist.'):'';
+  const no=document.getElementById('net_out');if(no)no.onchange=()=>bc({op:'out',src:'net',dev:no.value})}
+ let h='<label style="font-size:13px;color:#aab">Bluetooth-Empfänger</label>';
+ if(B.platform&&B.platform!=='linux'){el.innerHTML=h+'<div style="font-size:12px;color:#99a;margin:2px 0">Bluetooth-Empfang gibt es nur am Raspberry Pi. Hier: einen Bluetooth-Empfänger an den Line-In stecken.</div>';return}
+ if(!B.tools||!B.bluealsa){el.innerHTML=h+'<div style="font-size:12px;color:#99a;margin:2px 0">Der Licht-Rechner kann Musik per Bluetooth empfangen (wie ein Lautsprecher). Dafür einmal im Terminal einrichten: ssh -t admin@'+esc(location.hostname)+' sudo bash lichtshow/bluetooth_setup.sh</div>';return}
+ h+='<div style="font-size:12px;color:#99a;margin:2px 0 6px">Am Handy oder Laptop unter Bluetooth „'+esc(B.name)+'“ koppeln, solange er sichtbar ist. Dann oben den Eingang Bluetooth wählen. Lautstärke am Gerät hoch stellen.</div>';
+ if(B.blocked)h+='<div style="font-size:12px;color:#ffb86b;margin-bottom:4px">Bluetooth ist am Licht-Rechner gesperrt: bluetooth_setup.sh noch einmal ausführen.</div>';
+ h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><button id="bt_vis">'+(B.visible?'Sichtbar noch '+B.visible+' s':'Sichtbar machen (3 min)')+'</button><button id="bt_hide"'+(B.visible?'':' disabled')+'>Unsichtbar</button><button id="bt_scan">'+(B.scanning?'Suche … '+B.scanning+' s':'Geräte suchen')+'</button></div>';
+ if(B.msg)h+='<div style="font-size:13px;color:#9fd0ff;margin-bottom:4px">'+esc(B.msg)+'</div>';
+ if(B.error)h+='<div style="font-size:13px;color:#ff6b5a;margin-bottom:4px">'+esc(B.error)+'</div>';
+ if(!B.devices.length)h+='<div style="font-size:13px;color:#889">Noch kein Gerät gekoppelt.</div>';
+ B.devices.forEach(d=>{const st=d.connected?'<span style="color:#9fd0ff">verbunden</span>':d.paired?'<span style="color:#aab">gekoppelt</span>':'<span style="color:#889">gefunden</span>';
+  h+='<div style="display:flex;align-items:center;gap:6px;margin:3px 0;font-size:13px"><span style="flex:1">'+(d.connected?'<span class="dot ok"></span>':'')+esc(d.name)+' · '+st+'</span>'+
+   (d.paired?(d.connected?'<button data-op="disconnect" data-mac="'+d.mac+'">Trennen</button>':'<button data-op="connect" data-mac="'+d.mac+'">Verbinden</button>')+'<button class="danger" data-op="remove" data-mac="'+d.mac+'">Entfernen</button>':'<button data-op="pair" data-mac="'+d.mac+'">Koppeln</button>')+'</div>'});
+ h+=outSel('bt_out',B.out,'Ton weiterleiten an','Damit die Musik vom Handy auch zu hören ist: der Licht-Rechner spielt sie über diese Ausgabe ab (zum Beispiel ins Mischpult). Läuft auch, wenn oben ein anderer Eingang gewählt ist. Ein Bluetooth-Lautsprecher erscheint hier, sobald er gekoppelt und verbunden ist (Geräte suchen, Koppeln). Er spielt etwas später: dazu unter Einstellungen allgemein → Ausgabe die Licht-Verzögerung.');
+ el.innerHTML=h;
+ document.getElementById('bt_vis').onclick=()=>bc({op:'visible'});document.getElementById('bt_hide').onclick=()=>bc({op:'hide'});
+ document.getElementById('bt_scan').onclick=()=>bc({op:B.scanning?'scan_off':'scan'});
+ const bo=document.getElementById('bt_out');if(bo)bo.onchange=()=>bc({op:'out',dev:bo.value});
+ el.querySelectorAll('button[data-op]').forEach(b=>b.onclick=()=>{if(b.dataset.op==='remove'&&!confirm('Kopplung mit diesem Gerät entfernen?'))return;bc({op:b.dataset.op,mac:b.dataset.mac})})}
+setInterval(()=>{const box=document.getElementById('audiobox');if(box&&box.open&&document.getElementById('btbox'))btLoad()},2000);
 let recWas=null;
 function recStat(r){const el=document.getElementById('aud_recst');if(!el||!r)return;
  el.innerHTML=!r.on?'<span style="color:#889">Aus</span>':r.rec?'<span style="color:#ff6b5a">● Nimmt auf</span> '+Math.round(r.cur_s)+' s'+(r.dropped?' <span style="color:#ffb86b">('+r.dropped+' Blöcke verworfen)</span>':''):'<span style="color:#ffb86b">Wartet auf Ton …</span>';
@@ -1133,7 +1183,17 @@ function drawLvm(){const el=document.getElementById('lvm'),L=S.lvl;if(!el)return
  const r=document.getElementById('lvr'),p=document.getElementById('lvp');
  r.style.width=pc(L.rms_db)+'%';r.style.background=L.peak_db>-3?'#ff5a5a':L.peak_db>-12?'#f0c040':'#3ddc84';
  p.style.left='calc('+pc(L.hold_db)+'% - 1px)';
- document.getElementById('lvs').textContent=S.lvsrc==='lan'?'LAN':'Line-In'}
+ const ls=document.getElementById('lvs'),src=S.lvsrc==='lan'?'lan':S.lvsrc==='bt'?'bt':'line';
+ const F=S.lvfwd,fk=F?F.kind+(F.active?'1':'0')+F.name:'';
+ if(ls.dataset.src!==src||ls.dataset.fwd!==fk){ls.dataset.src=src;ls.dataset.fwd=fk;const nm=S.lvsrc==='lan'?'LAN':S.lvsrc==='bt'?'Bluetooth':'Line-In';
+  ls.title=nm+(F?' → '+F.name+(F.active?'':' (wartet)'):'');
+  ls.innerHTML=SRC_ICON[src]+(F?'<span style="opacity:'+(F.active?1:0.4)+(F.error?';color:#ff6b5a':'')+'">'+SRC_SVG('<path d="M4 12h15M14 7l5 5-5 5"/>')+SRC_ICON[F.kind]+'</span>':'')}}
+// Eingang als Symbol (Wunsch von Markus 25.11.2026): Bluetooth, Netzwerk (Ton vom Musik-Rechner), Klinkenstecker (Line-In)
+const SRC_SVG=d=>'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle">'+d+'</svg>';
+const SRC_ICON={bt:SRC_SVG('<path d="M7 7l10 10-5 5V2l5 5L7 17"/>'),
+ lan:SRC_SVG('<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="17" width="6" height="5" rx="1"/><rect x="16" y="17" width="6" height="5" rx="1"/><path d="M12 7v5M5 17v-5h14v5"/>'),
+ hdmi:SRC_SVG('<path d="M3 8h18v5l-3 3H6l-3-3z"/><path d="M8 11h8"/>'),
+ line:SRC_SVG('<path d="M1.5 12h2.5"/><rect x="4" y="10.5" width="5" height="3" rx="1"/><path d="M9 9.5h2.5v5H9z"/><rect x="11.5" y="8" width="7" height="8" rx="1.5"/><path d="M18.5 12h4"/>')};
 function powerOn(n){const p=(S.power_for||{})[n];if(!p)return;   // Steckdose eines nicht erreichbaren Geraets (HomeMatic)
  if(confirm(TXT.pwr_q[LANG==='de'?0:1].replace('%s',n).replace('%l',p.label)))c({power_on:n})}
 // ---- Seite APC mini · Belegung (/apc) --------------------------------------------------------------------------------
@@ -1422,7 +1482,7 @@ function draw(){drawHlBtn();drawSafety();pwDraw();
   if(s&&(!m||!m.connected||m.deck===null||(!m.plan&&s.title))){   // kein Lied aus Mixxx: die Titelerkennung nimmt dieselbe Zeile
    const bad=s.st==='missing'||s.st==='error'||s.st==='offline',st=S.style_eff?tr('st_'+S.style_eff):'',arrow=st&&st.toLowerCase()!==String(s.genre).toLowerCase()?' → '+st:'';
    if(m&&m.connected&&m.deck!==null)drawMxBar(m);
-   el.style.display='';el.title=s.msg||'';el.innerHTML=row(dot(s.title?'ok':(bad?'bad':'')),'<b>'+tr('sr_label')+'</b><i>'+(S.lvsrc==='lan'?'LAN':'Line-In')+'</i>',s.title?'<span style="color:#9fd0ff;font-weight:600;font-size:12.5px">'+(s.artist?esc(s.artist)+' – ':'')+esc(s.title)+'</span>':'<span style="color:#889">'+tr('sr_'+s.st)+'</span>',s.title&&s.genre?'<span style="color:#889;font-weight:400;font-size:12px">'+esc(s.genre)+arrow+'</span>':'');return}
+   el.style.display='';el.title=s.msg||'';el.innerHTML=row(dot(s.title?'ok':(bad?'bad':'')),'<b>'+tr('sr_label')+'</b><i>'+(S.lvsrc==='lan'?'LAN':S.lvsrc==='bt'?'Bluetooth':'Line-In')+'</i>',s.title?'<span style="color:#9fd0ff;font-weight:600;font-size:12.5px">'+(s.artist?esc(s.artist)+' – ':'')+esc(s.title)+'</span>':'<span style="color:#889">'+tr('sr_'+s.st)+'</span>',s.title&&s.genre?'<span style="color:#889;font-weight:400;font-size:12px">'+esc(s.genre)+arrow+'</span>':'');return}
   const MXOFF=document.documentElement.classList.contains('nomixxx');el.style.display='';   // ohne Mixxx (14.11.2026): Zeile nur fuer den Auto-DJ
   if(MXOFF&&(!m||!m.connected||m.deck===null||(m.deck!==11&&m.deck!==12))){el.innerHTML='';el.style.display='none';return}
   if(!m){el.innerHTML=row('','<span style="color:#889">Mixxx</span>','<span style="color:#889">'+tr('mx_off')+'</span>','');return}
@@ -1722,7 +1782,7 @@ def help_page(lang="de", anlage=False, technik=False):
 
 
 # Texte der Kopfleiste (static/sm/nav.js): Titel der Seiten und die Menuepunkte
-NAV_KEYS = ("nav_back", "nav_home", "nav_menu", "music_host", "h_showman", "h_music", "h_autotag", "h_dupes", "h_titles", "h_check", "h_genres", "h_cd", "h_folders", "h_import", "h_merge", "h_lose", "h_mirror", "h_fnametags", "h_care", "h_pre", "h_autodj", "h_artists", "h_albums", "h_favs", "h_missing", "h_damaged", "h_groups", "h_room", "stat_title", "h_health", "h_setpage", "h_software", "h_about",
+NAV_KEYS = ("nav_back", "nav_home", "nav_menu", "music_host", "h_showman", "h_music", "h_autotag", "h_dupes", "h_titles", "h_check", "h_genres", "h_cd", "h_folders", "h_import", "h_merge", "h_lose", "h_mirror", "h_fnametags", "h_care", "h_pre", "h_autodj", "h_artists", "h_albums", "h_favs", "h_missing", "h_damaged", "h_groups", "h_room", "stat_title", "h_health", "h_setpage", "h_software", "h_about", "h_eichen",
             "h_help", "h_editor", "h_fixtures", "apc_title", "lumi_title", "h_dmxdebug", "sys_dmxmon", "h_matrix", "h_radio")
 
 
@@ -2201,6 +2261,18 @@ def start(show, port):
                 self._send(200, stats_page_html, "text/html; charset=utf-8")
             elif self.path == "/health" or self.path.startswith("/health?"):  # Zustand (Herz neben dem Statistik-Knopf)
                 self._send(200, health_page_html, "text/html; charset=utf-8")
+            elif self.path == "/api/lyrics" or self.path.startswith("/api/lyrics?"):   # Liedtext fuer den Fernseher (23.11.2026)
+                self._send(200, json.dumps(show.lyrics_api(), ensure_ascii=False).encode(), "application/json; charset=utf-8",
+                           {"Access-Control-Allow-Origin": "*"})
+            elif self.path == "/api/takt" or self.path.startswith("/api/takt?"):   # Takt fuer den Fernseher (23.11.2026), nur lesen
+                self._send(200, json.dumps(show.takt(), ensure_ascii=False).encode(), "application/json; charset=utf-8",
+                           {"Access-Control-Allow-Origin": "*"})
+            elif self.path == "/api/links":                                   # eigene Links zu Geraeten (Einstellungen)
+                self._send(200, json.dumps({"links": show.links.public()}, ensure_ascii=False).encode(), "application/json; charset=utf-8")
+            elif self.path == "/api/liste":                                   # Szenen, Effekte, Bewegungen mit Beschreibung (24.11.2026)
+                import takt_liste
+                self._send(200, json.dumps(takt_liste.liste(show), ensure_ascii=False).encode(), "application/json; charset=utf-8",
+                           {"Access-Control-Allow-Origin": "*"})
             elif self.path == "/api/health":
                 self._send(200, json.dumps(hl.info(), ensure_ascii=False).encode(), "application/json")
             elif self.path == "/api/stats":
@@ -2279,6 +2351,26 @@ def start(show, port):
                 rec = getattr(show, "recorder", None)
                 if rec is not None:
                     info["rec"] = rec.status()                 # Debug-Aufnahme (12.11.2026)
+                self._send(200, json.dumps(info).encode(), "application/json")
+            elif self.path == "/api/bt":                      # Bluetooth-Empfaenger (bt_audio.py, 24.11.2026)
+                import bt_audio
+                try:
+                    info = bt_audio.manager().status()
+                except Exception as e:                         # noqa: BLE001
+                    info = {"tools": False, "bluealsa": False, "devices": [], "error": str(e)[:120]}
+                info["platform"] = sys.platform                # Bluetooth gibt es nur unter Linux (Pi)
+                try:                                           # WLAN-Schalter (wlan.py, 25.11.2026)
+                    import wlan
+                    info["wlan"] = wlan.manager().status()
+                except Exception as e:                         # noqa: BLE001
+                    info["wlan"] = {"tool": False, "error": str(e)[:120]}
+                for key, name in (("out", "bt_out_info"), ("net_out", "net_out_info")):   # Weiterleitung (25.11.2026)
+                    fn = getattr(show.src, name, None)
+                    if fn is not None:
+                        try:
+                            info[key] = fn()
+                        except Exception as e:                 # noqa: BLE001
+                            info[key] = {"dev": "", "outs": [], "error": str(e)[:120]}
                 self._send(200, json.dumps(info).encode(), "application/json")
             elif self.path == "/api/audio/level":
                 fn = getattr(show.src, "level", None)

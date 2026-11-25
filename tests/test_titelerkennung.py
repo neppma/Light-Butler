@@ -305,7 +305,7 @@ check(len(got) == 1 and got[0].shape == (512,) and abs(got[0][0] - 0.25 * 10 ** 
 print("Panel")
 page = make_page()
 check("srline" not in page and "tr('sr_label')" in page, "keine eigene Zeile: Live nimmt die Mixxx-Zeile, das Panel springt nicht")
-check("tr('sr_label')+'</b><i>'+(S.lvsrc==='lan'?'LAN':'Line-In')+'</i>'" in page, "neben Live steht, woher der Ton kommt (Line-In oder LAN vom Mac)")
+check("tr('sr_label')+'</b><i>'+(S.lvsrc==='lan'?'LAN':S.lvsrc==='bt'?'Bluetooth':'Line-In')+'</i>'" in page, "neben Live steht, woher der Ton kommt (Line-In, LAN vom Mac oder Bluetooth)")
 check("s&&(!m||!m.connected||m.deck===null||(!m.plan&&s.title))" in page, "Live nur, wenn aus Mixxx kein Lied kommt")
 check("Titelerkennung" in page, "Gruppe unter Einstellungen allgemein")
 

@@ -29,6 +29,7 @@ from . import covers
 from . import artists as artists_mod
 from . import albums as albums_mod
 from . import radio as radio_mod
+from . import eichen
 from . import local_play
 from . import favorites as fav_mod
 from . import stars as stars_mod
@@ -129,9 +130,12 @@ class ShowManager:
         self.favs = fav_mod.Favorites(self.store.base, self.artists.library, artists=self.artists, albums=self.albums)   # Favoriten (14.11.2026)
         self.missing = missing_mod.Missing(self.store.base, self.artists.library)                  # Merkliste Fehlt mir (14.11.2026)
         self.favs.stars = self.stars                                                    # 5 Sterne = Favorit, auch hier gesetzte
+        self.line_lock = threading.Lock()                                                # Eingang Line-In fuers Radio am Geraet
+        self.line_sw, self.line_err, self.line_thread = None, "", None
         self.radio = radio_mod.Radio(self.store.base, opener=lambda req, timeout: (self.artist_opener or urllib.request.urlopen)(req, timeout=timeout))
         show.radio = self.radio                                                         # Internetradio (21.11.2026): Titel -> Licht-Stil, Matrix
         self.local = local_play.LocalPlay()
+        self.eich = eichen.EichRuns()                # Eichstueck: letzter Durchlauf (Seite /eichen, nur im Speicher)
         show.local = self.local                                                         # Musik-DB spielt im Browser (21.11.2026): nur Anzeige
         show.lyric_cache = ly.LyricCache(os.path.join(self.store.base, "_liedtexte.sqlite"))  # "_": zaehlt nicht als Show, shows/ bleibt beim Einspielen unberuehrt
         self.lyric_bulk = ly.LyricBulk(show.lyric_cache, lambda: show.mixxx.library() if getattr(show, "mixxx", None) is not None else [])
@@ -686,6 +690,10 @@ class ShowManager:
         r = self.radio
         if op == "radio_report":                  # Helfer: Zustand und Titelfeld
             return r.report(d)
+        if op == "radio_here":                    # Browser, der selbst spielt (22.11.2026): Zustand, Eingang Line-In
+            out = r.here_report(d)
+            self._line_watch()
+            return dict(out, line=self.line_info())
         if op == "radio_countries":
             return {"countries": r.countries()}
         if op == "radio_tags":
@@ -699,7 +707,7 @@ class ShowManager:
         elif op == "radio_fav":
             r.fav(d.get("st"), bool(d.get("on")))
         elif op == "radio_play":
-            r.play(d.get("st"), d.get("slot"))
+            r.play(d.get("st"), d.get("slot"), here=bool(d.get("here")), dev=d.get("dev") or "")
         elif op == "radio_stop":
             r.stop()
         elif op == "radio_vol":
@@ -707,6 +715,69 @@ class ShowManager:
         else:
             raise ValueError("unbekannter Befehl")
         return r.state()
+
+    # ---- Eingang Line-In, solange ein Browser das Radio selbst spielt (Fernseher am Line-In, 22.11.2026) ----------
+    def line_info(self):
+        sw = getattr(self, "line_sw", None)
+        return {"cur": str(getattr(getattr(self.show, "src", None), "dev_name", "") or ""), "auto": bool(sw and sw.get("to")),
+                "prev": (sw or {}).get("prev") or "", "err": getattr(self, "line_err", "")}
+
+    def line_device(self):
+        """Der Line-In am Licht-Rechner: eine echte Soundkarte (USB zuerst), nie der Ton vom Musik-Rechner."""
+        fn = getattr(getattr(self.show, "src", None), "list_devices", None)
+        devs = [x for x in (fn() if fn else []) if x.get("index", -1) >= 0]
+        if not devs:
+            return ""
+        rank = lambda x: (0 if "usb" in x["name"].lower() else 1 if "hw:" in x["name"].lower() else 2, x["index"])
+        return sorted(devs, key=rank)[0]["name"]
+
+    def _line_watch(self):
+        """Waechter-Faden einmal starten: schaltet auf Line-In und nach dem Ende (auch Seite zu) zurueck."""
+        if getattr(self, "line_thread", None) is None:
+            self.line_thread = threading.Thread(target=self._line_loop, daemon=True)
+            self.line_thread.start()
+        self.line_tick()
+
+    def _line_loop(self):
+        while True:
+            time.sleep(1.0)
+            try:
+                self.line_tick()
+            except Exception:                         # noqa: BLE001  Waechter darf nie sterben
+                pass
+
+    def line_tick(self):
+        src = getattr(self.show, "src", None)
+        fn = getattr(src, "configure", None)
+        if fn is None:                                # Simulator: kein Eingang
+            return
+        with self.line_lock:
+            sw = getattr(self, "line_sw", None)
+            cur = str(getattr(src, "dev_name", "") or "")
+            if self.radio.here_line():
+                if sw is None:
+                    to = self.line_device()
+                    if not to:
+                        self.line_err = "Kein Line-In am Light-Butler gefunden"
+                        self.line_sw = {"prev": "", "to": ""}
+                    elif cur == to:
+                        self.line_sw = {"prev": "", "to": to}          # war schon Line-In: danach nichts zurueckstellen
+                    else:
+                        try:
+                            fn(device=to)
+                            self.line_sw, self.line_err = {"prev": cur, "to": to}, ""
+                            self.show.note = "Internetradio am Geraet: Eingang " + to
+                        except ValueError as e:
+                            self.line_err = str(e)[:120]
+                            self.line_sw = {"prev": "", "to": ""}
+            elif sw is not None:
+                self.line_sw = None
+                if sw.get("prev") and cur == sw.get("to"):           # nur zurueck, wenn niemand inzwischen anders gewaehlt hat
+                    try:
+                        fn(device=sw["prev"])
+                        self.show.note = "Internetradio am Geraet beendet: Eingang wieder " + sw["prev"]
+                    except ValueError as e:
+                        self.line_err = str(e)[:120]
 
     def matrix_song_text(self, song):
         """Pixel-Matrix, Laufschrift: Interpret, Titel, Album zum laufenden Lied (Bibliothek, Internetradio oder Show)."""
@@ -1004,7 +1075,7 @@ class ShowManager:
         if not os.path.isfile(self.room_path):
             return None
         r = rm.load(self.room_path, {x["name"] for x in rm.devices(self.show.rig)})
-        return None if r.get("guess") else r
+        return None if r.get("guess") else rm.lights_only(r)    # Anzeigen (Matrix, API-Anzeige) gehen den Assistenten nichts an
 
     def _lib_meta(self, doc):
         """Genre und Energiestufe fuer den Assistenten: aus dem Mixxx-Deck (marks), sonst aus der Bibliothek ueber Titel und
@@ -1282,6 +1353,8 @@ class ShowManager:
             return dict(self.favs.state(), conf=self.fav_conf(), n=n)
         if op == "stars_ack":                     # Musik-Rechner: in seine Warteschlange fuer Mixxx uebernommen
             return {"n": self.stars.ack(d.get("items") if isinstance(d.get("items"), list) else [])}
+        if op == "eich_result":                   # Eichstueck (Seite /eichen, 23.11.2026): Messwerte eines Durchlaufs
+            return self.eich.put(d)
         if op == "local_play":                    # Musik-DB: Lied im Browser (Hauptpanel Quelle Lokal, Matrix), nie aufs Licht
             return {"local": self.local.report(d)}
         if op.startswith("radio_"):               # Internetradio (Seite /musik/radio, 21.11.2026)
@@ -1612,6 +1685,11 @@ def handle_get(h, mgr):
         return _static(h, "cd.html")
     if path == "/musik/defekt":                   # Beschaedigte Dateien finden und reparieren (Musik-Rechner, 14.11.2026)
         return _static(h, "defekt.html")
+    if path == "/eichen":                         # Eichstueck abspielen und die Erkennung pruefen (23.11.2026)
+        return _static(h, "eichen.html")
+    if path == "/eichen/eichstueck.mp3":
+        _send_mp3(h, os.path.join(os.path.dirname(STATIC), "eichstueck.mp3"))
+        return True
     if path == "/musik/radio":                    # Internetradio (21.11.2026)
         return _static(h, "radio.html")
     if path == "/musik/fehlt":                    # Merkliste Fehlt mir (14.11.2026)
@@ -1745,6 +1823,10 @@ def handle_get(h, mgr):
             _ws(h, mgr)
         elif path == "/api/sm/audio":
             _audio(h, mgr, name)
+        elif path == "/api/sm/eichen":                       # Eichstueck: Abschnitte mit Sollwerten, letzter Durchlauf
+            import eichstueck
+            _json(h, {"sections": eichstueck.sections(), "dur": eichstueck.DURATION, "grace": eichstueck.GRACE_S, "einsatz": eichstueck.EINSATZ_S,
+                      "version": eichstueck.VERSION, "last": mgr.eich.last})
         elif path == "/api/sm/shows":
             _json(h, {"shows": mgr.store.list(), "status": mgr.status()})
         elif path == "/api/sm/show":
@@ -1794,7 +1876,8 @@ def handle_get(h, mgr):
             _json(h, {"r": mgr.stars.eff(p, x.get("rating") or 0)})
         elif path == "/api/sm/radio":                        # Internetradio: Plaetze, Favoriten, Zustand, Eingang am Licht-Rechner
             cur = str(getattr(getattr(mgr.show, "src", None), "dev_name", "") or "")
-            _json(h, dict(mgr.radio.state(), input=cur, net=cur == "Musik-Rechner (Netzwerk)", sim=not cur))
+            _json(h, dict(mgr.radio.state(), input=cur, net=cur == "Musik-Rechner (Netzwerk)", sim=not cur, line=mgr.line_info(),
+                          line_dev=mgr.line_device() if cur else ""))
         elif path == "/api/sm/radio_want":                   # Helfer am Musik-Rechner: welcher Sender spielen soll
             _json(h, mgr.radio.want_info())
         elif path in ("/api/sm/radio_logo", "/api/sm/radio_cover"):
@@ -1987,8 +2070,12 @@ def _manual(h):
 
 
 def _audio(h, mgr, name):
+    """MP3 einer Show."""
+    _send_mp3(h, mgr.store.path(name, "audio.mp3"))
+
+
+def _send_mp3(h, p):
     """MP3 mit Range-Anfragen: Der Browser muss darin springen koennen, Safari verlangt das sogar. Status wie HTTP/1.1."""
-    p = mgr.store.path(name, "audio.mp3")
     if not os.path.isfile(p):
         h._send(404, b"keine Musik", "text/plain")
         return

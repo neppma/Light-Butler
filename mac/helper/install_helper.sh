@@ -68,7 +68,7 @@ case "$PI" in *.*) ;; *) PI="$PI.$LOCAL_DOMAIN" ;; esac
 
 # --- Programmordner -----------------------------------------------------------------------------------------------------
 mkdir -p "$BASE" "$LOGDIR"
-cp "$HERE/helper.py" "$SRC/apc_relay.py" "$SRC/audio_send.py" "$BASE/"
+cp "$HERE/helper.py" "$SRC/apc_relay.py" "$SRC/audio_send.py" "$SRC/pi_addr.py" "$BASE/"
 # Liedliste ohne Mixxx: derselbe Teil wie in der Mixxx-Bruecke (Mixxx-Lieder aus ~/Light-Butler-Daten/mixxxdb.sqlite, MP3s im Musikordner)
 cp "$SRC/mixxx_bridge.py" "$SRC/analyze_track.py" "$SRC/music_serve.py" "$SRC/stems_backup.py" "$SRC/energy_level.py" \
    "$SRC/energie_modell.json" "$SRC/key_estimate.py" "$SRC/loudness.py" "$SRC/prio.py" "$SRC/pfad.py" "$SRC/id3_tags.py" "$SRC/folder_lib.py" "$SRC/convert_mp3.py" "$SRC/tag_edit.py" "$SRC/auto_tag.py" "$SRC/dupes.py" "$SRC/folder_art.py" "$SRC/changed_log.py" "$SRC/file_check.py" "$SRC/genre_edit.py" "$SRC/cd_assist.py" "$SRC/music_excl.py" "$SRC/export_files.py" "$SRC/import_assist.py" "$SRC/klang_fp.py" "$SRC/cue_estimate.py" "$SRC/stick_hold.py" "$SRC/folder_merge.py" "$SRC/nas_mirror.py" "$SRC/fname_tags.py" "$SRC/audio_fade.py" "$SRC/mixxx_uebertragen.py" "$SRC/programs_copy.py" "$SRC/album_loose.py" "$SRC/damaged.py" "$SRC/mixxx_sterne.py" "$SRC/mixxx_sterne.sh" "$SRC/radio_play.py" "$BASE/"

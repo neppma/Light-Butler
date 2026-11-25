@@ -35,7 +35,7 @@ Light-Butler runs the light, and if you like the music too, all by itself. You l
 - **Fine effects:** brightness follows loudness, hi-hat sparkle, beat pulse, devices one after another.
 - **40 scenes** with a scene editor, plus instant buttons: STROBE, WOW! (building strobe), SMOKE (fog), FREEZE, BLINDER, BLACKOUT and laser. All except AUTO only act while you hold them.
 - **Track recognition** via Shazam: title and artist even without DJ software, the genre picks the light style.
-- **Lyrics** run live with the music in the panel.
+- **Lyrics** run live with the music in the panel. Lines in another script (Arabic, Chinese …) are hidden by the checkbox **Liedtext nur in lateinischer Schrift** (general settings → track recognition, on). With the checkbox **Schnittstelle: nur Refrain** (there, off) other devices get only the chorus instead of the whole text.
 
 **Show manager**
 
@@ -160,7 +160,7 @@ All except AUTO are **push buttons**: they only act while you hold them.
 
 - If the connection breaks (phone locked, Wi-Fi gone), the Light-Butler releases a held button by itself after 1.5 seconds.
 - Below you choose the **Flashes/s** (1 to 10). Without strobe permission the fast steps are dimmed.
-- **General Dimmer** sets the overall brightness. **Groups ▾** opens a separate slider per light group (for example spiders, washes, moving head, ambience, Nanoleaf).
+- **General Dimmer** sets the overall brightness. **Groups ▾** opens a separate slider per light group (for example spiders, washes, moving head, ambience, Nanoleaf). The slider **API** affects no light; it only dampens the brightness other devices get through the interface, for example a dashboard on the TV.
 
 ### Speed and Style
 
@@ -419,6 +419,8 @@ With the round **radio** button at the top of the main page (or menu **☰** →
 - **Find stations:** choose country, genre or name, then **Suchen** (search). **♡** marks favourites, **+** puts a station on one of the **12 preset slots**. Tapping a slot plays it, **Bearbeiten** (edit) empties slots.
 - **Playback** runs on the music computer in the **Light-Butler helper**, at the volume from the page. It also sends the sound to the Light-Butler; you may close the page.
 - **For the light** the Light-Butler needs the input **Musik-Rechner (Netzwerk)** (music computer, network); the page offers to switch.
+- **Ton: dieses Gerät** (sound: this device; switch next to stop, remembered per device): the browser plays by itself, for example on the TV, while the music computer stays silent. Title, cover, style are still there. If the device is connected to the **line-in** of the Light-Butler, the checkbox below sets the input to line-in while playing, then back. Some devices start the sound only after a tap on **▶ Ton hier starten** (start sound here).
+- **📺 Fernseher-Ansicht** (TV view; button at the preset slots, remembered per device): shows only what is playing plus the preset slots, large, selectable with the arrow keys and OK of the remote. The sound then always plays on this device with line-in. On a TV it switches itself on at the first visit; **↩ Normale Ansicht** (normal view) switches back.
 - If the station sends **artist and title**, you see them with a cover (on the page, at the top of the main page; the mouse over it enlarges it), the light takes the matching **style**, and the pixel matrix shows cover and station logo. Other texts (programme, news) are shown as info only. Traffic news and radio text are not available over the internet.
 
 ## DJ software and music computer
@@ -538,6 +540,8 @@ On the page **Room plan** (menu **☰**) you draw where your devices stand in th
 3. Tap a device to set position, direction and length (for LED strips) exactly. **+ Stück** (add piece) adds another piece to a strip.
 4. **Save**.
 
+You can also place the **pixel matrix** and the **API display** (a TV or screen that shows beat and lyrics via the interface). They are displays only: they do not affect the light or the show assistant.
+
 ### Connections and outputs
 
 Under **⚙** → **General settings** → **Connections** you see all network devices and whether they are reachable. A tap on the address opens their web interface.
@@ -579,6 +583,15 @@ With the **DMX debugger** (**⚙** → **Tools**) you set each DMX channel on it
 - The push button **Kurz dunkel** (briefly dark, or the space bar) sets all channels to 0 while you hold it.
 - BLACKOUT always takes priority. The debugger switches off when the page is closed and after 2 seconds without connection.
 
+### Test piece
+
+The **test piece** (**⚙** → **Tools**) checks how well the Light-Butler detects music.
+
+- It is a test track of 3 minutes with fixed sections: silence, music without a beat, beat, break, build-up, drop plus a soft beat.
+- Play it on the device whose sound reaches the Light-Butler, at normal volume, with no other music.
+- The page shows what is detected while it plays, and at the end how much of each section was right.
+- With the same piece you can compare settings before and after a change.
+
 ## Settings
 
 The gear **⚙** at the top opens the page **Settings**. It has two large expandable sections and below them links to further pages.
@@ -590,7 +603,8 @@ The gear **⚙** at the top opens the page **Settings**. It has two large expand
 | **General settings** | connections, home, backup, MIDI controller, audio input plus output, fog, track recognition and panel |
 | **Settings (auto detection)** | how AUTO reads the music: silence, kick and beat, energy, phases, levels, strobe, laser, scene automation, ambience, Mixxx prediction |
 | **Devices** | Fixtures, room plan, pixel matrix, APC mini · Mapping, ROLI Lumi · Mapping |
-| **Tools** | DMX monitor, DMX debugger |
+| **Own links** | buttons to your own devices in the home network, for example a dashboard on the TV: enter address and port (or paste a whole address with a path), **Next**, give it a name, **Save**. The button opens the page in a new tab, **✕** removes it |
+| **Tools** | DMX monitor, DMX debugger, test piece |
 | **Software for other computers** | system diagram and downloads of the installation packages |
 
 - Every change takes effect at once and is saved.
@@ -612,6 +626,8 @@ All the automation depends on the music signal.
 4. Too quiet: raise **Gain (software)**. Too loud (red **CLIPPING**): turn it down at the mixer.
 
 Use a line input, never a microphone input.
+
+**Bluetooth:** The lighting computer can also receive music via Bluetooth, like a speaker. Under **Audio input** → **Bluetooth-Empfänger** press **Sichtbar machen** (make visible, 3 minutes), pair "Light-Butler" on the phone and choose the input **Bluetooth** at the top. Set it up once before: the hint there names the command. So that the music from the phone can still be heard, choose an output of the lighting computer below at **Ton weiterleiten an** (forward sound to: headphone socket or USB sound card into the mixer). The same exists for the sound from the music computer: **Ton vom Musik-Rechner weiterleiten an**, in case the music computer is away from the mixer. A **Bluetooth speaker** also works as output: find it with **Geräte suchen** (search devices), **Koppeln** (pair), then it appears in the list. Since it plays a little later, the **light delay** in milliseconds can be set under general settings → output (about 150 to 250). If the Bluetooth sound stutters while the lighting computer is on a cable, press **WLAN trennen** (disconnect Wi-Fi) there (Bluetooth shares the radio with Wi-Fi).
 
 ### The most important switches
 

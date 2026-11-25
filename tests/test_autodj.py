@@ -318,5 +318,8 @@ check("function nextPos()" in _j3 and "items.splice(nextPos(), 0, trackItem(t" i
 _h3 = open(os.path.join(ROOT, "pi", "static", "sm", "autodj.html"), encoding="utf-8").read()
 check('id="bclear"' in _h3 and "$('bclear').onclick" in _j3 and "items = [now]; cur = 0" in _j3 and "stopAll(); items = []" in _j3,
       "Knopf Leeren: das laufende Lied spielt zu Ende, sonst ganz leer (Wunsch 12.11.2026)")
+check("#padcfg select { min-height: 30px; font-size: 12px; flex: 1 1 auto; width: 100%; min-width: 0; }" in _hh
+      and "minmax(min(170px, 100%), 1fr)" in _hh,
+      "Tasten-Belegung: lange Sample-Namen machen die Zeile nie breiter (Fernseher, Handy, 22.11.2026)")
 finish("Auto-DJ")
 

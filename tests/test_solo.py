@@ -4,6 +4,7 @@ from _common import build, ch, Clock, check, finish
 
 WASH = ["rgbuv_7", "rgbuv_8", "rgbuv_10", "rgbuv_11"]
 rig, sh = build(seed=3)
+sh.cfg.set("drop_step", 0.0)                     # prueft den Einzel-Strobe (ab Vollgas), nicht die Stufe nach dem Drop
 clk = Clock(sh)
 events, other, wash_vals = [], set(), set()
 cur = [None]

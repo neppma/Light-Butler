@@ -21,6 +21,7 @@ import bisect
 import re
 
 from . import fixtures as fm
+from . import latin
 from . import patterns as pt
 
 EASES = ("linear", "ease_in", "ease_out", "ease_in_out", "constant")
@@ -285,7 +286,7 @@ class Compiled:
         for g in fm.default_groups(rig):
             groups.setdefault(g["id"], g)
         self.master = None
-        self.lyric_lines = (doc.get("lyrics") or {}).get("lines") or []
+        self.lyric_raw = (doc.get("lyrics") or {}).get("lines") or []
         for tr in doc["tracks"]:
             tg = tr["target"]
             if "master" in tg:
@@ -354,6 +355,11 @@ class Compiled:
                     vals[fname] = ok
             self.scenes.append((c["t"], c["t"] + c["d"], c["fade_in"], c["fade_out"], vals))
         self._ctx = pt.Ctx()
+
+    @property
+    def lyric_lines(self):
+        """Zeilen fuer die Anzeige (Panel, Matrix, Schnittstelle): mit lyrics_latin nur lateinische Schrift (latin.py)."""
+        return latin.lines(self.lyric_raw)
 
     def beat_at(self, t):
         return (t - self.beat_offset) * self.bpm / 60.0

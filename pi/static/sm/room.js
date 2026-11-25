@@ -1,15 +1,17 @@
-// room.js - Raumplan: Geraete im Grundriss platzieren (Seite /raum). Nur ein Plan, aufs Licht wirkt er nicht.
+// room.js - Raumplan: Geraete und Anzeigen (Pixel-Matrix, API-Anzeige) im Grundriss platzieren (Seite /raum). Nur ein Plan, aufs Licht wirkt er nicht.
 (function () {
   'use strict';
   const SM = window.SM;
   const $ = id => document.getElementById(id);
   const NS = 'http://www.w3.org/2000/svg';
-  const COLOR = { bars: '#ff7a59', wash: '#7d8cff', spot: '#cfd3e6', locked: '#ff5fa2', fx: '#c58bff', uv: '#a066ff', ambient: '#2fd4c6', nano: '#3ddc6a' };
+  const COLOR = { bars: '#ff7a59', wash: '#7d8cff', spot: '#cfd3e6', locked: '#ff5fa2', fx: '#c58bff', uv: '#a066ff', ambient: '#2fd4c6', nano: '#3ddc6a', display: '#5ec8ff' };
   const BAND = '#ffc83d';
   let room = null, devs = [], sel = null, dirty = false, drag = null;
 
   const byName = n => devs.find(d => d.name === n.split('#')[0]);
   const color = k => { const d = byName(k); return d && d.line && d.group === 'ambient' && k.startsWith('effektband') ? BAND : COLOR[(d || {}).group] || '#aab'; };
+  const isDisp = k => !!(byName(k) || {}).display;              // Anzeige (Pixel-Matrix, API-Anzeige): Bildschirm, kein Licht
+  const isLine = k => room.items[k].len > 0 && !isDisp(k);       // bei Anzeigen ist len die Breite des Bildschirms
   const part = k => k.includes('#') ? ' (' + k.split('#')[1] + ')' : '';
   const label = k => { const d = byName(k); return d ? (d.nr ? d.nr + ' · ' : '') + d.label + part(k) : k; };
   const short = k => { const d = byName(k); return d ? (d.short || d.label) + part(k) : k; };
@@ -35,12 +37,17 @@
     for (let y = 0.5; y < H; y += 0.5) el('line', { x1: 0, y1: y, x2: W, y2: y, stroke: y % 1 ? '#1a1c28' : '#24273a', 'stroke-width': 0.012 }, svg);
     const t1 = el('text', { x: W / 2, y: -0.15, fill: '#889', 'font-size': 0.2, 'text-anchor': 'middle' }, svg); t1.textContent = W + ' m';
     const t2 = el('text', { x: -0.15, y: H / 2, fill: '#889', 'font-size': 0.2, 'text-anchor': 'end', 'dominant-baseline': 'middle' }, svg); t2.textContent = H + ' m';
-    const keys = Object.keys(room.items).sort((a, b) => (room.items[b].len > 0) - (room.items[a].len > 0));   // Streifen unten, Punkte obenauf
+    const keys = Object.keys(room.items).sort((a, b) => isLine(b) - isLine(a));   // Streifen unten, Punkte obenauf
     for (const k of keys) {
       const it = room.items[k], c = color(k), on = k === sel;
       const g = el('g', { transform: 'translate(' + it.x + ' ' + it.y + ') rotate(' + it.rot + ')', style: 'cursor:grab' }, svg);
       g.dataset.k = k;
-      if (it.len > 0) {
+      if (isDisp(k)) {                                           // Bildschirm von oben: schmaler Balken quer zur Blickrichtung
+        const bw = Math.max(it.len, 0.2);
+        el('line', { x1: 0, y1: 0, x2: 0.32, y2: 0, stroke: c, 'stroke-width': 0.03, opacity: 0.8 }, g);
+        el('rect', { x: -0.05, y: -bw / 2, width: 0.1, height: bw, rx: 0.02, fill: '#0d0e16', stroke: on ? '#fff' : c, 'stroke-width': on ? 0.045 : 0.03 }, g);
+        el('rect', { x: -0.2, y: -bw / 2 - 0.12, width: 0.5, height: bw + 0.24, fill: 'transparent' }, g);
+      } else if (it.len > 0) {
         el('line', { x1: -it.len / 2, y1: 0, x2: it.len / 2, y2: 0, stroke: c, 'stroke-width': on ? 0.12 : 0.08, 'stroke-linecap': 'round' }, g);
         el('line', { x1: -it.len / 2, y1: 0, x2: it.len / 2, y2: 0, stroke: 'transparent', 'stroke-width': 0.22 }, g);
         el('circle', { cx: 0, cy: 0, r: 0.1, fill: c, stroke: on ? '#fff' : 'none', 'stroke-width': 0.03 }, g);
@@ -49,11 +56,14 @@
         el('circle', { cx: 0, cy: 0, r: on ? 0.17 : 0.14, fill: c, stroke: on ? '#fff' : '#0d0e16', 'stroke-width': 0.03 }, g);
         el('circle', { cx: 0, cy: 0, r: 0.35, fill: 'transparent' }, g);
       }
-      const ty = it.len > 0 ? (it.y < 0.4 ? 0.3 : -0.14) : (it.y < 0.4 ? 0.36 : -0.22);   // an der oberen Wand darunter
-      const flat = it.len > 0 && it.rot % 180 === 0;             // waagrechter Streifen: Name am linken Ende, die Mitte bleibt frei
-      const anchor = flat ? 'start' : it.len > 0 ? 'middle' : it.x < 0.7 ? 'start' : it.x > W - 0.7 ? 'end' : 'middle';
+      const ln = isLine(k);
+      const ty = ln ? (it.y < 0.4 ? 0.3 : -0.14) : (it.y < 0.4 ? 0.36 : -0.22);   // an der oberen Wand darunter
+      const half = isDisp(k) ? Math.max(it.len, 0.2) / 2 * Math.abs(Math.cos(it.rot * Math.PI / 180)) : 0;   // Bildschirm: Name neben dem Balken
+      const tyd = half ? (it.y < 0.4 ? half + 0.2 : -half - 0.1) : ty;
+      const flat = ln && it.rot % 180 === 0;             // waagrechter Streifen: Name am linken Ende, die Mitte bleibt frei
+      const anchor = flat ? 'start' : ln ? 'middle' : it.x < 0.7 ? 'start' : it.x > W - 0.7 ? 'end' : 'middle';
       const ax = flat ? it.x - it.len / 2 + 0.6 : anchor === 'start' ? it.x - 0.15 : anchor === 'end' ? it.x + 0.15 : it.x;
-      const tx = el('text', { x: ax, y: it.y + ty, fill: on ? '#fff' : '#cfd3e6', 'font-size': 0.15, 'text-anchor': anchor, 'pointer-events': 'none' }, svg);
+      const tx = el('text', { x: ax, y: it.y + tyd, fill: on ? '#fff' : '#cfd3e6', 'font-size': 0.15, 'text-anchor': anchor, 'pointer-events': 'none' }, svg);
       tx.textContent = short(k);
     }
     drawFree();
@@ -70,7 +80,7 @@
       b.innerHTML = '<span class="dot"></span>';
       b.firstChild.style.background = COLOR[d.group] || '#aab';
       b.appendChild(document.createTextNode(label(d.name)));
-      b.onclick = () => { room.items[d.name] = { x: snap(room.w / 2), y: snap(room.h / 2), rot: 0, len: d.line ? 2 : 0 }; sel = d.name; setDirty(true); draw(); };
+      b.onclick = () => { room.items[d.name] = { x: snap(room.w / 2), y: snap(room.h / 2), rot: 0, len: d.line ? 2 : d.size || 0 }; sel = d.name; setDirty(true); draw(); };
       box.appendChild(b);
     }
   }
@@ -104,14 +114,14 @@
     B.firstChild.textContent = label(sel);
     B.appendChild(num('X (m von links)', it.x, 0.1, v => { it.x = clamp(v, 0, room.w); }));
     B.appendChild(num('Y (m von oben)', it.y, 0.1, v => { it.y = clamp(v, 0, room.h); }));
-    B.appendChild(num(it.len > 0 ? 'Drehung (Grad)' : 'Blickrichtung (Grad)', it.rot, 15, v => { it.rot = ((v % 360) + 360) % 360; }));
+    B.appendChild(num(isLine(sel) ? 'Drehung (Grad)' : 'Blickrichtung (Grad)', it.rot, 15, v => { it.rot = ((v % 360) + 360) % 360; }));
     const rr = document.createElement('div');
     rr.className = 'row';
     rr.appendChild(btn('↺ 15°', () => { it.rot = (it.rot + 345) % 360; }));
     rr.appendChild(btn('↻ 15°', () => { it.rot = (it.rot + 15) % 360; }));
     rr.appendChild(btn('90°', () => { it.rot = (it.rot + 90) % 360; }, 'Um 90 Grad drehen'));
     B.appendChild(rr);
-    B.appendChild(num('Länge (m, 0 = Punkt)', it.len, 0.1, v => { it.len = clamp(v, 0, Math.max(room.w, room.h)); }));
+    B.appendChild(num(isDisp(sel) ? 'Breite des Bildschirms (m)' : 'Länge (m, 0 = Punkt)', it.len, 0.1, v => { it.len = clamp(v, 0, Math.max(room.w, room.h)); }));
     const r2 = document.createElement('div');
     r2.className = 'row';
     if (d && d.line && !sel.includes('#')) {
@@ -125,6 +135,12 @@
     }
     r2.appendChild(btn('Aus dem Plan', () => { delete room.items[sel]; sel = null; }));
     B.appendChild(r2);
+    if (isDisp(sel)) {
+      const p = document.createElement('p');
+      p.className = 'dim';
+      p.textContent = 'Anzeige: nur im Plan eingezeichnet, aufs Licht und den Show-Assistenten wirkt sie nicht.';
+      B.appendChild(p);
+    }
   }
 
   function pt(e) {

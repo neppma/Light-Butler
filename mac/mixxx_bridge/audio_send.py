@@ -32,6 +32,8 @@ FRAMES = 256                  # Bilder je Paket: 1024 Byte bei Stereo, passt ohn
 HEAD = struct.Struct("<4sIIBB2x")
 HINT = "blackhole"
 STALL_S = 3.0                 # so lange ohne Block von Core Audio: Eingang neu oeffnen
+QUIET_S = 60.0                # kam seit dem Oeffnen noch nie ein Block (Mac schlaeft, Deckel zu): erst dann wieder,
+QUIET_MAX_S = 600.0           # jedes Mal doppelt so lange, hoechstens so lange (Absturz 22.11.2026 nach 5000 Mal neu oeffnen)
 WIN_HINTS = ("cable output", "stereomix", "stereo mix", "line in", "line-in", "line-eingang", "leitungseingang")
 
 
@@ -89,13 +91,21 @@ class AudioSender:
         self.lock = threading.Lock()
         self._run = False
         self.last_cb = None                           # wann Core Audio zuletzt einen Block geliefert hat
+        self.got = False                              # seit dem Oeffnen schon ein Block gekommen?
+        self.opened = 0.0
+        self.quiet = QUIET_S                          # Wartezeit ohne jeden Block, waechst bis QUIET_MAX_S
         self.restarts = 0
 
     def resolve(self):
         """Adresse des Pi nachschlagen. Nie im Ton-Faden (Fehlerbericht 21.11.2026: Ton zum Pi riss ab, eine haengende
         Namensabfrage hielt den Core-Audio-Faden auf); der Ton nimmt immer die zuletzt bekannte Adresse."""
         try:
-            self.addr = (socket.gethostbyname(self.pi[0]), self.pi[1])
+            try:
+                import pi_addr                          # Kabel und WLAN: die Adresse, die antwortet (25.11.2026)
+                ip = pi_addr.best(self.pi[0])
+            except ImportError:
+                ip = self.pi[0]
+            self.addr = (socket.gethostbyname(ip), self.pi[1])
         except OSError:
             pass
         self.addr_t = time.monotonic()
@@ -127,6 +137,7 @@ class AudioSender:
 
     def _callback(self, indata, frames, t, status):
         self.last_cb = time.monotonic()
+        self.got = True
         self.feed(indata, self.dev_rate)
 
     def connect(self):
@@ -143,7 +154,7 @@ class AudioSender:
                     ch = min(2, d["max_input_channels"])
                     self.stream = self.sd.InputStream(device=i, channels=ch, samplerate=rate, blocksize=1024,
                                                       dtype="float32", callback=self._callback)
-                    self.last_cb = time.monotonic()
+                    self.last_cb, self.got, self.opened = None, False, time.monotonic()
                     self.stream.start()
                     self.name, self.dev_rate = d["name"], rate
                     self.log(f"Ton: {self.name} ({rate} Hz) geht an {self.pi[0]}:{self.pi[1]}")
@@ -189,11 +200,20 @@ class AudioSender:
             elif not self.stream.active:              # Geraet weg (zum Beispiel BlackHole entfernt)
                 self.log("Ton: Eingang beendet, suche neu")
                 self.stop_stream()
-            elif self.last_cb is not None and time.monotonic() - self.last_cb > STALL_S:
-                self.restarts += 1                     # Core Audio liefert nichts mehr, obwohl der Eingang offen ist
+            elif self.got and time.monotonic() - self.last_cb > STALL_S:
+                self.restarts += 1                     # Core Audio liefert nichts mehr, obwohl der Eingang lief
                 self.log("Ton: %s liefert seit %.0f s nichts, oeffne neu" % (self.name, time.monotonic() - self.last_cb))
                 self.stop_stream()
                 last_try = -99.0
+            elif not self.got and time.monotonic() - self.opened > self.quiet:
+                self.restarts += 1                     # nach dem Oeffnen nie ein Block (Mac schlaeft): selten probieren
+                self.log("Ton: %s liefert seit dem Oeffnen nichts (%.0f s), oeffne neu, naechster Versuch fruehestens in %.0f s"
+                         % (self.name, time.monotonic() - self.opened, min(QUIET_MAX_S, self.quiet * 2)))
+                self.quiet = min(QUIET_MAX_S, self.quiet * 2)
+                self.stop_stream()
+                last_try = -99.0
+            elif self.got:
+                self.quiet = QUIET_S                   # Ton laeuft wieder: Wartezeit zuruecksetzen
             time.sleep(1.0)
 
     def stop_stream(self):

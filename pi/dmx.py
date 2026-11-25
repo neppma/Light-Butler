@@ -21,6 +21,7 @@ SICHERHEIT (wird bei JEDEM Frame in Fixture.write erzwungen):
 import os
 import socket
 import struct
+import collections
 import threading
 import time
 
@@ -466,6 +467,12 @@ class Output:
         self.send_errors = 0                              # fehlgeschlagene Sendungen (Seite Zustand)
         self.last_sent = {}                               # zuletzt gesendetes Bild je Ziel (DMX-Monitor)
         self.debug = None                                 # dmx_debug.DmxDebug: Seite /dmx-debug, ersetzt eingeschaltet das Bild der DMX-Kette
+        # Licht-Verzoegerung (Einstellung light_delay_ms, 25.11.2026): das Licht geht so viele Bilder spaeter hinaus, zum
+        # Beispiel wenn die Musik ueber einen Bluetooth-Lautsprecher spaeter kommt. Von der Show je Bild gesetzt.
+        self.delay_frames = 0
+        self.delay_now = False                            # True (BLACKOUT): sofort, Warteschlange leeren
+        self._delayq = collections.deque()
+        self._instant = None                              # Ziel -> Kanaele, die sofort ausgehen (Laser, Nebel)
 
     def _wled_exit_off(self, targets=None):
         """WLED-Ziele mit "on_exit: off", nur im echten Betrieb (nie im Trockenlauf/Simulator: kein Zugriff auf Geraete)."""
@@ -535,6 +542,44 @@ class Output:
         self.synced = True
         self._tick.set()
 
+    def instant_channels(self):
+        """Kanaele, die bei Verzoegerung trotzdem sofort auf 0 gehen (Regeln 2 und 5): alle Kanaele von Geraeten mit
+        gesperrten Kanaelen oder Laser-Kanaelen und von gesperrten Geraeten (Hazer). Einschalten kommt verzoegert."""
+        if self._instant is None:
+            out = {}
+            for fx in self.rig.fixtures:
+                if fx.locked or fx.locked_params or fx.laser_params or fx.manual_ok:
+                    t = fx.target or self.rig.target
+                    idx = [fx.address - 1 + ch - 1 for ch in fx.map.values()]
+                    out.setdefault(t, []).extend(i for i in idx if 0 <= i < 512)
+            self._instant = out
+        return self._instant
+
+    def _delay(self, frames):
+        """Bild von vor delay_frames Bildern senden. Ohne Verzoegerung oder bei BLACKOUT das aktuelle (Licht gleich)."""
+        n = max(0, min(80, int(self.delay_frames)))
+        if n == 0 or self.delay_now:
+            self._delayq.clear()
+            return frames
+        q = self._delayq
+        q.append(frames)
+        while len(q) > n + 1:                             # Verzoegerung verkleinert: alte Bilder auslassen
+            q.popleft()
+        old = q.popleft() if len(q) > n else q[0]         # Verzoegerung vergroessert: altes Bild halten
+        out = dict(old)
+        for t, idx in self.instant_channels().items():
+            cur, d = frames.get(t), out.get(t)
+            if cur is None or d is None:
+                continue
+            b = bytearray(d)
+            for i in idx:
+                if i < len(cur) and i < len(b) and cur[i] == 0:
+                    b[i] = 0                              # jetzt aus: sofort aus
+            out[t] = bytes(b)
+        for t in frames:                                  # neue Ziele (selten): aktuelles Bild
+            out.setdefault(t, frames[t])
+        return out
+
     def _loop(self):
         nxt = time.perf_counter()
         while self._run:
@@ -544,6 +589,7 @@ class Output:
             with self.rig.lock:
                 frames = self.rig.render_all()
             self._apply_ext(frames)
+            frames = self._delay(frames)
             if self.debug is not None:
                 raw = self.debug.frame()
                 if raw is not None:

@@ -7,6 +7,11 @@ er fragt jede Sekunde /api/sm/radio_want, spielt den Sender ueber ffmpeg auf sei
 per UDP 9022 an den Licht-Rechner (Eingang "Musik-Rechner (Netzwerk)"). Er meldet Zustand und Titelfeld (ICY StreamTitle)
 mit dem Befehl radio_report zurueck.
 
+Abspielen am Geraet (Wunsch 22.11.2026, Fernseher mit Line-In am Licht-Rechner): radio_play mit here und dev (Kennung des
+Browsers). Dann spielt der Browser selbst (<audio>), der Helfer bekommt play False und bleibt still. Der Browser meldet alle
+2 s radio_here (Zustand); das Titelfeld liest der Licht-Rechner selbst mit (IcyTitle: nur die Titel-Bloecke, der Ton wird
+verworfen). Mit Haken "line" schaltet der ShowManager den Eingang solange auf Line-In und danach zurueck.
+
 Titelfeld "Interpret - Titel": einmal je Lied fragt der Licht-Rechner iTunes (nur Interpret und Titel) nach Genre und Cover.
 Genre -> Licht-Stil (Einstellung radio_style), Cover und Senderlogo -> Pixel-Matrix. Anderer Text (Sendung, Nachrichten,
 Werbung) ist nur Info. Verkehrsfunk und Radiotext (RDS, DAB+) kommen ueber das Internet nicht mit.
@@ -89,6 +94,59 @@ def station(x):
             "votes": int(x.get("votes") or 0) if str(x.get("votes") or "0").isdigit() else 0}
 
 
+def icy_title(meta):
+    """StreamTitle aus einem ICY-Metadatenblock (Bytes) oder None."""
+    m = re.search(rb"StreamTitle='(.*?)';", meta, re.S)
+    if not m:
+        return None
+    b = m.group(1)
+    try:
+        return clean(b.decode("utf-8"), 200)
+    except UnicodeDecodeError:
+        return clean(b.decode("latin-1"), 200)
+
+
+class IcyTitle:
+    """Liest beim Abspielen am Geraet das Titelfeld des Senders mit (eigener Faden, Ton wird verworfen)."""
+
+    def __init__(self, url, on_title, keep, opener=None, check=public_host):
+        self.url, self.on_title, self.keep = url, on_title, keep
+        self.opener = opener or (lambda req, timeout: urllib.request.urlopen(req, timeout=timeout))
+        self.check = check
+        self.error = ""
+
+    def run(self):
+        if not self.check(self.url):
+            self.error = "Adresse nicht im Internet"
+            return
+        try:
+            req = urllib.request.Request(self.url, headers={"User-Agent": UA, "Icy-MetaData": "1"})
+            with self.opener(req, 15) as r:
+                try:
+                    n = int(r.headers.get("icy-metaint") or 0)
+                except (TypeError, ValueError, AttributeError):
+                    n = 0
+                if not 0 < n <= 1_000_000:
+                    self.error = "Sender schickt kein Titelfeld"
+                    return
+                while self.keep():
+                    left = n
+                    while left > 0:
+                        b = r.read(min(left, 65536))
+                        if not b:
+                            return
+                        left -= len(b)
+                    ln = r.read(1)
+                    if not ln:
+                        return
+                    if ln[0]:
+                        t = icy_title(r.read(ln[0] * 16))
+                        if t is not None:
+                            self.on_title(t)
+        except (OSError, ValueError) as e:
+            self.error = str(e)[:120]
+
+
 def split_title(t):
     """"Interpret - Titel" -> (Interpret, Titel); sonst (None, None): Sendung, Nachrichten, Werbung, Sendername."""
     t = clean(t, 200)
@@ -108,8 +166,11 @@ class Radio:
         self.lock = threading.Lock()
         self.cache = {}
         self.data = self._load()
-        self.want = {"seq": 0, "play": False, "st": self.data.get("last"), "vol": self.data.get("vol", 0.8)}
+        self.want = {"seq": 0, "play": False, "st": self.data.get("last"), "vol": self.data.get("vol", 0.8), "here": False, "dev": ""}
         self.rep, self.rep_t = {}, 0.0
+        self.here_rep, self.here_t = {}, 0.0          # Meldung des Browsers, der selbst spielt
+        self.icy, self.icy_title, self.icy_url = None, "", ""
+        self.icy_opener, self.icy_check = None, public_host     # Tests setzen beides
         self.song_info = {}                       # Titelfeld -> {genre, cover}
         self.title_t = 0.0
         self.server = 0
@@ -223,7 +284,7 @@ class Radio:
                 self.data["favs"].pop(s["uuid"], None)
             self._save()
 
-    def play(self, st=None, slot=None):
+    def play(self, st=None, slot=None, here=False, dev=""):
         if slot is not None:
             s = self.data["slots"].get(str(slot))
             if s is None:
@@ -233,7 +294,9 @@ class Radio:
         if s is None:
             raise ValueError("Kein Sender gewaehlt")
         with self.lock:
-            self.want = dict(self.want, seq=self.want["seq"] + 1, play=True, st=s)
+            dev = re.sub(r"[^A-Za-z0-9_-]", "", str(dev or ""))[:40] if here else ""
+            self.want = dict(self.want, seq=self.want["seq"] + 1, play=True, st=s, here=bool(here and dev), dev=dev)
+            self.here_rep, self.here_t, self.icy_title = {}, 0.0, ""
             self.data["last"] = s
             self._save()
         threading.Thread(target=self.click, args=(s["uuid"],), daemon=True).start()
@@ -250,9 +313,9 @@ class Radio:
             self._save()
 
     def want_info(self):
-        """Fuer den Helfer: was spielen (nur Adresse, Name, Kennung, Lautstaerke)."""
+        """Fuer den Helfer: was spielen (nur Adresse, Name, Kennung, Lautstaerke). Spielt ein Browser selbst: nichts."""
         w, s = self.want, self.want.get("st") or {}
-        return {"seq": w["seq"], "play": bool(w["play"] and s), "url": s.get("url", ""), "uuid": s.get("uuid", ""),
+        return {"seq": w["seq"], "play": bool(w["play"] and s and not w.get("here")), "url": s.get("url", ""), "uuid": s.get("uuid", ""),
                 "name": s.get("name", ""), "hls": s.get("hls", 0), "vol": w["vol"]}
 
     # ---- Meldung vom Helfer, Titelfeld ------------------------------------------------------------
@@ -264,24 +327,70 @@ class Radio:
                     "seq": int(d.get("seq") or 0) if str(d.get("seq") or "0").isdigit() else 0,
                     "codec": clean(d.get("codec"), 20), "kbps": int(d.get("kbps") or 0) if str(d.get("kbps") or "0").isdigit() else 0}
         self.rep_t = self.now()
-        a, t = split_title(self.rep["title"])
+        self._title_seen(self.rep["title"])
+        return {"ok": True}
+
+    def _title_seen(self, title):
+        a, t = split_title(title)
         if a and (a, t) not in self.song_info and self.now() - self.title_t >= TITLE_GAP_S:
             self.title_t = self.now()
             self.song_info[(a, t)] = {}
             threading.Thread(target=self._lookup, args=(a, t), daemon=True).start()
+
+    # ---- Abspielen am Geraet (Browser) -------------------------------------------------------------
+    def here_report(self, d):
+        """Browser, der selbst spielt, meldet: state (verbinde, spielt, fehler, aus), dev, err. Ungepruefte Daten."""
+        dev = re.sub(r"[^A-Za-z0-9_-]", "", str(d.get("dev") or ""))[:40]
+        if not self.want.get("here") or dev != self.want.get("dev"):
+            return {"ok": False, "other": True}           # anderer Browser oder nicht mehr gewuenscht: aufhoeren
+        st = str(d.get("state") or "")
+        self.here_rep = {"state": st if st in ("verbinde", "spielt", "fehler", "aus") else "", "err": clean(d.get("err"), 200),
+                         "line": bool(d.get("line"))}
+        self.here_t = self.now()
+        if self.here_rep["state"] == "spielt":
+            self._icy_start()
         return {"ok": True}
 
+    def here_alive(self):
+        return bool(self.want.get("here")) and self.now() - self.here_t < REPORT_S
+
+    def here_line(self):
+        """True, solange ein Browser hier spielt und den Eingang Line-In will."""
+        return self.here_alive() and self.want["play"] and self.here_rep.get("state") in ("verbinde", "spielt") and self.here_rep.get("line")
+
+    def _icy_keep(self, url):
+        return self.here_alive() and self.want["play"] and (self.want.get("st") or {}).get("url") == url
+
+    def _icy_on(self, title):
+        self.icy_title = title
+        self._title_seen(title)
+
+    def _icy_start(self):
+        url = (self.want.get("st") or {}).get("url", "")
+        if not url or (self.icy is not None and self.icy.is_alive() and self.icy_url == url):
+            return
+        self.icy_url, self.icy_title = url, ""
+        r = IcyTitle(url, self._icy_on, lambda: self._icy_keep(url), opener=self.icy_opener, check=self.icy_check)
+        self.icy = threading.Thread(target=r.run, daemon=True)
+        self.icy.start()
+
+    def _rep(self):
+        """Zustand und Titelfeld: vom Browser plus mitgelesenem Titel, sonst vom Helfer."""
+        if self.want.get("here"):
+            return dict(self.here_rep, title=self.icy_title) if self.here_alive() else {}
+        return self.rep if self.now() - self.rep_t < REPORT_S else {}
+
     def alive(self):
-        return self.now() - self.rep_t < REPORT_S
+        return self.here_alive() if self.want.get("here") else self.now() - self.rep_t < REPORT_S
 
     def playing(self):
-        return self.alive() and self.rep.get("state") == "spielt" and self.want["play"]
+        return self.alive() and self._rep().get("state") == "spielt" and self.want["play"]
 
     def song(self):
         """Laufendes Lied aus dem Titelfeld: {artist, title, genre, station} oder None (Sendung, Werbung, nichts)."""
         if not self.playing():
             return None
-        a, t = split_title(self.rep.get("title"))
+        a, t = split_title(self._rep().get("title"))
         if not a:
             return None
         info = self.song_info.get((a, t)) or {}
@@ -293,10 +402,11 @@ class Radio:
         if not self.playing():
             return None
         st = self.want.get("st") or {}
-        a, t = split_title(self.rep.get("title"))
+        rp = self._rep()
+        a, t = split_title(rp.get("title"))
         info = self.song_info.get((a, t)) or {} if a else {}
         return {"st": st.get("name", ""), "uuid": st.get("uuid", ""), "logo": bool(st.get("logo")), "artist": a or "", "title": t or "",
-                "info": "" if a else self.rep.get("title", ""), "genre": info.get("genre", ""), "cover": bool(info.get("cover"))}
+                "info": "" if a else rp.get("title", ""), "genre": info.get("genre", ""), "cover": bool(info.get("cover"))}
 
     def _lookup(self, artist, title):
         """iTunes: Genre und Cover zu Interpret und Titel (nur diese beiden gehen ins Internet)."""
@@ -374,10 +484,12 @@ class Radio:
     # ---- Seite ---------------------------------------------------------------------------------------
     def state(self):
         st = self.want.get("st") or {}
-        a, t = split_title(self.rep.get("title"))
+        rp = self._rep()
+        a, t = split_title(rp.get("title"))
         info = self.song_info.get((a, t)) or {}
         return {"slots": self.data["slots"], "favs": list(self.data["favs"].values()), "cc": self.data.get("cc", ""),
-                "want": {"play": bool(self.want["play"]), "st": st or None, "vol": self.want["vol"]},
-                "helper": self.alive(), "rep": self.rep if self.alive() else {},
+                "want": {"play": bool(self.want["play"]), "st": st or None, "vol": self.want["vol"],
+                         "here": bool(self.want.get("here")), "dev": self.want.get("dev", "")},
+                "helper": self.now() - self.rep_t < REPORT_S, "here_alive": self.here_alive(), "rep": rp,
                 "song": {"artist": a, "title": t, "genre": info.get("genre", ""), "cover": bool(info.get("cover")),
                          "done": bool(info.get("done"))} if a else None}

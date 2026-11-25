@@ -2,7 +2,7 @@
 """
 room.py - Raumplan: wo die Geraete im Partyraum stehen (Seite /raum, Beschreibung in docs/RAUM.md).
 
-Nur Anzeige und Grundlage fuer spaetere Regeln, aufs Licht wirkt der Plan nicht.
+Nur Anzeige und Grundlage fuer spaetere Regeln, aufs Licht wirkt der Plan nicht. Auch Anzeigen (Pixel-Matrix, API-Anzeige) stehen darin.
 Gespeichert in raum.json im Programmordner (Zustandsdatei: deploy.sh schliesst *.json aus, die Sicherung nimmt sie mit).
 
 Ein Eintrag je Geraet, Schluessel = Name aus der Anlage. Weitere Stuecke desselben Geraets (zum Beispiel das zweite Segment des
@@ -18,6 +18,13 @@ from .store import write_json
 KEY_RE = re.compile(r"^([A-Za-z0-9_.\-]{1,40})(#[2-9])?$")
 SIZE_MIN, SIZE_MAX = 1.0, 40.0
 EXTRA = [{"name": "nanoleaf", "label": "Nanoleaf", "short": "Nanoleaf", "group": "nano", "line": False}]
+# Anzeigen (25.11.2026): Bildschirme im Raum, kein Licht. Pixel-Matrix (wled_matrix.py, Seite /matrix) und API-Anzeige (Fernseher
+# oder Dashboard, das GET /api/takt liest). Nur Position und Blickrichtung, len = Breite des Bildschirms in Metern. Sie zaehlen nie
+# zu den Raum-Gruppen, zur Lichtwelle oder zu den Angaben fuer den Show-Assistenten (DISPLAY_NAMES).
+DISPLAYS = [{"name": "matrix", "label": "Pixel-Matrix (Anzeige)", "short": "Matrix", "group": "display", "line": False, "display": True, "size": 0.3},
+            {"name": "api_anzeige", "label": "API-Anzeige (Fernseher)", "short": "API-Anzeige", "group": "display", "line": False, "display": True,
+             "size": 1.2}]
+DISPLAY_NAMES = frozenset(d["name"] for d in DISPLAYS)
 SHORT_GROUP = {"bars": "Spider", "wash": "Wash", "spot": "Moving Head", "uv": "UV"}
 SHORT_NAME = {"eyes": "Eyes", "derby": "Derby", "par": "Barlicht", "laser": "KTV-Laser", "hazer": "Hazer", "effektband": "Effektband",
               "theke": "Theke", "couchtisch": "Couchtisch"}    # kein DMX-Geraet, haengt aber im Raum
@@ -47,7 +54,16 @@ def devices(rig):
         if fx.group in ("bars", "wash") and fx.extra.get("nr"):
             short += " " + str(fx.extra["nr"])                   # mehrere gleiche: mit Nummer
         out.append({"name": fx.name, "label": label, "short": short, "nr": fx.extra.get("nr"), "group": fx.group, "line": line})
-    return out + [dict(e) for e in EXTRA if e["name"] not in {f.name for f in rig.fixtures}]
+    taken = {f.name for f in rig.fixtures}
+    return out + [dict(e) for e in EXTRA + DISPLAYS if e["name"] not in taken]
+
+
+def lights_only(room):
+    """Raumplan ohne Anzeigen: fuer alles, was das Licht oder den Show-Assistenten betrifft."""
+    if not room:
+        return room
+    items = {k: v for k, v in (room.get("items") or {}).items() if k.split("#")[0] not in DISPLAY_NAMES}
+    return dict(room, items=items)
 
 
 def default(names):

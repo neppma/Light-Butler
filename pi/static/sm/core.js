@@ -953,7 +953,9 @@
     }
     el.querySelector('span').textContent = msg;
   };
-  if (typeof document !== 'undefined' && typeof location !== 'undefined' && /^\/musik/.test(location.pathname)) {
+  // Nicht auf dem Internetradio (Wunsch 23.11.2026): das braucht die Musik-Daten nicht; fehlt der Helfer, sagt die Radio-Seite das selbst
+  SM.needsSource = p => /^\/musik/.test(p) && !/^\/musik\/radio/.test(p);
+  if (typeof document !== 'undefined' && typeof location !== 'undefined' && SM.needsSource(location.pathname)) {
     setTimeout(SM.sourceCheck, 800);
     setInterval(SM.sourceCheck, 30000);
   }

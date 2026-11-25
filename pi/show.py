@@ -38,6 +38,8 @@ from collections import deque
 from audio import Analyzer, Simulator, key_label, meter_label
 import laser_show
 from scenes import COLORS as SCENE_COLORS
+from takt import TaktClock, to_bar
+from showman import latin as _latin
 from showman.lyrics import line_end as lyric_end
 from showman.lyrics import repeats as lyric_repeats
 from genre_style import GENRE_STYLE, STYLES, GenreStyles, genre_style  # noqa: F401  (Genre-Stile aus Mixxx)
@@ -152,7 +154,8 @@ GROUP_KEYS = {"bars": "bar", "wash": "wash", "bar": "barlight", "fx": "fx", "uv"
 AUTO_SOLO_KEYS = ("spot", "nano", "bar", "fx", "wash", "uv")   # AUTO "Geraete der Reihe nach": diese Gruppen wechseln sich ab
 AUTO_SOLO_ORDER = ("spot", "nano", "bar", "fx", "wash")        # UV allein waere zu dunkel, Ambiente steht immer
 GROUP_LABELS = [("bar", "Docooler"), ("wash", "Washes"), ("barlight", "PAR Barlicht"), ("fx", "Eyes und Derby"),
-                ("uv", "UV-Leiste"), ("spot", "Vega"), ("amb", "Ambiente"), ("nano", "Nanoleaf")]
+                ("uv", "UV-Leiste"), ("spot", "Vega"), ("amb", "Ambiente"), ("nano", "Nanoleaf"),
+                ("api", "API")]   # API (Wunsch 23.11.2026): kein Licht, daempft nur masterDim/helligkeit in /api/takt
 
 
 class Show:
@@ -206,6 +209,9 @@ class Show:
         self.scene_rev, self.scene_last = 0, ""
         self.cfg = Settings(settings_file)                  # einstellbare Parameter der Auto-Erkennung
         self.safety_open = False                           # Sicherheitshinweis offen (neue Anlage, safety.py; main setzt ihn)
+        from links import Links
+        self.links = Links(os.path.join(os.path.dirname(os.path.abspath(settings_file)), "links.json")
+                           if settings_file else None)     # eigene Links zu Geraeten (Einstellungen, 24.11.2026)
         self.fine = FineStore(os.path.join(os.path.dirname(os.path.abspath(settings_file)), "fine.json")
                               if settings_file else None)   # Feinregler je Bewegungs- und Licht-Mix-Knopf
         self.levels_path = (os.path.join(os.path.dirname(os.path.abspath(settings_file)), "levels.json")
@@ -266,6 +272,14 @@ class Show:
         self.pilot = True                                # Autopilot (Knopf AUTO): die Show bedient sich selbst, Bedienung darunter gesperrt
         self.auto_color = None                           # im AUTO-Modus gewaehlte Farbe (Panel/Controller), None = nach Stimmung
         self.auto_colors = []                            # im Panel gewaehlte Farbtoene (Mehrfachauswahl), ab 2 wechseln sie sich ab
+        self.takt_mark = None                            # (Schlag, Zeit) des letzten Beats fuer /api/takt
+        self.takt_enter = None                           # Schlag, ab dem der Abschnitt gilt (/api/takt)
+        self.takt_ev = 0                                 # Zaehler der Abschnittswechsel (/api/takt)
+        self.takt_clock = TaktClock()                    # gleichmaessige Takt-Uhr (/api/takt), nur Anzeige
+        self.takt_keys = {k: False for k in self.TAKT_KEYS}   # Effekt-Tasten gedrueckt (/api/takt)
+        self.takt_keys_since = {}                        # Taste -> Schlag, ab dem sie gedrueckt ist
+        self.takt_keys_n = {k: 0 for k in self.TAKT_KEYS}     # so oft gedrueckt seit dem Start
+        self.takt_dyn = (None, None)                     # Dynamik-Stufe (/api/takt) und ab welchem Schlag
         self.auto_rainbow = False                        # Licht-Mix Regenbogen in AUTO: Regenbogenfarben, Helligkeit nach der Musik
         self.rb_beats = 0.0                              # Fortschritt des Regenbogens in Beats
         self.auto_move = None                            # im AUTO-Modus gewaehlte Bewegung, None = nach Musik
@@ -325,6 +339,13 @@ class Show:
         self.net = []                          # Netzwerk des Raspberry (LAN/WLAN), wird vom Panel-Thread gepflegt
         self.mo = None                         # Bewegungsvorgabe der Szene
         self.manual_bpm = None
+        self.takt_lvl = {k: 0.0 for k, _ in self.TAKT_BANDS}        # /api/takt pegel/baender: geglaettet
+        self.takt_lvl_max = {k: deque() for k, _ in self.TAKT_BANDS}   # (Sekunde, Hoechstwert in ihr)
+        self.takt_lvl_n = 0
+        self.bpm_unsure = False                # Tempo noch nicht sicher (Liedanfang ohne Beat): Licht ohne Tempo, _bpm_gate
+        self.bs_ref = self.bs_since = None
+        self.bs_clar = deque()                 # (Zeit, Schlag-Klarheit) der letzten bpm_sure_s Sekunden
+        self.bs_sure, self.bs_seen_kick, self.bs_kicks = False, 0, deque()
         self.aim = None                        # Ziel fuer alle Bewegungen: bank | tisch | tuer | bar | None (frei)
         self.aim_file = aim_file
         self.aim_targets = self._load_aim(rig)
@@ -346,6 +367,10 @@ class Show:
         self.last_act = -99.0                  # Zeitpunkt des letzten Kicks oder Beats
         self.rel_idle, self.idle_floor = False, -120.0        # Stille bei Rauschen (relativ zum Musikpegel)
         self.ref_db = -30.0                    # Pegel vor einer Stille oder einem Break (fuer die Rueckkehr)
+        self.db_music = None                   # Langzeit-Pegel nur aus Musik (ohne Stille), phase_v2
+        self.high_s, self.build_high = 0.0, 0.0   # geglaettete Hoehen, ihr Hoechstwert im Aufbau (phase_v2: Drop nach dem Aufbau)
+        self.drop_pre = None                   # drop_step: Stufe vor dem letzten Drop
+        self.takt_scene, self.takt_scene_since = None, None   # /api/takt: aktive Szene und Schlag, ab dem sie gilt
         self.resume_t = -99.0                  # Zeitpunkt, an dem nach einer Stille wieder Musik begann
         self.t_first = None
         self.build_score = self.build_hold = self.build_prog = 0.0
@@ -472,6 +497,9 @@ class Show:
         dt = 0.025 if self.last_t is None else min(0.1, max(0.0, now - self.last_t))
         self.last_t, self.last_dt = now, dt
         self._t_now = now
+        _latin.ENABLED = self.cfg["lyrics_latin"] > 0.5     # Liedtext nur lateinisch (Anzeige, 24.11.2026)
+        self._takt_keys(now)                                # /api/takt: Effekt-Tasten (nur Anzeige)
+        self._takt_level(f, dt)                             # /api/takt: Pegel und Baender der Musik (nur Anzeige)
         if self.output is not None:                        # Ausgabe zum OLA-Pi und zu den WLED-Lichtern nach den Einstellungen schalten
             self.output.set_enabled(self.rig.target, self.out_on("ola"))
             if self.override == "blackout" and getattr(self.output, "debug", None) is not None and self.output.debug.armed:
@@ -494,6 +522,8 @@ class Show:
         f = self._apply_mixxx(f, now)
         f = self._rel_silence(f, now)
         f = self._mixxx_pause(f, now)
+        f = self._bpm_refine(f)
+        f = self._bpm_gate(f, now)
         self._titles_tick(now, f)
         self.bpm = f.bpm
         self.f = f
@@ -513,6 +543,8 @@ class Show:
         self.seen_weak = weak                                                          # (unsicher): die halten die Stille nicht auf
         if new_kicks or new_beats > new_weak:
             self.last_act = now
+        if self.bpm_unsure:                       # Tempo noch nicht sicher: die Schlaege von aubio zaehlen nicht, der Kick fuehrt
+            new_beats = 0
         for _ in range(new_kicks):
             self.kick_times.append(now)
             if now - self.last_flash > c["kick_flash_gap"]:  # Kick-Hell, begrenzt das Flackern
@@ -525,6 +557,9 @@ class Show:
         if new_beats or (new_kicks and f.bpm <= 0):       # ohne Tempo-Erkennung blinkt das Lamperl auf den Kick
             self.beat_t = now
         self.step += new_beats if f.bpm > 0 else new_kicks
+        if new_beats and f.bpm > 0:
+            self.takt_mark = (self.step, now)                  # /api/takt: Schlag self.step lag genau hier (nur Anzeige)
+            self.takt_clock.beat(self.step, now, self.manual_bpm or f.bpm)
         new_steps = new_beats if f.bpm > 0 else new_kicks
         self.kick_env *= math.exp(-dt / c["kick_env_decay"])
         self.beat_env *= math.exp(-dt / c["beat_env_decay"])
@@ -726,6 +761,8 @@ class Show:
                                    hz=self._blitz_rate())
                 self.blitz_f += 1
         if self.output is not None:                            # Ausgabe sendet genau dieses Bild (kein Doppeln oder Auslassen)
+            self.output.delay_frames = int(round(c["light_delay_ms"] / 25.0))   # Licht-Verzoegerung (25.11.2026)
+            self.output.delay_now = self.override == "blackout"
             self.output.notify()
         if self.matrix is not None:                            # Pixel-Matrix (wled_matrix.py): eigenes Ziel, liest nur den Zustand
             self._matrix_tick(now, dt, f, new_beats, new_kicks, new_hats, frozen)
@@ -855,23 +892,57 @@ class Show:
         return f._replace(silent=True) if self.rel_idle else f
 
     def _enter(self, state, now):
+        prev = self._takt_section(now) if self.state_t is not None else "normal"
+        if self.state == "drop" and prev == "normal":       # Drop war schon vorbei (nach drop_len): dieser Wechsel zaehlte schon
+            self.takt_ev += 1
         self.state, self.state_t = state, now
-        if state in ("gap", "break") and self.f is not None:
-            self.ref_db = self.f.db_long                       # Pegel vor der Pause: daran misst sich die Rueckkehr
+        old, self.takt_enter = self.takt_enter, self._takt_bar_at(now)   # /api/takt: neuer Abschnitt ab diesem Taktanfang (die Eins)
+        if self._takt_section(now) != prev:                 # jeder Wechsel des Abschnitts zaehlt (nur Anzeige)
+            self.takt_ev += 1
+        else:
+            self.takt_enter = old                            # gleicher Abschnitt (zum Beispiel gap -> break): bleibt, wie er war
+        if state in ("gap", "break") and self.f is not None and not (prev == "gap" and self.cfg["phase_v2"] > 0.5):
+            self.ref_db = self._db_long(self.f)                # Pegel vor der Pause: daran misst sich die Rueckkehr
+            # (phase_v2: Pause -> Break behaelt den Pegel von vor der Pause, sonst galt die leise Musik als zurueck)
         if state == "build":
             self.build_start = now
         elif state == "drop":
             self.last_drop = now
             self.boost = self.cfg["drop_boost"]      # Energie bleibt nach dem Drop erhoeht
             self.arousal = max(self.arousal, self.cfg["drop_arousal"])
-            self.inten, self.tier, self.tier_t = max(self.inten, 0.85), 3, now
+            if self.cfg["drop_step"] > 0.5:                 # Drop hebt nur eine Stufe, danach zurueck (Wunsch 23.11.2026)
+                self.drop_pre = self.tier
+                self.inten, self.tier_t = max(self.inten, 0.85), now
+            else:
+                self.inten, self.tier, self.tier_t = max(self.inten, 0.85), 3, now
             self.kick_env = 1.0
             self.build_hold = 0.0
             self.hist.clear()                        # Build-up-Erkennung beginnt neu
         elif state == "normal":
             self.below = 0.0
 
+    PHASE_DB_TC = 8.0           # phase_v2: Gedaechtnis des Vergleichspegels (db_long der Analyse: 20 s, mit Stille)
+    BUILD_RISING = 0.4          # phase_v2: ab diesem Aufbau-Wert endet ein Break nicht mit einem Drop (erst der Aufbau)
+    BUILD_DROP_HIGH = 0.25      # phase_v2: so weit fallen die Hoehen am Ende des Aufbaus (Rauschen/Wirbel endet)
+
+    def _db_long(self, f):
+        """Langzeit-Pegel fuer die Phasen. phase_v2 (Eichstueck 23.11.2026): nur aus Musik, ohne Stille; db_long der Analyse
+        zieht nach einer Stille noch lange nach unten (nach 30 s Beat -32 statt -26 dB), dann wurde jeder Break zum Drop.
+        Kuerzeres Gedaechtnis (PHASE_DB_TC), damit auch eine leise Einleitung den Pegel vor dem Break nicht verfaelscht."""
+        if self.cfg["phase_v2"] > 0.5 and self.db_music is not None:
+            return self.db_music
+        return f.db_long
+
     def _update_state(self, f, now, dt):
+        if f.silent:
+            self.db_music = None
+        elif self.db_music is None:
+            self.db_music = f.db_short
+        else:
+            self.db_music += (1 - math.exp(-dt / self.PHASE_DB_TC)) * (f.db_short - self.db_music)
+        self.high_s += (1 - math.exp(-dt / 0.3)) * (f.high - self.high_s)
+        v2 = self.cfg["phase_v2"] > 0.5
+        dbl = self._db_long(f)
         self.hist.append((now, f.db_short, f.high, f.centroid))
         while self.hist and now - self.hist[0][0] > 8.0:
             self.hist.popleft()
@@ -915,7 +986,7 @@ class Show:
         since = now - self.state_t
 
         if self.state == "normal":
-            self.below = self.below + dt if f.db_short < f.db_long - c["break_below_db"] else 0.0
+            self.below = self.below + dt if f.db_short < dbl - c["break_below_db"] else 0.0
             if early:
                 pass
             elif self.build_hold > c["build_hold_s"] and now - self.last_drop > c["build_cooldown_s"]:
@@ -925,27 +996,37 @@ class Show:
             elif self.below > c["break_hold_s"] and kicks_recent <= 1:          # leise UND ohne Kick = Break
                 self._enter("break", now)
             elif (f.db_short - old_db > c["drop_jump_db"] and old_db > c["silence_db"] + 10.0
-                  and now - self.last_drop > c["drop_cooldown_s"]):   # Einsatz (nicht aus der Stille heraus)
+                  and now - self.last_drop > c["drop_cooldown_s"]
+                  and (not v2 or kicks_recent >= 1)):   # Einsatz (nicht aus der Stille heraus); v2: nur mit Beat
                 self._enter("drop", now)
         elif self.state == "break":
             kick_back = kicks_recent >= (2 if since > 2.5 else 3)
+            rising = v2 and self.build_score > self.BUILD_RISING   # es baut sich auf (Wirbel zaehlt als Kick): erst der Aufbau
             if self.build_hold > c["build_hold_s"]:
                 self._enter("build", now)
-            elif present and returned and (kick_back or f.db_short > f.db_long - 2.5 or since > c["break_max_s"]):
+            elif not rising and present and returned and (kick_back or (f.db_short > (self.ref_db if v2 else dbl) - 2.5
+                                                                          and (not v2 or kicks_recent >= 1))
+                                                          or (since > c["break_max_s"] and not v2)):
+                # v2: ein Break endet nur mit Beat im Drop (lauter ohne Kick = Aufbau), zu lang = kein Drop
                 self._enter("drop", now)
             elif since > c["break_max_s"]:                    # die Musik ist waehrend des Breaks verstummt: kein Drop
                 self._enter("normal", now)
         elif self.state == "build":
+            self.build_high = max(self.build_high, self.high_s) if since > 0.1 else self.high_s
             if f.db_short < max_db - 8.0:
                 self._enter("gap", now)
+            elif (v2 and since > 2.0 and kicks_recent >= 2 and present
+                  and self.high_s < self.build_high - self.BUILD_DROP_HIGH):   # Rauschen/Wirbel endet, Beat da: Drop ohne Pause
+                self._enter("drop", now)
             elif since > c["build_max_s"] or (score < 0.15 and since > 4.0):
                 self._enter("normal", now)
         elif self.state == "gap":
             kicked = any(t > self.state_t for t in self.kick_times)
-            if present and returned and (kicked or f.db_short > f.db_long - 6.0 or since > c["gap_max_s"]):
+            if present and returned and (kicked or f.db_short > dbl - 6.0 or since > c["gap_max_s"]):
                 self._enter("drop", now)
             elif since > c["gap_max_s"]:                      # es bleibt still (Pause, Ende des Liedes): kein Drop
-                self._enter("normal", now)
+                quiet = present and kicks_recent == 0 and f.db_short < self.ref_db - c["break_below_db"]
+                self._enter("break" if v2 and quiet else "normal", now)   # v2: leise ohne Kick weiter = Break
         elif self.state == "drop" and since > c["drop_len_s"]:
             self._enter("normal", now)
         target = {"break": c["break_dim"], "idle": 0.12, "gap": 0.0}.get(self.state, 1.0)
@@ -990,6 +1071,9 @@ class Show:
             new = self.tier + 1
         elif self.tier > 0 and self.inten < down[self.tier - 1]:
             new = self.tier - 1
+        if (c["drop_step"] > 0.5 and self.drop_pre is not None
+                and now - self.last_drop < self.DROP_STEP_WIN * c["boost_decay_s"]):
+            new = min(new, self.drop_pre)                     # nach dem Drop: nicht ueber die Stufe von vorher (der Schub hebt nicht)
         if new != self.tier and now - self.tier_t > c["tier_min_s"]:
             self.tier, self.tier_t = new, now
 
@@ -1129,11 +1213,17 @@ class Show:
             self.note = f"Pixel-Matrix: {e}"
             self.matrix = None
 
+    DROP_STEP_WIN = 2.0         # drop_step: so viele Abklingzeiten (boost_decay_s) nach dem Drop haelt die Stufe von vorher
+
     def eff_tier(self):
-        """Wirksame Stufe: Break = ruhig, Build/Drop = Peak."""
+        """Wirksame Stufe: Break = ruhig, Build/Drop = Peak. drop_step (Wunsch 23.11.2026, ruhiges Lied, jeder Refrain ein
+        Drop, danach 20 s Vollgas): Build/Drop nur eine Stufe ueber der Stufe davor, danach zurueck auf sie."""
         if self.state == "break":
             return 0
         if self.state in ("build", "drop"):
+            if self.cfg["drop_step"] > 0.5:
+                pre = self.drop_pre if (self.state == "drop" and self.drop_pre is not None) else self.tier
+                return min(3, pre + 1)
             return 3
         return self._base_tier()
 
@@ -1980,6 +2070,22 @@ class Show:
                     rec.set_on(bool(d["rec"]))
                 if d.get("rec_del"):
                     rec.delete_all()
+            if "wlan" in d:                                    # WLAN des Licht-Rechners an/aus (wlan.py, 25.11.2026)
+                import wlan
+                on_ = bool((d["wlan"] or {}).get("on")) if isinstance(d["wlan"], dict) else bool(d["wlan"])
+                wlan.manager().check(on_)
+                self.cfg.set("wlan_trennen", 0.0 if on_ else 1.0)   # bleibt ueber einen Neustart, der Waechter haelt es
+                wlan.manager().apply(on_)
+            if "bt" in d:                                      # Bluetooth: sichtbar, suchen, koppeln, verbinden (bt_audio.py, 24.11.2026)
+                import bt_audio
+                b_ = d["bt"] if isinstance(d["bt"], dict) else {}
+                if b_.get("op") == "out":                      # Ton weiterleiten an eine Ausgabe (25.11.2026), "" = aus
+                    fn = getattr(self.src, "set_net_out" if b_.get("src") == "net" else "set_bt_out", None)
+                    if fn is None:
+                        raise ValueError("Weiterleitung gibt es nur mit echtem Eingang (nicht im Simulator)")
+                    fn(b_.get("dev") or "")
+                else:
+                    bt_audio.manager().command(b_)
             if "audio" in d:                                   # Audio-Eingang waehlen, Gain, Kanal, Hardware-Regler
                 fn = getattr(self.src, "configure", None)
                 if fn is None:
@@ -2001,6 +2107,10 @@ class Show:
                     self.cfg.set(k, v)
             if "reset" in d:
                 self.cfg.reset(None if d["reset"] == "all" else d["reset"])
+            if "link_add" in d:                                # eigene Links zu Geraeten im Heimnetz (links.json, 24.11.2026)
+                self.links.add(d["link_add"])
+            if "link_del" in d:
+                self.links.remove(d["link_del"])
             if "matrix_ip" in d:                               # Adresse der Pixel-Matrix (matrix.json), leer = keine
                 if self.matrix is None:
                     raise ValueError("Pixel-Matrix nicht verfuegbar")
@@ -2913,13 +3023,16 @@ class Show:
                 "reach": self.reach, "reach_ip": self.reach_ip, "reach_url": self.reach_url, "net": self.net, "drop": self.state == "drop", "laser": self.laser_on,
                 "beat_ago": None if self.beat_t is None else round(max(0.0, time.time() - self.beat_t), 3),
                 "beat_bpm": round(self._bpm_show(), 2),
+                "beat_clear": round(float(getattr(self.src, "beat_clarity", -1.0)), 2), "bpm_unsure": self.bpm_unsure,
                 "freeze": self.freeze, "color_freeze": self.color_freeze, "build": self.build_t0 is not None, "build_p": round(self.build_p, 2),
                 "fog_on": self._fog_clock() < self.fog_end,
                 "fog_wait": 0 if self._fog_clock() < self.fog_end else max(0, round(self.fog_end + self._fog_cool() - self._fog_clock())),
                 "fog_st": self._fog_status(),
                 "fog_note": self._fog_note(),
                 "lvl": self.src.level() if hasattr(self.src, "level") else None,          # kleines Pegelmeter in Zeile 2
-                "lvsrc": "lan" if getattr(self.src, "dev_name", "") in ("Musik-Rechner (Netzwerk)", "Mac (Netzwerk)") else "line",
+                "lvsrc": ("lan" if getattr(self.src, "dev_name", "") in ("Musik-Rechner (Netzwerk)", "Mac (Netzwerk)")
+                          else "bt" if getattr(self.src, "dev_name", "") == "Bluetooth" else "line"),
+                "lvfwd": self.src.fwd_state() if hasattr(self.src, "fwd_state") else None,   # Weiterleitung (25.11.2026)
                 "held": sorted(self.held)}
 
     # ---- Einzel-Strobe (AUTO): EIN Fixture blitzt ueber seinen eigenen Strobe-Kanal ------------------------
@@ -3118,6 +3231,380 @@ class Show:
                 self.backup_info = {"running": False, "last": "", "error": str(e)[:150]}
         threading.Thread(target=work, daemon=True).start()
         self.note = "Sicherung gestartet"
+
+    def takt(self, wall=None):
+        """Takt fuer andere Geraete (/api/takt, Wunsch 23.11.2026: Fernseher zeigt Muster im Takt). Nur lesen.
+        beat = Zaehlzeit der Show (Vielfaches von quantum = die Eins, wie das Licht zaehlt) mit Nachkommastellen zum
+        Zeitpunkt zeit (Unix-ms), aus der gleichmaessigen Takt-Uhr (takt.TaktClock: erkannte Schlaege geglaettet).
+        Nicht die Zeitachse von Ableton Link: deren Schlaege liegen nicht auf der Musik. aktiv erst bei stabilem Tempo."""
+        wall = time.time() if wall is None else wall
+        clk, q = self.takt_clock, max(1, int(self.bar_len))
+        live = self.manual_bpm or self._bpm_live()
+        aktiv = bool(live and live > 0 and clk.stable(wall))
+        f = self.f
+        # spielt = Musik da, auch ohne Beat (Eichstueck 23.11.2026: Applaus und Melodie galten sonst als "spielt nicht")
+        spielt = bool(f is not None and not f.silent and self.state != "idle" and self.override != "blackout")
+        b = clk.at(wall)
+        d = {"version": 1, "aktiv": aktiv, "spielt": spielt, "bpm": round(clk.bpm if aktiv else float(live or 0.0), 2), "quantum": q,
+             "beat": round(b if b is not None else float(self.step), 3), "zeit": round(wall * 1000.0, 1)}
+        st = self._style_key()
+        if st:
+            d["stil"] = st
+        sec, seit, over = self._takt_now(wall)
+        d["abschnitt"] = sec
+        if seit is not None:
+            d["abschnittSeit"] = seit
+        d["ereignis"] = self.takt_ev + (1 if over else 0)
+        mx = self.mx or {}
+        d["quelleAbschnitt"] = "analyse" if (mx.get("plan") and self.cfg["mixxx_light"] > 0.5) else "live"
+        nd = self._takt_next_drop(wall)
+        if nd is not None:
+            d["naechsterDrop"] = nd
+        d["energie"] = round(clamp01(self.arousal), 2) if spielt else 0.0
+        sg = self._takt_song(wall)                        # Liedtext fuer den Fernseher (23.11.2026)
+        if sg is not None:
+            d["liedId"] = sg["id"]
+            if sg["pos"] is not None:
+                d["liedPosition"] = round(sg["pos"], 2)
+        d["lyrics"] = bool(sg and (sg["lines"] or sg["plain"]))
+        dyn, dseit = self.takt_dyn
+        if dyn:
+            d["dynamik"] = dyn
+            if dseit is not None:
+                d["dynamikSeit"] = dseit
+        d["tasten"] = dict(self.takt_keys)
+        d["tastenSeit"] = dict(self.takt_keys_since)
+        d["tastenZaehler"] = dict(self.takt_keys_n)
+        if self.blitz:                                     # Blitze pro Sekunde, genau wie das Licht blitzt (mit der Grenze ohne Erlaubnis)
+            d["strobeHz"] = round(float(self._blitz_rate()), 2)
+        if self.build_t0 is not None:                      # Stand der WOW!-Steigerung, derselbe Wert, mit dem das Licht rechnet
+            d["wowProzent"] = int(round(clamp01(self.build_p) * 100))
+        d["farben"] = self._takt_colors()
+        if self.takt_scene:                                # Szene, Effektband, Bewegung (Wunsch 24.11.2026): fehlen, wenn nichts laeuft
+            d["szene"] = self.takt_scene
+            if self.takt_scene_since is not None:
+                d["szeneSeit"] = round(self.takt_scene_since, 3)
+        eff = self._takt_effect()
+        if eff:
+            d["effekt"] = eff
+        mv = self._takt_move()
+        if mv:
+            d["bewegung"] = mv
+        api = clamp01(self.glevel.get("api", 1.0))        # Gruppen-Regler API: daempft beide Werte fuer andere Geraete
+        d["helligkeit"] = round(clamp01(self.master * self.loud_k) * api if self.override != "blackout" else 0.0, 2)
+        d["masterDim"] = int(round(clamp01(self.master) * api * 100))   # General Dimmer x API-Regler in %
+        lv = self._takt_levels()                           # Pegel und Baender der Musik (ohne Musik weggelassen)
+        if lv:
+            d.update(lv)   # Stand des General Dimmers in %, ohne Lautstaerke und BLACKOUT
+        tl = self._takt_title()
+        if tl:
+            d["titel"] = tl
+        if self.link_out is not None and getattr(self.link_out, "on", False):
+            d["teilnehmer"] = int(self.link_out.peers)
+        d["jetzt"] = round(time.time() * 1000.0, 1)
+        return d
+
+    def _takt_song(self, now):
+        """Laufendes Lied mit Liedtext fuer /api/takt und /api/lyrics: {id, name, lines, plain, pos, sync, quelle} oder None.
+        Wie der Liedtext im Panel (Show, Mixxx/Auto-DJ, Titelerkennung), dazu Musik-DB im Browser und Internetradio
+        (dort ist die Stelle im Lied unbekannt: pos None, nur der Text). Liest nur; geholt wird wie immer nur mit lyrics_auto."""
+        try:
+            s = self._lyric_source(now)
+        except Exception:                                   # noqa: BLE001  Liedtext haelt nie etwas auf
+            s = None
+        radio = False
+        if s is None and self.cfg["lyrics_auto"] > 0.5 and self.lyric_cache is not None:
+            lp = self.local.panel() if self.local is not None else None
+            rs = self.radio.song() if self.radio is not None else None
+            if lp:
+                name = (lp["artist"] + " - " if lp.get("artist") else "") + lp["title"]
+                e = self.lyric_cache.get_entry(name, lp.get("dur") or 0.0, now)
+                s = {"src": "local", "name": name, "dur": lp.get("dur") or 0.0, "lines": e["lines"], "plain": e["plain"], "pos": lp["pos"]}
+            elif rs:
+                name = rs["artist"] + " - " + rs["title"]
+                e = self.lyric_cache.get_entry(name, 0.0, now)
+                s, radio = {"src": "radio", "name": name, "dur": 0.0, "lines": e["lines"], "plain": e["plain"], "pos": None}, True
+        if s is None:
+            return None
+        import hashlib
+        lid = hashlib.sha1(("%s|%d" % (s["name"], round(s.get("dur") or 0.0))).encode("utf-8")).hexdigest()[:8]
+        lines, plain = s["lines"] or [], s.get("plain") or ""
+        if self.cfg["lyrics_api_chorus"] > 0.5:
+            lines, plain = self._chorus_only(lines, plain)
+        return {"id": lid, "name": s["name"], "lines": lines, "plain": plain,
+                "pos": None if radio else s.get("pos"), "sync": bool(s["lines"]) and not radio,
+                "quelle": "show" if s["src"] == "show" else "lrclib"}
+
+    @staticmethod
+    def _chorus_only(lines, plain):
+        """Einstellung lyrics_api_chorus (Wunsch von Markus 24.11.2026): fuer die Schnittstelle nur der Refrain, gleiche Regel
+        wie auf der Pixel-Matrix (lyrics.repeats). Mit Zeiten werden die anderen Zeilen leer (Pause, die Zeit bleibt), ohne
+        Zeiten bleibt zwischen den Refrain-Bloecken eine Leerzeile. Kein Refrain = kein Text."""
+        if lines:
+            rep = lyric_repeats(lines)
+            out = [[t, x if i in rep else ""] for i, (t, x) in enumerate(lines)]
+            return (out if any(x for _, x in out) else []), ""
+        rows = [x.strip() for x in str(plain).splitlines()]
+        rep = lyric_repeats([[0.0, x] for x in rows])
+        out = []
+        for i, x in enumerate(rows):
+            if i in rep:
+                out.append(x)
+            elif out and out[-1]:
+                out.append("")
+        return [], "\n".join(out).strip("\n")
+
+    def lyrics_api(self, wall=None):
+        """GET /api/lyrics: alle Zeilen des laufenden Liedes (Zeit in s ab Liedanfang, leer = Pause), liedId wie /api/takt."""
+        wall = time.time() if wall is None else wall
+        sg = self._takt_song(wall)
+        if sg is None:
+            return {"version": 1, "liedId": "", "titel": "", "synchron": False, "quelle": "", "zeilen": []}
+        if sg["sync"]:
+            rows = [{"t": round(float(t), 2), "text": str(x)} for t, x in sg["lines"]]
+        elif sg["lines"]:
+            rows = [{"text": str(x)} for _, x in sg["lines"]]
+        else:
+            rows = [{"text": x.strip()} for x in sg["plain"].splitlines()]
+        return {"version": 1, "liedId": sg["id"], "titel": sg["name"].replace(" - ", " – ", 1), "synchron": sg["sync"] and bool(rows),
+                "quelle": sg["quelle"] if rows else "", "zeilen": rows}
+
+    TAKT_LVL_TC = 0.25            # /api/takt pegel/baender: Glaettung
+    TAKT_LVL_WIN = 30             # ... bezogen auf den Hoechstwert der letzten so vielen Sekunden
+    TAKT_LVL_DB = 30.0            # ... in dB: so viel leiser als der Hoechstwert = 0 (das Ohr hoert logarithmisch)
+    TAKT_BANDS = (("level", "pegel"), ("bass", "bass"), ("mid", "mitten"), ("high", "hoehen"))
+
+    def _takt_level(self, f, dt):
+        """Pegel der Musik fuer /api/takt (Wunsch Bravia-Dashboard 23.11.2026), unabhaengig von Master und loud_k: je Band
+        der ungewichtete Pegel der Analyse (Analyzer.raw_lvl, im Simulator die Merkmale), ueber TAKT_LVL_TC geglaettet, geteilt
+        durch den Hoechstwert der letzten TAKT_LVL_WIN Sekunden (je Sekunde ein Hoechstwert), in dB (TAKT_LVL_DB leiser = 0).
+        Leise aufgenommene Lieder wirken so nicht schwach, beim Ausklingen geht es gegen 0. Nur lesen."""
+        raw = getattr(self.src, "raw_lvl", None)
+        if not isinstance(raw, dict):
+            raw = {"level": f.level, "bass": f.bass, "mid": f.mid, "high": f.high}
+        a = 1 - math.exp(-dt / self.TAKT_LVL_TC)
+        self.takt_lvl_n += 1
+        sec = self.takt_lvl_n // 40                      # Bilder zu 25 ms: 40 je Sekunde
+        for k, _ in self.TAKT_BANDS:
+            v = 0.0 if f.silent else max(0.0, float(raw.get(k, 0.0)))
+            self.takt_lvl[k] += a * (v - self.takt_lvl[k])
+            q = self.takt_lvl_max[k]
+            if q and q[-1][0] == sec:
+                if self.takt_lvl[k] > q[-1][1]:
+                    q[-1] = (sec, self.takt_lvl[k])
+            else:
+                q.append((sec, self.takt_lvl[k]))
+            while q and q[0][0] <= sec - self.TAKT_LVL_WIN:
+                q.popleft()
+
+    def _takt_levels(self):
+        """{"pegel": 0..1, "baender": {...}} oder None (ohne Musik)."""
+        f = self.f
+        if f is None or f.silent or self.state == "idle" or f.db_short <= self.cfg["silence_db"]:
+            return None
+        out = {}
+        for k, name in self.TAKT_BANDS:
+            top = max((m for _, m in self.takt_lvl_max[k]), default=0.0)
+            r = self.takt_lvl[k] / top if top > 1e-9 else 0.0
+            out[name] = round(clamp01(1.0 + 20.0 * math.log10(r) / self.TAKT_LVL_DB), 3) if r > 1e-6 else 0.0
+        return {"pegel": out["pegel"], "baender": {n: out[n] for _, n in self.TAKT_BANDS[1:]}}
+
+    TAKT_KEYS = ("strobe", "wow", "sonnenbrille", "freeze", "blackout", "nebel")
+
+    def _takt_scene(self):
+        """Name der aktiven Szene (von Hand oder Szenen-Automatik), sonst None. Nur Anzeige."""
+        if self.sc is not None:
+            return self.sc.name
+        return self.sa["name"] if self.sa is not None else None
+
+    def _takt_move(self):
+        """Laufender Bewegungseffekt fuer /api/takt (wie die markierten Knoepfe im Panel), None bei Stop."""
+        from takt_liste import MOVE_NAMES
+        m = self.sc.move if self.sc is not None else (self.auto_move or "auto")
+        if m == "auto":
+            m = self._pilot_move()                           # Bewegung nach der Musik: der aehnlichste Knopf
+        return None if m in ("home", "", None) else MOVE_NAMES.get(m, m)
+
+    def _takt_effect(self):
+        """Name der Voreinstellung, die gerade auf dem Effektband laeuft, None wenn aus."""
+        if not self.presets or self.presets[0].values.get("dimmer", 0) <= 0:
+            return None
+        cur = int(self.presets[0].values.get("preset", 0))
+        return dict(self._eb_names()).get(cur) if cur > 0 else None
+
+    def _takt_keys(self, now):
+        """Effekt-Tasten fuer /api/takt, je Bild aus dem Zustand gelesen (Panel, APC, Lumi gleich): gedrueckt, ab welchem
+        Schlag, wie oft. Nur Anzeige."""
+        sz = self._takt_scene()                              # Szene: ab welchem Schlag (szeneSeit)
+        if sz != self.takt_scene:
+            self.takt_scene, self.takt_scene_since = sz, (self._takt_beat_at(now) if sz else None)
+        cur = {"strobe": bool(self.blitz), "wow": self.build_t0 is not None, "sonnenbrille": self.override == "allbright",
+               "freeze": bool(self.freeze), "blackout": self.override == "blackout", "nebel": "fog" in self.held}
+        for k, on in cur.items():
+            if on and not self.takt_keys[k]:
+                self.takt_keys_n[k] += 1
+                b = self.takt_clock.at(now)
+                if b is not None:
+                    self.takt_keys_since[k] = round(b, 3)
+            elif not on:
+                self.takt_keys_since.pop(k, None)
+        self.takt_keys = cur
+        dyn = self._takt_dyn()                              # Dynamik-Stufe wie fuers Licht: Wechsel ab dem naechsten Taktanfang
+        if dyn != self.takt_dyn[0]:
+            self.takt_dyn = (dyn, self._takt_bar_at(now) if dyn else None)
+
+    TAKT_DYN = {0: "langsam", 1: "langsam", 2: "mittel", 3: "schnell"}
+
+    def _takt_dyn(self):
+        """langsam (Chillen, Groove), mittel (Party) oder schnell (Vollgas): die Stufe, mit der das Licht gerade laeuft
+        (eff_tier: Break ruhig, Aufbau und Drop voll, sonst nach der Musik oder dem Tempo-Knopf). Ohne Musik None."""
+        if self.state == "idle" or self.f is None or self.f.silent:
+            return None
+        return self.TAKT_DYN.get(self.eff_tier())
+
+    def _takt_beat_at(self, t):
+        """Ganzer Schlag der Takt-Uhr am naechsten an Zeitpunkt t, oder None ohne Uhr."""
+        b = self.takt_clock.at(t)
+        return None if b is None else float(round(b))
+
+    def _takt_bar_at(self, t):
+        """Taktanfang (die Eins) am naechsten an Zeitpunkt t, oder None ohne Uhr."""
+        b = self.takt_clock.at(t)
+        return None if b is None else to_bar(b, self.bar_len)
+
+    TAKT_SECTION = {"build": "aufbau", "drop": "drop", "break": "break", "gap": "break"}
+    TAKT_DROP_BARS = 4                                   # Drop mindestens 4 Takte melden (Rueckmeldung Dashboard)
+
+    def _takt_drop_end(self):
+        """Schlag, ab dem ein Drop als vorbei gilt: nach drop_len und mindestens 4 Takten, auf einem Taktanfang. None ohne Uhr."""
+        start = self.takt_enter if self.takt_enter is not None else self._takt_bar_at(self.state_t)
+        by_time = self.takt_clock.at(self.state_t + max(0.8, self.cfg["drop_len_s"]))
+        if start is None or by_time is None:
+            return None
+        q = max(1, int(self.bar_len))
+        return max(start + self.TAKT_DROP_BARS * q, to_bar(by_time + q / 2.0 - 0.001, q))
+
+    def _takt_now(self, now):
+        """(Abschnitt, ab Schlag, Drop gerade von selbst vorbei) wie das Licht; die Pause vor dem Drop zaehlt als break."""
+        st = self.state
+        seit = self.takt_enter if self.takt_enter is not None else self._takt_bar_at(self.state_t)
+        if st == "drop":
+            end, b = self._takt_drop_end(), self.takt_clock.at(now)
+            over = (b >= end) if (end is not None and b is not None) else now - self.state_t >= max(0.8, self.cfg["drop_len_s"])
+            if over:
+                return "normal", end, True
+            return "drop", seit, False
+        return self.TAKT_SECTION.get(st, "normal"), seit, False
+
+    def _takt_section(self, now):
+        return self._takt_now(now)[0]
+
+    def _takt_next_drop(self, now):
+        """Schlag des naechsten Drops, wenn die Analyse des Liedes (Mixxx-Plan) ihn kennt, sonst None."""
+        m = self.mx or {}
+        if not (m.get("connected") and m.get("plan") and self.mx_tempo_on):
+            return None
+        nxt = next((u for u in (m.get("next") or []) if u.get("type") == "drop"), None)
+        if nxt is None:
+            return None
+        return self._takt_beat_at(now + float(nxt.get("in") or 0.0))
+
+    def _takt_colors(self):
+        """1 bis 4 Farben wie das Licht gerade: gewaehlte Farbtoene, sonst der Farbton der Stimmung (Weiss, UV, Bunt eigens)."""
+        import colorsys
+        hx = lambda h, s=1.0, v=1.0: "#%02x%02x%02x" % tuple(int(round(x * 255)) for x in colorsys.hsv_to_rgb(h % 1.0, s, v))
+        c = self.auto_color
+        if c == "white":
+            return ["#ffffff"]
+        if c == "uv":
+            return [hx(0.78, 1.0, 0.8)]
+        if self.auto_rainbow or c == "rainbow":
+            return [hx(self.hue + k / 4.0) for k in range(4)]
+        hues = [SCENE_COLORS[x] for x in self.auto_colors if x in SCENE_COLORS][:4]
+        if hues:
+            return [hx(h) for h in hues]
+        if c == "multi":
+            return [hx(self.hue), hx(self.hue + 0.5)]
+        return [hx(self.hue), hx(self.hue + 0.08)]
+
+    def _takt_title(self):
+        m = self.mx or {}
+        if m.get("connected") and m.get("deck") is not None and m.get("title"):
+            return (m.get("artist") + " – " if m.get("artist") else "") + m["title"]
+        if self.local is not None and self.local.song() is not None:
+            ls = self.local.song()
+            return (ls["artist"] + " – " if ls.get("artist") else "") + ls["title"]
+        if self.radio is not None and self.radio.song() is not None:
+            rs = self.radio.song()
+            return rs["artist"] + " – " + rs["title"]
+        song = self.titles.song if self.titles is not None and getattr(self.titles, "active", False) else None
+        if isinstance(song, dict) and song.get("title"):
+            return (song.get("artist") + " – " if song.get("artist") else "") + song["title"]
+        return ""
+
+    BPM_FINE_TOL = 0.04          # feines Tempo gilt nur so nahe an aubio (halb/doppelt eingeschlossen)
+
+    def _bpm_refine(self, f):
+        """Eichstueck 23.11.2026: aubio rastet auf seine Blockgroesse ein (am Pi 121,7 statt 120, 96 statt 95). Liegt das feine
+        Tempo aus der Schlag-Klarheit (beat_clarity.py, Analyzer.bpm_fine) hoechstens BPM_FINE_TOL neben aubio (auch halb oder
+        doppelt), gilt es, in aubios Oktave. Die Schlaege selbst bleiben von aubio. Nicht bei Mixxx-Tempo, von Hand, bpm_fine 0."""
+        fine = getattr(self.src, "bpm_fine", 0.0) or 0.0
+        if fine <= 0 or f.bpm <= 0 or self.cfg["bpm_fine"] < 0.5 or self.mx_tempo_on or self.manual_bpm is not None:
+            return f
+        for k in (1.0, 2.0, 0.5):
+            if abs(f.bpm / (fine * k) - 1.0) <= self.BPM_FINE_TOL:
+                return f._replace(bpm=fine * k)
+        return f
+
+    BPM_SURE_TOL = 0.03          # so weit darf das erkannte Tempo schwanken (halb/doppelt zaehlt als gleich)
+    BPM_SURE_KICK_WIN = 4.0      # ohne Klarheits-Messung (Simulator): Kicks in diesem Fenster belegen den Beat
+    BPM_SURE_KICKS = 3
+    BPM_SURE_LONG = 3.0          # ohne Klarheits-Messung und ohne Kicks: so viel mal laenger warten
+
+    def _bpm_gate(self, f, now):
+        """Wunsch von Markus 23.11.2026: in einer Einleitung ohne Beat (Klatschen, leise Trompete, eine Minute lang) meldet
+        aubio trotzdem ein Tempo (oft 120-130, das bevorzugt es), das Licht wird unruhig. Das Tempo aus dem Audio gilt erst,
+        wenn die Schlag-Klarheit (beat_clarity.py, Analyzer.beat_clarity) im Mittel der letzten bpm_sure_s Sekunden mindestens
+        bpm_clear war und das Tempo dabei gleich blieb. Ohne diese Messung (Simulator): gleiches Tempo plus Kicks, ohne Kicks das BPM_SURE_LONG-fache.
+        Bis dahin rechnet das Licht wie ohne Tempo-Erkennung (BPM 0: der Kick fuehrt, Anzeige --). Einmal sicher, bleibt es
+        bis zur naechsten Stille oder einem anderen Tempo (Breaks im Lied nicht). Mixxx, Tempo von Hand, bpm_sure_s 0: aus."""
+        wait = self.cfg["bpm_sure_s"]
+        nk = max(0, f.kick_count - self.bs_seen_kick)
+        self.bs_seen_kick = f.kick_count
+        for _ in range(min(nk, 50)):
+            self.bs_kicks.append(now)
+        while self.bs_kicks and now - self.bs_kicks[0] > self.BPM_SURE_KICK_WIN:
+            self.bs_kicks.popleft()
+        clar = getattr(self.src, "beat_clarity", None)
+        if clar is not None:                      # Klarheit der letzten bpm_sure_s Sekunden (Mittelwert, Eichstueck 23.11.2026:
+            self.bs_clar.append((now, float(clar)))   # ein weicher Beat schwankt um die Schwelle, ununterbrochen war zu streng)
+            while self.bs_clar and now - self.bs_clar[0][0] > max(wait, 0.5):
+                self.bs_clar.popleft()
+        if wait <= 0 or self.mx_tempo_on or self.manual_bpm is not None:
+            self.bpm_unsure = False
+            return f
+        if f.silent or f.bpm <= 0:                # Stille: danach beginnt die Pruefung neu
+            self.bs_ref = self.bs_since = None
+            self.bs_sure = self.bpm_unsure = False
+            return f
+        r = f.bpm / self.bs_ref if self.bs_ref else 0.0
+        while 0 < r < 0.75:
+            r *= 2.0
+        while r >= 1.5:
+            r /= 2.0
+        if self.bs_ref is None or abs(r - 1.0) > self.BPM_SURE_TOL:
+            self.bs_since, self.bs_sure = now, False   # neues Tempo: wieder warten
+        self.bs_ref = f.bpm
+        held = now - self.bs_since
+        if not self.bs_sure:
+            if clar is not None:
+                cl = [c for _, c in self.bs_clar]
+                full = bool(self.bs_clar) and now - self.bs_clar[0][0] >= wait - 0.1
+                self.bs_sure = held >= wait and full and sum(cl) / len(cl) >= self.cfg["bpm_clear"]
+            elif held >= wait and (len(self.bs_kicks) >= self.BPM_SURE_KICKS or held >= wait * self.BPM_SURE_LONG):
+                self.bs_sure = True
+        self.bpm_unsure = not self.bs_sure
+        return f._replace(bpm=0.0) if self.bpm_unsure else f
 
     def _bpm_live(self):
         """Erkanntes Tempo fuer die Anzeige. Bei Stille oder wenn seit 4 Sekunden kein Beat kam, 0 (Anzeige --)
@@ -3788,6 +4275,10 @@ def main():
             lc.start()
         except ImportError:
             print("Hinweis: MIDI-Controller nicht benutzt (mido fehlt: sudo apt install python3-mido python3-rtmidi)")
+    if not a.dry_run:                                          # WLAN-Schalter: Waechter schaltet es wieder ein, wenn das Kabel fehlt
+        import wlan
+        wlan.manager().want_off = lambda: show.cfg["wlan_trennen"] > 0.5
+        wlan.manager().start_watch()
     if a.web:
         import webpanel
         webpanel.start(show, a.web)

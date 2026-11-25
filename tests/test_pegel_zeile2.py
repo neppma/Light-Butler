@@ -34,7 +34,11 @@ check(sh.snapshot()["lvsrc"] == "lan", "Quelle: LAN (Ton vom Mac)")
 
 p = webpanel.make_page()
 check('<span id="lvm" onclick="openAudio()"' in p and 'id="lvr"' in p and 'id="lvp"' in p, "Meter rechts in Zeile 2")
-check("S.lvsrc==='lan'?'LAN':'Line-In'" in p, "Beschriftung Line-In / LAN")
+check("const nm=S.lvsrc==='lan'?'LAN':S.lvsrc==='bt'?'Bluetooth':'Line-In'" in p and "ls.title=nm+" in p and "ls.innerHTML=SRC_ICON[src]" in p,
+      "Quelle als Symbol, Name beim Darueberfahren")
+check(all(k + ":SRC_SVG(" in p for k in ("bt", "lan", "line", "hdmi")), "Symbole Bluetooth, Netzwerk, Klinkenstecker, HDMI")
+check("const F=S.lvfwd" in p and "SRC_ICON[F.kind]" in p, "Weiterleitung: Pfeil und Ziel-Symbol neben der Quelle")
+check("lvfwd" in sh.snapshot() and sh.snapshot()["lvfwd"] is None, "ohne Weiterleitung kein Pfeil")
 check("el.classList.toggle('dead',!L.alive)" in p and "el.classList.toggle('clip'" in p, "ohne Signal gestrichelt, uebersteuert rot")
 check("L.peak_db>-3?'#ff5a5a':L.peak_db>-12?'#f0c040':'#3ddc84'" in p, "Farben: gruen, gelb ab -12 dB, rot ab -3 dB")
 check("function openAudio()" in p and "a.open=true" in p, "Antippen oeffnet den Audio-Eingang")

@@ -134,7 +134,12 @@ class ApcRelay:
         if self.addr is None or now - self.addr_t > 30.0:
             self.addr_t = now
             try:
-                self.addr = (socket.gethostbyname(self.pi[0]), self.pi[1])
+                try:
+                    import pi_addr                    # Kabel und WLAN: die Adresse, die antwortet (25.11.2026)
+                    ip = pi_addr.best(self.pi[0])
+                except ImportError:
+                    ip = self.pi[0]
+                self.addr = (socket.gethostbyname(ip), self.pi[1])
             except OSError:
                 pass                                  # alte Adresse behalten, spaeter neu versuchen
         return self.addr

@@ -42,7 +42,7 @@ fresh = audio_send.AudioSender("pi.test", sd_mod=object(), sock=types.SimpleName
 fresh.feed(block, 44100)
 check(fresh.addr == ("127.0.0.1", 9022), "ohne Faden (Tests, Radio): einmal selbst nachschlagen")
 
-# Waechter: Eingang offen, aber kein Block mehr -> neu oeffnen
+# Waechter: Eingang lief, dann kein Block mehr -> neu oeffnen
 logs = []
 
 
@@ -52,6 +52,7 @@ class Stream:
     def __init__(self, **kw):
         self.kw = kw
         Stream.made += 1
+        Stream.last = self
 
     def start(self):
         pass
@@ -68,16 +69,44 @@ SD = types.SimpleNamespace(query_devices=lambda: [{"name": "BlackHole 2ch", "max
                            InputStream=lambda **kw: Stream(**kw))
 w = audio_send.AudioSender("pi.test", sd_mod=SD, sock=types.SimpleNamespace(sendto=lambda p, a: None), log=logs.append)
 audio_send.STALL_S = 0.3
+audio_send.QUIET_S = 0.8
+audio_send.QUIET_MAX_S = 1.6
+w.quiet = audio_send.QUIET_S
 real_sleep = time.sleep
 time.sleep = lambda s: real_sleep(0.05)
 w.start()
-real_sleep(0.4)
-check(Stream.made >= 1, "Eingang geoeffnet")
-real_sleep(0.6)
-check(w.restarts >= 1 and any("liefert seit" in m for m in logs), "kein Block mehr: Waechter meldet und schliesst: %s" % logs[-1:])
 real_sleep(0.3)
+check(Stream.made == 1, "Eingang geoeffnet")
+w._callback(block, 1024, None, None)             # Ton laeuft ...
+real_sleep(0.6)                                  # ... und hoert auf
+check(w.restarts == 1 and any("liefert seit 0 s" in m or "liefert seit 1 s" in m for m in logs),
+      "Ton lief, dann kein Block mehr: Waechter meldet und schliesst: %s" % logs[-1:])
+real_sleep(0.3)
+check(Stream.made == 2, "danach neu geoeffnet (%d)" % Stream.made)
+
+# Mac schlaeft (Fehlerbericht 22.11.2026: 5000 Mal neu geoeffnet, dann Absturz): ohne jeden Block nur selten
+
+
+def wait_made(n, limit=5.0):
+    end = time.monotonic() + limit
+    while Stream.made < n and time.monotonic() < end:
+        real_sleep(0.01)
+    return time.monotonic()
+
+
+wait_made(2)
+t2 = w.opened                                    # wann der zweite Eingang geoeffnet wurde
+real_sleep(max(0.0, t2 + 0.5 - time.monotonic()))
+check(Stream.made == 2, "kein Block seit dem Oeffnen: nicht alle paar Sekunden neu (%d)" % Stream.made)
+t3 = wait_made(3)
+check(Stream.made == 3 and t3 - t2 >= 0.7 and w.quiet == 1.6,
+      "erst nach der Wartezeit neu (%.2f s), Wartezeit verdoppelt (%.1f)" % (t3 - t2, w.quiet))
+real_sleep(1.0)
+check(Stream.made == 3, "naechster Versuch erst nach der laengeren Wartezeit (%d)" % Stream.made)
+w._callback(block, 1024, None, None)             # aufgewacht: Ton kommt wieder
+real_sleep(0.2)
+check(w.quiet == audio_send.QUIET_S, "Ton wieder da: Wartezeit zurueckgesetzt")
 w.stop()
 time.sleep = real_sleep
 socket.gethostbyname = orig
-check(Stream.made >= 2, "danach neu geoeffnet (%d)" % Stream.made)
 finish("test_ton_waechter")
