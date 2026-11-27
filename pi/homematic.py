@@ -12,6 +12,9 @@ Im Trockenlauf (Simulator) wird diese Anbindung nicht gestartet.
 Aenderungen aus dem Panel (Adresse der CCU, Namen, neue und entfernte Kanaele) stehen in homematic_user.json,
 homematic.yaml bleibt unveraendert. Neue Kanaele kommen nur aus der Kanalliste der CCU (Knopf "Kanaele holen"),
 der Nebelschub (FORBIDDEN) wird dort nie angeboten und laesst sich auf keinem Weg als Kanal eintragen.
+Ohne homematic.yaml (neue Installation, Windows, Mac, 27.11.2026) startet die Anbindung leer (DEFAULT_CCU, ohne Adresse):
+Adresse der CCU, Kanaele und die Rollen (ROLES: Steckdose der Nebelmaschine, Wohnzimmerlicht der Automatik) kommen dann
+ganz aus dem Panel. Ohne Adresse wird nie etwas gesendet oder gelesen.
 
 Nebelschub (ccu.fog_trigger): schaltet NUR der SMOKE-Knopf ueber fog_fire(), nie das Panel oder die Automatik. Jeder
 Schub sendet zuerst ON_TIME (Sekunden), damit der Schalter auch dann von selbst ausgeht, wenn der Aus-Befehl verloren geht.
@@ -31,6 +34,8 @@ KINDS = ("switch", "dimmer")
 FOG_ID = "fogtrig"                 # Zeile des Nebelschubs im ReGa-Skript
 MAX_SENDS = 12                     # Schaltbefehle pro Minute, mehr lehnt Home.set ab (Schutz des Duty Cycle)
 USER_FILE = "homematic_user.json"
+DEFAULT_CCU = {"host": "", "ports": {"HmIP-RF": 2010, "BidCos-RF": 2001}, "poll_s": 5}   # ohne homematic.yaml
+ROLES = {"fog_power": ("switch",), "room_light": ("switch", "dimmer")}   # Rolle -> erlaubte Arten; "" = keiner
 FORBIDDEN = set()                  # Nebelschub-Geraet: Nebel nur ueber den SMOKE-Knopf (Sicherheitsregel), nie schaltbar;
                                    # load_config traegt das Geraet aus ccu.fog_trigger ein (nur dazu, nie heraus)
 ADDR_RE = re.compile(r"^[A-Za-z0-9]{6,20}:[0-9]{1,2}$")
@@ -51,7 +56,7 @@ def forbidden(address):
 
 
 def empty_user():
-    return {"version": 1, "host": "", "labels": {}, "added": [], "removed": []}
+    return {"version": 1, "host": "", "labels": {}, "added": [], "removed": [], "roles": {}}
 
 
 def load_user(path):
@@ -65,6 +70,7 @@ def load_user(path):
         for k in u:
             if k in d and isinstance(d[k], type(u[k])):
                 u[k] = d[k]
+        u["roles"] = {k: v for k, v in u["roles"].items() if k in ROLES and isinstance(v, str) and (v == "" or ID_RE.match(v))}
     except (OSError, ValueError) as e:
         print(f"Hinweis: {os.path.basename(path)} nicht lesbar ({e}), Aenderungen aus dem Panel werden ignoriert")
     return u
@@ -88,6 +94,9 @@ def merge(ccu, devs, user):
         ids.add(a["id"])
         out.append({"id": a["id"], "label": str(a.get("label") or a["id"])[:LABEL_MAX], "kind": a["kind"],
                     "interface": a["interface"], "address": a["address"], "status": a["status"], "user": True})
+    for role, dev_id in (user.get("roles") or {}).items():   # Rolle aus dem Panel geht vor homematic.yaml ("" = keiner)
+        if role in ROLES and isinstance(dev_id, str):
+            ccu[role] = dev_id
     for d in out:
         lab = user.get("labels", {}).get(d["id"])
         if isinstance(lab, str) and lab.strip():
@@ -148,7 +157,11 @@ class Home:
     def __init__(self, path="homematic.yaml", proxy=None, rega=None, timeout=3.0, log=print, user_path=None):
         """proxy: Funktion (interface) -> Objekt mit setValue; rega: Funktion (Skript) -> Text (beide nur fuer Tests austauschbar).
         user_path: Datei mit den Aenderungen aus dem Panel (Standard: homematic_user.json neben homematic.yaml)."""
-        self.base_ccu, self.base_devs = load_config(path)
+        self.has_file = bool(path) and os.path.exists(path)
+        if self.has_file:
+            self.base_ccu, self.base_devs = load_config(path)
+        else:                                                  # ohne homematic.yaml: alles kommt aus dem Panel
+            self.base_ccu, self.base_devs = json.loads(json.dumps(DEFAULT_CCU)), []
         self.user_path = user_path or os.path.join(os.path.dirname(os.path.abspath(path)), USER_FILE)
         self.user = load_user(self.user_path)
         self.found, self.scanning = None, False                # Kanalliste der CCU (Knopf "Kanaele holen")
@@ -189,7 +202,8 @@ class Home:
     # ---- im Panel bearbeiten ---------------------------------------------------------------------------------------
     def edit(self, d):
         """Aenderung aus dem Panel: {"host": "192.168.1.20"} | {"label": {"id", "text"}} | {"add": {"interface", "status"}}
-        (nur ein Kanal aus der Kanalliste der CCU) | {"remove": id}. Wird sofort gespeichert und gilt sofort."""
+        (nur ein Kanal aus der Kanalliste der CCU) | {"remove": id} | {"role": {"role": "fog_power", "id": id oder ""}}.
+        Wird sofort gespeichert und gilt sofort."""
         u = json.loads(json.dumps(self.user))
         if "host" in d:
             h = str(d["host"]).strip()
@@ -214,6 +228,13 @@ class Home:
             u["labels"].pop(dev_id, None)
         if "add" in d:
             self._add(u, d["add"])
+        if "role" in d:
+            role, dev_id = str(d["role"].get("role")), str(d["role"].get("id") or "")
+            if role not in ROLES:
+                raise ValueError("Unbekannte Rolle")
+            if dev_id and (dev_id not in self.by_id or self.by_id[dev_id]["kind"] not in ROLES[role]):
+                raise ValueError("Dieser Kanal passt hier nicht" + (" (nur Steckdosen)" if ROLES[role] == ("switch",) else ""))
+            u["roles"][role] = dev_id
         self.user = u
         self._save()
         self._apply()
@@ -241,6 +262,8 @@ class Home:
         """Kanalliste der CCU holen (ein ReGa-Aufruf, kein Funk). Ergebnis in self.found."""
         if self.scanning:
             return
+        if not self.ccu.get("host"):
+            raise ValueError("Zuerst die Adresse der CCU eintragen und speichern")
         self.scanning = True
 
         def run():
@@ -295,6 +318,9 @@ class Home:
     def poll(self):
         """Zustand aller Geraete einmal lesen (blockiert, ruft der Hintergrund-Thread auf). Ein Aufruf, kein Funk."""
         devs = list(self.devices)
+        if not self.ccu.get("host"):                           # keine CCU eingetragen: nichts lesen, kein Fehler
+            self.error = ""
+            return
         try:
             text = self._rega(self.read_script(devs))
         except Exception as e:                                      # noqa: BLE001
@@ -357,6 +383,8 @@ class Home:
         d = self.by_id.get(dev_id)
         if d is None:
             raise ValueError("Unbekanntes Geraet")
+        if not self.ccu.get("host"):
+            raise ValueError("Keine CCU eingetragen")
         now = time.monotonic()
         with self.lock:
             self.sends = [t for t in self.sends if now - t < 60.0]
@@ -435,7 +463,8 @@ class Home:
             empty = {"on": None, "level": None, "ok": None}
             return {"devices": [dict(id=d["id"], label=d["label"], kind=d["kind"], iface=d["interface"], addr=d["address"],
                                      **self.state.get(d["id"], empty)) for d in self.devices],
-                    "error": self.error, "host": self.ccu["host"], "found": self.found, "scanning": self.scanning}
+                    "error": self.error, "host": self.ccu["host"], "found": self.found, "scanning": self.scanning,
+                    "roles": {r: (self.ccu.get(r) if self.ccu.get(r) in self.by_id else "") for r in ROLES}, "file": self.has_file}
 
 
 def default_path():

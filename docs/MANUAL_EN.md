@@ -130,7 +130,7 @@ The main page is for operating only. It is divided into grey sections. From top 
 | Row | What you see |
 | --- | --- |
 | 1 | **Beat lamp**, **BPM**, the **status field** and round buttons: heart (**Health**), CD (**Auto DJ**), database (**Music library**), bars (**Statistics**), **⚙** (**Settings**), **?** (help) and **⏻** |
-| 2 | Mode, level in words (**Chill**, **Groove**, **Party**, **Peak**), mood, key, meter and a small level meter of the audio input |
+| 2 | Mode, level in words (**Chill**, **Groove**, **Party**, **Peak**), mood, key (orange **3/4** only when the light counts in groups of three) and a small level meter of the audio input |
 | 3 | Song from Mixxx or the Auto-DJ: title, energy level, genre, remaining time and the next events, for example "Drop 5.1 s" |
 | 4 | **Song progress**: the loudness of the song as a curve with build-up, break, drops and hotcues, for viewing only |
 
@@ -451,7 +451,7 @@ If the music plays on the music computer (for example Spotify, YouTube), the Hel
 brew install blackhole-2ch
 ```
 
-2. In the app **Audio MIDI Setup** create a **Multi-Output Device**: tick your speakers plus "BlackHole 2ch", tick **Drift Correction** for BlackHole, the same rate everywhere (44100 Hz). Without drift correction the sound to the Light-Butler can break off after a while, even though you still hear it on the Mac.
+2. In the app **Audio MIDI Setup** create a **Multi-Output Device**: tick your speakers plus "BlackHole 2ch", tick **Drift Correction** for BlackHole, the same rate everywhere (44100 Hz). Without drift correction the sound to the Light-Butler can break off after a while, even though you still hear it on the Mac. Drift correction applies to every device except the **primary device**. In Mixxx under Sound Hardware set the sample rate to 44100 Hz as well. If something is off, the panel shows **⚠ Ton am Musik-Rechner** at the bottom.
 3. Choose this device in System Settings under **Sound → Output**.
 4. If macOS asks for **microphone access** for the Helper: allow it.
 5. In the panel under **Audio input** choose the input **Musik-Rechner (Netzwerk)** (music computer, network).
@@ -547,14 +547,15 @@ You can also place the **pixel matrix** and the **API display** (a TV or screen 
 Under **⚙** → **General settings** → **Connections** you see all network devices and whether they are reachable. A tap on the address opens their web interface.
 
 - Per output (DMX, WLED, Nanoleaf) there is **Off**, **On** and **Not present**. **Off** is meant for a while (orange reminder), **Not present** for a rig without this device (no warning).
-- **DMX route:** **Art-Net gateway** over the network or **USB adapter** directly on the lighting computer.
+- **DMX route:** **Art-Net gateway** over the network or **USB adapter** directly on the lighting computer. For the gateway you enter its **address** below; it applies after the restart.
 - **Art-Net input** (default off): accepts light from another lighting program. The locks for laser, fog and strobe still apply.
 - **Ableton Link** passes the tempo on to Link devices on the network.
 
 ### WLED and Nanoleaf
 
 - **WLED:** in WLED the **transition time must be 0**, and presets must have no transition of their own, otherwise the strip does not flash on the beat.
-- **Nanoleaf:** you change address and key under **Fixtures** → **Edit**. If the panels cannot keep up with strobe, lower the **strobe limit for Nanoleaf**.
+- **Pair Nanoleaf** (under **Connections**): enter the IP, hold the power button on the Nanoleaf for 5 to 7 seconds until the LEDs flash, then tap **Pair** within 30 seconds. The Light-Butler fetches the key and reads the panels; after the restart they light along. This also works for pairing again.
+- **Nanoleaf:** you can also change address and key under **Fixtures** → **Edit**. If the panels cannot keep up with strobe, lower the **strobe limit for Nanoleaf**.
 - **Pixel matrix:** a WLED with a 2D matrix (for example 32 × 32 LEDs) shows patterns of its own to the music: plasma, rings on the beat, level, sparks, tunnel, plus snake (tunnel with curves), grid (tiles flash on the beat), scanner (bars shoot across), explosion (ring of sparks on every kick), kaleidoscope, glitch (picture briefly disturbed). **Auto** changes with the music: scanner in the build-up, explosion with grid at the drop, otherwise another pattern each phrase (all in turn, the scanner too). If dark areas look brighter on the matrix than in the preview, raise **Contrast (gamma)** (default 2.2). **Follows loudness** (default 70 %) makes quiet passages darker, loud ones fully bright, as fast as the music; 0 = off. **Lyrics** (default off): if the song has lyrics with times (like the line in the main panel), the matrix shows the sung line as scrolling text or word by word, only in the chorus (lines that occur several times in the song) or always. Under **Settings** → **Pixel matrix** you enter the address (or **Im Netz suchen**, search network: all WLEDs in the network in a list, matrices first, the size is taken over), see a preview and switch **Send** on. The **test picture** checks rotation and wiring. While a song plays, the matrix now and then shows the cover, the artist picture, the album cover for a few seconds each (only those that exist), then the effect returns. A **scrolling text** with artist, title, album comes with it: A one big line, B three small lines, C cover with a band, D word by word on the beat, **Auto** a different one of the four each time (choice, speed on the page pixel matrix). During silence the matrix goes dark. The state of the pictures (no song, loaded, no picture) is shown on the page below the preview. Off by default; without strobe permission the music triggers something new at most twice a second. If the matrix does not answer (switched off, unplugged), sending pauses until it is back; with sending off it is neither checked nor reported.
 
 ### HomeMatic (Home)
@@ -564,7 +565,8 @@ In the section **Home** (under **Connections**) you switch room light and socket
 - **Room light** (in the panel "living room light"): slider for the brightness, **Off** and **On**.
 - **Sockets:** a tap toggles, switched-on ones are orange.
 - **Automatic:** if no music plays for a while, the Light-Butler dims the room light up; when the music returns, it switches it off.
-- **Settings: CCU and channels** (bottom of the section): enter the address, **Get channels from the CCU**, take them over with **+ Add**.
+- **Settings: CCU and channels** (bottom of the section): enter the address, **Get channels from the CCU**, take them over with **+ Add**. This also works on a new installation without a prepared file, on every lighting computer.
+- **Roles** (in the same place): choose the **fog machine socket** and the **living room light** for the automatic. With the socket set to **none**, SMOKE fires the fog right away via DMX (machine plugged into the wall, switched on by hand).
 - The fog burst is never offered there, fog only via the SMOKE button.
 
 ### DMX monitor
@@ -772,6 +774,7 @@ You recognise most problems from the notice line and the status field. More help
 | APC fader does nothing | first move the fader up to the current value |
 | preview fails, red notice | switch on music computer plus Helper, plug in the stick, check the music folder under **Connections** |
 | heart at the top yellow or red | open the page **Health**, it says what is wrong |
+| the light jumps during a speech | if the Light-Butler detects speech, the top shows **🎤 Speech**, then the light runs calmly: no drops, no flashes, no scene or effect changes, no song recognition, no lyrics; otherwise switch on **Sprache: keine Drops** (speech: no drops) under settings (auto detection) → phases |
 
 ## About Light-Butler and licence
 

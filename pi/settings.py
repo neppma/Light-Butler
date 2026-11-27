@@ -150,6 +150,8 @@ DEFS = [
     P(G_COLOR, "hue_fade_s", "Farbwechsel: Ueberblendzeit", "Wie lange die Ueberblendung zur neuen Farbe dauert.",
       1.0, 0.2, 5.0, 0.1, "s"),
     # ---- Phasen -----------------------------------------------------------------------------
+    P(G_PHASE, "speech_guard", "Sprache: keine Drops", "An = spricht jemand (Ansprache ueber das Mikrofon), erkennt das Licht keine Drops, keinen Aufbau, keine Pause und keinen Break. Erkannt an vielen unregelmaessigen Anschlaegen ohne regelmaessigen Schlag (Schlag-Klarheit). Gilt nicht mit Mixxx-Vorhersage. Aus = wie frueher (Wortpausen wurden zu Drops).",
+      1.0, 0.0, 1.0, 1.0, "switch:aus|an"),
     P(G_PHASE, "phase_v2", "Phasen verbessert (Eichstueck)", "An = Break, Aufbau und Drop wie mit dem Eichstueck eingestellt: der Vergleichspegel zaehlt nur Musik (keine Stille), ein Drop durch Pegelsprung braucht einen Beat, und nach dem Aufbau kommt der Drop auch ohne Pause, sobald Rauschen oder Wirbel enden und der Beat da ist. Aus = wie frueher.",
       1.0, 0.0, 1.0, 1.0, "switch:aus|an"),
     P(G_PHASE, "early_s", "Anlaufzeit ohne Phasen", "In den ersten Sekunden nach dem Start werden keine Phasen erkannt.",

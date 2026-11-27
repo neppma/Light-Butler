@@ -75,7 +75,7 @@ def full_path(p):
 # nur mit eigenen Nummern. Gilt dann das lauteste Deck, steht im Panel "Auto-DJ" statt "Mixxx". Plan = Analyse vom Mac (/marks).
 AUTODJ_DECKS = (11, 12)
 DECK_NUM = ("pp", "du", "pl", "tl", "vo", "rr", "bp", "bd", "fb", "fk", "k")
-LIB_TYPES = ("lib", "genres", "stats", "libhash")                    # Nachrichten zur Bibliothek, auch vom Light-Butler Helfer ohne Mixxx
+LIB_TYPES = ("lib", "genres", "stats", "libhash", "macaudio")                    # Nachrichten zur Bibliothek, auch vom Light-Butler Helfer ohne Mixxx
 
 
 def lib_item(x):
@@ -210,6 +210,13 @@ def _moved(moved, t):
 
 
 class MixxxLink:
+    mac_audio, mac_audio_t = [], 0.0                       # Warnungen zu den Audio-Einstellungen am Mac (Helfer, 25.11.2026)
+
+    def mac_audio_warn(self, now=None):
+        """Aktuelle Warnungen (nur, solange der Helfer sie in den letzten 3 min geschickt hat)."""
+        now = time.time() if now is None else now
+        return list(self.mac_audio) if now - self.mac_audio_t < 180 else []
+
     def __init__(self, port=9020, bind="0.0.0.0"):
         self.port, self.bind = port, bind
         self.decks = {}                 # Deck-Nr -> {"d": Zustand, "t": Empfangszeit}
@@ -508,6 +515,9 @@ class MixxxLink:
                     self.lib_ver += 1
             elif msg.get("type") == "stats":                      # Statistik der Bibliothek (Seite Statistik)
                 self.stats, self.stats_t = clean_stats(msg), now
+            elif msg.get("type") == "macaudio":                   # Audio-Einstellungen am Mac nicht wie empfohlen (25.11.2026)
+                w = msg.get("w") if isinstance(msg.get("w"), list) else []
+                self.mac_audio, self.mac_audio_t = [str(x)[:200] for x in w[:5]], now
             elif "pp" in msg and "d" in msg:
                 self.decks[int(msg["d"])] = {"d": msg, "t": now}
 

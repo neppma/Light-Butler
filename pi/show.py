@@ -386,6 +386,8 @@ class Show:
                                "mode", "key_conf", "kick_rate", "arousal", "valence", "quadrant", "build"])
         self.hue = self.hue_target = self._pick_hue()
         self.kick_times = deque()
+        self.talk, self.talk_clar = False, deque()     # Sprache erkannt (speech_guard, 25.11.2026)
+        self.talk_t = None                             # seit wann es nach Sprache aussieht
         self.mxp_t, self.mxp_kick_seen, self.mxp_music = None, 0, False   # Mixxx pausiert, aber Musik am Audio-Eingang?
         self.mxp_kicks = deque()
         self.last_flash = -99.0
@@ -591,6 +593,8 @@ class Show:
         if self.cue_now:                                            # Hotcue ueberschritten: wie eine neue Phrase
             phrase = True
             self.cue_seq += 1
+        if self.talk:                                               # Sprache: keine Phrasen (kein Szenen-/Farbwechsel, 25.11.2026)
+            phrase = False
         sm_on = False                                               # Showmanager: dieses Bild kommt aus der programmierten Show
         if self.showman is not None:
             self.showman.offset = c["sm_light_ms"] / 1000.0
@@ -598,7 +602,7 @@ class Show:
                 self.showman.offset += c["mixxx_lead_s"]            # derselbe Vorlauf wie Beat und Vorhersage aus Mixxx
             self.showman.tick(now)
             sm_on = self.showman.active()
-        if not sm_on:                                               # die Szenen-Automatik ruht, solange eine Show laeuft
+        if not sm_on and not self.talk:                             # die Szenen-Automatik ruht, solange eine Show laeuft oder jemand spricht
             with self.cmd_lock:
                 self._scene_auto(now, phrase, drop_start)
 
@@ -621,10 +625,10 @@ class Show:
             fe = max(1, int(round(fe * 3 / 4)))                      # gleiche Anzahl Takte wie bei 4/4
         if (self.white_on and fe > 0 and new_steps
                 and self.step % fe == 0 and self.arousal > c["flash_arousal"]
-                and self._base_tier() >= 2 and self.state == "normal" and self._style("flash", True)):
+                and self._base_tier() >= 2 and self.state == "normal" and self._style("flash", True) and not self.talk):
             self.white_env = 1.6        # nach Abklingen im ersten Frame ca. 1,0
         cool = c["burst_cool_drop_s"] if drop_start else c["burst_cool_s"]
-        if (self.strobe and self.state not in ("idle", "gap", "build")
+        if (self.strobe and self.state not in ("idle", "gap", "build") and not self.talk
                 and now - self.last_burst > cool
                 and (drop_start or (new_steps and self.step % (16 * bl) == 0 and self.arousal > 0.6))):
             self.burst_start, self.burst_until, self.last_burst = now, now + c["burst_len_s"], now
@@ -965,6 +969,11 @@ class Show:
             target = {"break": c["break_dim"], "idle": 0.12, "gap": 0.0}.get(self.state, 1.0)
             self.dim += (1 - math.exp(-dt / 0.6)) * (target - self.dim)
             return
+        if self._talk_update(now):                        # Ansprache: keine Drops, kein Aufbau, keine Pause, kein Break
+            if self.state != "normal":
+                self._enter("normal", now)
+            self.dim += (1 - math.exp(-dt / 0.6)) * (1.0 - self.dim)
+            return
         early = (now - self.t_first < c["early_s"]       # in den ersten Sekunden keine Phasen erkennen,
                  or now - self.resume_t < c["early_s"])  # ebenso nach einer Stille (Musik beginnt von vorn)
 
@@ -1032,6 +1041,43 @@ class Show:
         target = {"break": c["break_dim"], "idle": 0.12, "gap": 0.0}.get(self.state, 1.0)
         self.dim += (1 - math.exp(-dt / 0.6)) * (target - self.dim)
 
+    TALK_S = 6.0            # so lange muss es nach Sprache aussehen
+    TALK_CLAR = 0.15        # Schlag-Klarheit darunter: kein regelmaessiger Schlag (Musik mit Beat um 0,6, weicher Beat 0,3)
+    TALK_KICKS = 4          # mindestens so viele Anschlaege in 4 s (Stimme loest die Kick-Erkennung aus; Applaus, Flaechen nicht)
+    TALK_END_CLAR = 0.3     # Ende: ein Schlag ist da (2 s im Mittel) ...
+    TALK_END_QUIET_S = 4.0  # ... oder so lange kein Anschlag mehr
+
+    def _talk_update(self, now):
+        """Sprache erkennen (Fehlerbericht 25.11.2026: ein Sprecher am Line-In, jede Wortpause wurde zum Drop).
+        Sprache = lange kein regelmaessiger Schlag (Schlag-Klarheit niedrig), aber viele Anschlaege (die Stimme loest die
+        Kick-Erkennung aus). Applaus, Flaechen und Breaks haben keine Anschlaege, Musik einen regelmaessigen Schlag.
+        Ohne Messung der Klarheit (Simulator) und ohne Einstellung nie: Licht wie frueher."""
+        clar = getattr(self.src, "beat_clarity", None)
+        if self.cfg["speech_guard"] < 0.5 or clar is None or clar < 0:
+            self.talk, self.talk_t = False, None
+            self.talk_clar.clear()
+            return False
+        self.talk_clar.append((now, float(clar)))
+        while self.talk_clar and now - self.talk_clar[0][0] > self.TALK_S:
+            self.talk_clar.popleft()
+        kicks = len(self.kick_times)                          # Anschlaege der letzten 4 s
+        if self.talk:
+            recent = [c for t, c in self.talk_clar if now - t < 2.0]
+            beat = bool(recent) and sum(recent) / len(recent) >= self.TALK_END_CLAR
+            quiet = not self.kick_times or now - self.kick_times[-1] > self.TALK_END_QUIET_S
+            if beat or quiet:
+                self.talk, self.talk_t = False, None
+        else:                                                 # TALK_S am Stueck: unklar UND Anschlaege (ein Beat, der
+            recent = [c for t, c in self.talk_clar if now - t < 2.0]   # nach Flaeche einsetzt, ist in 2-3 s klar)
+            cand = bool(recent) and sum(recent) / len(recent) < self.TALK_CLAR and kicks >= self.TALK_KICKS
+            if not cand:
+                self.talk_t = None
+            elif self.talk_t is None:
+                self.talk_t = now
+            elif now - self.talk_t >= self.TALK_S:
+                self.talk = True
+        return self.talk
+
     def _update_loud(self, f, dt):
         """Helligkeit folgt Lautstaerke: Faktor fuer das normale Licht, wenn eine Passage leiser ist als das Lied sonst.
         Mit Mixxx und analysiertem Lied aus der Lautstaerkekurve der Analyse (0-100 je Lied), sonst aus dem Audiosignal
@@ -1097,7 +1143,7 @@ class Show:
         if self.titles is None:
             return
         radio = self.radio is not None and self.radio.song() is not None       # Titel kommt vom Internetradio: kein Shazam noetig
-        new = self.titles.tick(now, self.cfg["songrec_on"] > 0.5, self.cfg["songrec_every"], not f.silent, self._mixxx_has_title() or radio)
+        new = self.titles.tick(now, self.cfg["songrec_on"] > 0.5, self.cfg["songrec_every"], not f.silent and not self.talk, self._mixxx_has_title() or radio)
         if new:
             if new["genre"]:
                 self.live_genres[new["genre"]] = self.live_genres.get(new["genre"], 0) + 1
@@ -1220,6 +1266,8 @@ class Show:
         Drop, danach 20 s Vollgas): Build/Drop nur eine Stufe ueber der Stufe davor, danach zurueck auf sie."""
         if self.state == "break":
             return 0
+        if self.talk and self.sc is None and self.auto_speed not in AUTO_SPEED_TIER:
+            return 0                                     # Sprache: ruhig (Effektband ruhig, keine Blitze), Tempo von Hand geht vor
         if self.state in ("build", "drop"):
             if self.cfg["drop_step"] > 0.5:
                 pre = self.drop_pre if (self.state == "drop" and self.drop_pre is not None) else self.tier
@@ -1436,7 +1484,7 @@ class Show:
             return {"src": "mixxx", "name": m["title"], "dur": m.get("dur", 0.0), "lines": e["lines"], "plain": e["plain"],
                     "pos": m.get("pos_f", 0.0) + max(0.0, now - m.get("t", now)) * m.get("rate", 1.0)}
         song = self.titles.song if self.titles is not None else None             # Musik ohne Mixxx: was die Titelerkennung gefunden hat
-        if not song or self.state == "idle":
+        if not song or self.state == "idle" or self.talk:                       # Sprache: kein Liedtext (25.11.2026)
             return None
         name = f"{song['artist']} - {song['title']}" if song.get("artist") else song["title"]
         e = self.lyric_cache.get_entry(name, 0.0, now)
@@ -1821,6 +1869,11 @@ class Show:
                     pid = roles["accent"][int(now) % len(roles["accent"])]
                     self.pre_cur[name], self.pre_t[name] = pid, now
                     self.accent_until[name], self.last_accent = now + 3.0, now
+                elif self.talk:                                # Sprache: ein ruhiges Preset, kein Wechsel (25.11.2026)
+                    if self.pre_role.get(name) != "calm" and roles.get("calm"):
+                        self.pre_idx[name] = 0
+                        self.pre_cur[name], self.pre_t[name] = roles["calm"][0], now
+                        self.pre_role[name] = "calm"
                 elif roles.get(role) and (pid is None or (role != self.pre_role.get(name) and dwell > 20)
                                           or dwell > 45):
                     lst = roles[role]
@@ -1830,9 +1883,9 @@ class Show:
             man = self._eb_manual()
             if man:
                 fx.set("preset", man)                                    # von Hand im Panel gewaehlt
-            elif self.sa_eb is not None and self.accent_until.get(name, 0) <= now:
+            elif self.sa_eb is not None and self.accent_until.get(name, 0) <= now and not self.talk:
                 fx.set("preset", self.sa_eb["pid"])                      # Szenen-Automatik: passendes Preset fuer ein paar Takte
-            elif self.auto_rainbow and self.accent_until.get(name, 0) <= now:
+            elif self.auto_rainbow and self.accent_until.get(name, 0) <= now and not self.talk:
                 fx.set("preset", 13)                                     # Regenbogen (wie im Licht-Mix)
             else:
                 fx.set("preset", self.pre_cur.get(name, 0))
@@ -2201,7 +2254,7 @@ class Show:
                 self.glevel = {k: 1.0 for k, _ in GROUP_LABELS}
             if ("master" in d or "glevel" in d or "blitz_hz" in d or "beam" in d or d.get("glevel_reset")) and self.levels_dirty_t is None:
                 self.levels_dirty_t = time.monotonic()         # gespeichert wird gesammelt (Fader am APC mini senden viel)
-            if any(k in d for k in ("fx_save", "fx_delete", "fx_restore", "fx_desc", "type_save", "type_import", "type_delete", "fx_reset", "restart", "nano_host", "nano_token")):
+            if any(k in d for k in ("fx_save", "fx_delete", "fx_restore", "fx_desc", "type_save", "type_import", "type_delete", "fx_reset", "restart", "nano_host", "nano_token", "nano_pair", "artnet_target")):
                 self._fixture_cmd(d)
             if d.get("backup"):                                # Sicherung jetzt starten (laeuft im Hintergrund)
                 self._backup_now()
@@ -2226,7 +2279,11 @@ class Show:
                 if d.get("home_scan"):
                     self.home.scan()
                 if "home_edit" in d:
+                    old_pw = self._fog_power()
                     self.home.edit(d["home_edit"])
+                    if self._fog_power() != old_pw:            # andere Nebel-Steckdose: Zustand neu lesen (an = warm)
+                        self.fog_prev_power, self.fog_warm_t, self.fog_on_t = None, None, None
+                        self.fog_remind = self.fog_ack = False
                     self.note = "Gespeichert."
             if d.get("poweroff") == "JA":                      # Pi herunterfahren (Knopf im Panel, mit Rueckfrage)
                 self._poweroff()
@@ -2975,6 +3032,8 @@ class Show:
                 "colors": [] if sc else list(self.auto_colors),
                 "style_man": self.style_man or "auto", "style_eff": self._style_key() or "",
                 "master": round(self.master, 2), "strobe": self.strobe,
+                "talk": self.talk,
+                "mac_audio": self.mixxx.mac_audio_warn() if getattr(self.mixxx, "mac_audio_warn", None) else [],
                 "sm_show": self.showman.doc_name if self.showman is not None and self.showman.active() else "",
                 "radio": self.radio.panel() if self.radio is not None else None,
                 "local": self.local.panel() if self.local is not None else None,
@@ -2998,6 +3057,7 @@ class Show:
                        "sound_ids": [int(i) for i in (self.presets[0].extra.get("preset_sound") or [])] if self.presets else []},
                 "blitz": self.blitz, "blitz_hz": round(self.blitz_hz, 1), "blitz_eff": round(self._blitz_rate(), 1),
                 "fx_pending": self.fx_pending,
+                "artnet": self._artnet_info(),
                 "solo": (self.solo["fx"].extra.get("label", self.solo["fx"].name) if self.solo else ""),
                 "ola_out": bool(self.cfg["ola_out"] > 0.5),
                 "ola_sending": True if self.output is None else self.output.is_sending(self.rig.target),
@@ -3117,6 +3177,14 @@ class Show:
         except Exception:                                   # noqa: BLE001
             self.fx_pending = False
 
+    def _artnet_info(self):
+        """Art-Net-Gateway fuers Panel (Einstellungen, Verbindungen): jetzt, nach dem Neustart, aus fixtures.yaml."""
+        import fixture_edit as fe
+        try:
+            return fe.artnet_info(self.rig)
+        except Exception:                                       # noqa: BLE001
+            return {"now": self.rig.target, "next": self.rig.target, "file": self.rig.target}
+
     def _fixture_cmd(self, d):
         """Fixtures im Panel bearbeiten (Aenderungen stehen in fixtures_user.json, ein Neustart uebernimmt sie)."""
         import fixture_edit as fe
@@ -3165,6 +3233,14 @@ class Show:
             self.note = ("Neuer Nanoleaf-Token gespeichert (vom Nanoleaf bestaetigt)." if ok else
                          "Neuer Nanoleaf-Token gespeichert, aber der Nanoleaf war nicht erreichbar (ungeprueft).") \
                 + " Er gilt nach dem Neustart."
+        if "artnet_target" in d:
+            ip = fe.cmd_artnet_target(self.rig, d["artnet_target"])
+            self._fx_check()
+            self.note = f"Art-Net-Gateway {ip} gespeichert." + (" Es gilt nach dem Neustart." if self.fx_pending else "")
+        if "nano_pair" in d:
+            name, n = fe.cmd_nano_pair(self.rig, d["nano_pair"])
+            self._fx_check()
+            self.note = f"Nanoleaf gekoppelt: {name}, {n} Panels. Gilt nach dem Neustart."
         if d.get("fx_reset"):
             fe.reset_user(self.rig)
             self._fx_check()
@@ -3251,6 +3327,7 @@ class Show:
         if st:
             d["stil"] = st
         sec, seit, over = self._takt_now(wall)
+        d["sprache"] = bool(self.talk)                    # jemand spricht (speech_guard, 25.11.2026): keine Drops
         d["abschnitt"] = sec
         if seit is not None:
             d["abschnittSeit"] = seit
@@ -4217,9 +4294,8 @@ def main():
     if not a.dry_run:                                           # HomeMatic-CCU (Bereich "Haus"), nur im echten Betrieb
         try:
             from homematic import Home, default_path
-            if os.path.exists(default_path()):
-                show.home = Home(default_path())
-                show.home.start()
+            show.home = Home(default_path())                    # ohne homematic.yaml leer, einrichten im Panel (27.11.2026)
+            show.home.start()
         except Exception as e:                                  # noqa: BLE001
             print(f"Hinweis: HomeMatic nicht verfuegbar ({e})")
     if not a.dry_run:                                           # Ableton Link nur im echten Betrieb (eingeschaltet im Panel)

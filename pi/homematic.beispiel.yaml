@@ -1,5 +1,5 @@
 # BEISPIEL fuer homematic.yaml (Geraetenummern und Adresse erfunden). Fuer die eigene Anlage als homematic.yaml
-# daneben speichern und Adresse der CCU sowie die Kanaele eintragen. Ohne homematic.yaml ist die HomeMatic-Anbindung aus.
+# daneben speichern und Adresse der CCU sowie die Kanaele eintragen. Ohne homematic.yaml startet die Anbindung leer (einrichten im Panel: Haus -> CCU und Kanaele).
 # HomeMatic-CCU: Geraete, die im Panel (Bereich "Haus") geschaltet werden koennen.
 # Verbindung per XML-RPC ohne Anmeldung (HmIP-RF Port 2010, BidCos-RF Port 2001).
 # Je Geraet:  id (fest, nur a-z, 0-9, _), label (Text im Panel), kind (switch | dimmer), interface (HmIP-RF | BidCos-RF),

@@ -11,6 +11,9 @@ bleibt unveraendert. Beim Start werden beide zusammengefuehrt:
   * desc    Kanalbeschreibungen (Typ -> Parameter -> Text)
   * nano_host  eigene IP-Adresse der Nanoleaf-Panels (leer = wie in nanoleaf.json); nanoleaf.json mit dem Token
                bleibt dabei unveraendert
+  * artnet_target  eigene IP des Art-Net-Gateways (leer = wie in fixtures.yaml, 27.11.2026), wirkt nach dem Neustart
+Nanoleaf koppeln (cmd_nano_pair, 27.11.2026): holt den Token am Geraet (/api/v1/new, Ein-Knopf 5-7 s gehalten), liest
+Modell und Panels und schreibt nanoleaf.json (nur auf Knopfdruck im Panel, der Token wird nie angezeigt).
 
 Namen (name) bleiben fest, geaendert wird nur die Anzeigebezeichnung (label). Gruppen sind nur erlaubt, wenn das Geraet
 zu den Auto-Effekten der Gruppe passt.
@@ -35,7 +38,7 @@ ROLES = ["dimmer", "r", "g", "b", "w", "uv", "strobe"]          # Parameter, die
 
 
 def empty_user():
-    return {"version": 1, "edits": {}, "added": [], "removed": [], "types": {}, "desc": {}, "nano_host": ""}
+    return {"version": 1, "edits": {}, "added": [], "removed": [], "types": {}, "desc": {}, "nano_host": "", "artnet_target": ""}
 
 
 def user_path_for(yaml_path, cfg=None):
@@ -102,6 +105,9 @@ def apply_user(cfg, user):
     nh = user.get("nano_host")
     if nh and _ip_ok(nh):
         c["nano_host"] = nh
+    at = user.get("artnet_target")
+    if at and _ip_ok(at):
+        c["artnet_target"] = at
     return c
 
 
@@ -503,6 +509,91 @@ def cmd_nano_token(rig, token, client=None):
     return ok
 
 
+def cmd_artnet_target(rig, ip):
+    """IP des Art-Net-Gateways (DMX-Kette) aendern, wirkt nach dem Neustart. Leer oder gleich fixtures.yaml = keine Aenderung."""
+    ip = str(ip or "").strip()
+    if ip and not _ip_ok(ip):
+        raise ValueError("Die IP-Adresse muss wie 192.168.0.50 aussehen")
+    base = str(rig.base_cfg.get("artnet_target", "127.0.0.1"))
+    u = copy.deepcopy(rig.user)
+    u["artnet_target"] = "" if ip == base else ip
+    rig.user = u
+    save_user(rig.user_path, u)
+    return ip or base
+
+
+def artnet_info(rig):
+    """Fuers Panel: gerade benutzt, nach dem Neustart, aus fixtures.yaml."""
+    base = str(rig.base_cfg.get("artnet_target", "127.0.0.1")) if getattr(rig, "base_cfg", None) else rig.target
+    nxt = (rig.user or {}).get("artnet_target") or base
+    return {"now": rig.target, "next": nxt, "file": base}
+
+
+PAIR_PORT = 16021
+
+
+def _pair_post(host, port=PAIR_PORT, timeout=3.0):
+    """Token am Nanoleaf holen (nur im Koppel-Modus: Ein-Knopf 5-7 s halten). Rueckgabe: Token."""
+    import urllib.error
+    import urllib.request
+    req = urllib.request.Request(f"http://{host}:{port}/api/v1/new", data=b"", method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            d = json.loads(r.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        if e.code == 403:
+            raise ValueError("Der Nanoleaf ist nicht im Koppel-Modus: am Geraet den Ein-Knopf 5 bis 7 Sekunden halten, "
+                             "bis die LEDs blinken, dann innerhalb von 30 Sekunden Koppeln tippen.") from None
+        raise ValueError(f"Der Nanoleaf antwortet mit Fehler {e.code}") from None
+    except (urllib.error.URLError, OSError, ValueError):
+        raise ValueError(f"Unter {host} antwortet kein Nanoleaf (Adresse pruefen, Geraet an?)") from None
+    return str(d.get("auth_token") or "")
+
+
+def cmd_nano_pair(rig, host, post=None, client=None, path=None):
+    """Nanoleaf koppeln: Token holen, Modell und Panels lesen, nanoleaf.json schreiben (eigene Einstellungen wie fps
+    bleiben). Wirkt nach dem Neustart. Der Token wird nie zurueckgegeben. Rueckgabe: (Name, Anzahl Panels)."""
+    import nanoleaf
+    host = str(host or "").strip()
+    if not _ip_ok(host):
+        raise ValueError("Die IP-Adresse muss wie 192.168.1.33 aussehen")
+    token = (post or _pair_post)(host)
+    if not TOKEN_RE.match(token):
+        raise ValueError("Der Nanoleaf hat keinen gueltigen Schluessel geschickt")
+    cfg = {}
+    npath = path or getattr(rig, "nano_path", None)
+    if not npath:
+        nf = rig.base_cfg.get("nanoleaf_file", "nanoleaf.json") or "nanoleaf.json"
+        npath = nf if os.path.isabs(nf) else os.path.join(os.path.dirname(os.path.abspath(rig.user_path)), nf)
+    try:
+        cfg = nanoleaf.load_config(npath) or {}
+    except Exception:                                      # noqa: BLE001  defekte Datei: neu anlegen
+        cfg = {}
+    port = int(cfg.get("port", PAIR_PORT))
+    cl = (client or nanoleaf.Client)(host, token, port, timeout=3.0)
+    try:
+        info, layout = cl.info(), cl.layout()
+    except nanoleaf.NanoleafError as e:
+        raise ValueError(f"Gekoppelt, aber die Panels liessen sich nicht lesen ({e}). Nichts gespeichert.") from None
+    panels = nanoleaf.panels_from_layout(layout or {})
+    if not panels:
+        raise ValueError("Der Nanoleaf meldet keine leuchtenden Panels. Nichts gespeichert.")
+    model = str((info or {}).get("model", ""))
+    old_model = cfg.get("model")
+    cfg.update({"host": host, "token": token, "panels": panels, "model": model, "name": str((info or {}).get("name", "")),
+                "firmware": str((info or {}).get("firmwareVersion", ""))})
+    if "protocol" not in cfg or old_model != model:
+        cfg["protocol"] = "v2" if model in ("NL29", "NL42", "NL47", "NL52", "NL59") else "v1"
+    nanoleaf.save_config(cfg, npath)
+    rig.nano_path, rig.nano_token_changed = npath, True
+    if (rig.user or {}).get("nano_host"):                  # Adresse steht jetzt in nanoleaf.json
+        u = copy.deepcopy(rig.user)
+        u["nano_host"] = ""
+        rig.user = u
+        save_user(rig.user_path, u)
+    return cfg["name"] or model or "Nanoleaf", len(panels)
+
+
 def reset_user(rig):
     rig.user = empty_user()
     if os.path.exists(rig.user_path):
@@ -513,7 +604,7 @@ def structure(c):
     """Nur das, was einen Neustart braucht (ohne Namen und Beschreibungen)."""
     fx = sorted((e["name"], e["type"], int(e["address"]), e.get("group", ""), e.get("target", "")) for e in c["fixtures"])
     ty = {t: json.dumps(d.get("map"), sort_keys=True) + json.dumps(d.get("safe_limits"), sort_keys=True) for t, d in c["types"].items()}
-    return json.dumps([fx, ty, c.get("nano_host", "")], sort_keys=True, default=str)
+    return json.dumps([fx, ty, c.get("nano_host", ""), c.get("artnet_target", "")], sort_keys=True, default=str)
 
 
 def pending_restart(rig):

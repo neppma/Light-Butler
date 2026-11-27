@@ -130,7 +130,7 @@ Die Hauptseite ist nur zum Bedienen da. Sie ist in grau hinterlegte Bereiche geg
 | Zeile | Was du siehst |
 | --- | --- |
 | 1 | **Beat-Lamperl**, **BPM**, das **Statusfeld** und runde Knöpfe: Herz (**Zustand**), CD (**Auto-DJ**), Datenbank (**Musik-Datenbank**), Balken (**Statistik**), **⚙** (**Einstellungen**), **?** (Hilfe) und **⏻** |
-| 2 | Betriebsart, Stufe in Worten (**Chillen**, **Groove**, **Party**, **Vollgas**), Stimmung, Tonart, Takt und ein kleines Pegelmeter des Audio-Eingangs |
+| 2 | Betriebsart, Stufe in Worten (**Chillen**, **Groove**, **Party**, **Vollgas**), Stimmung, Tonart (orange **3/4** nur, wenn das Licht in Dreiergruppen zählt) und ein kleines Pegelmeter des Audio-Eingangs |
 | 3 | Lied aus Mixxx oder dem Auto-DJ: Titel, Energiestufe, Genre, Restzeit und die nächsten Ereignisse, zum Beispiel „Drop 5,1 s“ |
 | 4 | **Liedverlauf**: die Lautstärke des Liedes als Kurve mit Aufbau, Break, Drops und Hotcues, nur zum Ansehen |
 
@@ -451,7 +451,7 @@ Läuft die Musik am Musik-Rechner (zum Beispiel Spotify, YouTube), schickt der H
 brew install blackhole-2ch
 ```
 
-2. Im Programm **Audio-MIDI-Setup** ein **Gerät mit mehreren Ausgängen** anlegen: deine Lautsprecher und „BlackHole 2ch“ anhaken, bei BlackHole die **Driftkorrektur** anhaken, überall dieselbe Rate (44100 Hz). Ohne Driftkorrektur kann der Ton zum Light-Butler nach einer Weile abreißen, obwohl du am Mac weiter hörst.
+2. Im Programm **Audio-MIDI-Setup** ein **Gerät mit mehreren Ausgängen** anlegen: deine Lautsprecher und „BlackHole 2ch“ anhaken, bei BlackHole die **Driftkorrektur** anhaken, überall dieselbe Rate (44100 Hz). Ohne Driftkorrektur kann der Ton zum Light-Butler nach einer Weile abreißen, obwohl du am Mac weiter hörst. Driftkorrektur gilt für jedes Gerät außer dem **Primärgerät**. In Mixxx unter Soundhardware die Abtastrate ebenfalls auf 44100 Hz stellen. Stimmt etwas nicht, zeigt das Panel unten **⚠ Ton am Musik-Rechner**.
 3. In den Systemeinstellungen unter **Ton → Ausgabe** dieses Gerät wählen.
 4. Fragt macOS nach dem **Mikrofon-Zugriff** für den Helfer: erlauben.
 5. Im Panel unter **Audio-Eingang** den Eingang **Musik-Rechner (Netzwerk)** wählen.
@@ -547,14 +547,15 @@ Auch die **Pixel-Matrix** und die **API-Anzeige** (ein Fernseher oder Bildschirm
 Unter **⚙** → **Einstellungen allgemein** → **Verbindungen** siehst du alle Netzwerk-Geräte und ob sie erreichbar sind. Ein Tipp auf die Adresse öffnet ihre Weboberfläche.
 
 - Je Ausgabe (DMX, WLED, Nanoleaf) gibt es **Aus**, **An** und **Nicht vorhanden**. **Aus** ist für eine Weile gedacht (orange Erinnerung), **Nicht vorhanden** für eine Anlage ohne dieses Gerät (keine Warnung).
-- **DMX-Weg:** **Art-Net-Gateway** über das Netzwerk oder **USB-Adapter** direkt am Licht-Rechner.
+- **DMX-Weg:** **Art-Net-Gateway** über das Netzwerk oder **USB-Adapter** direkt am Licht-Rechner. Beim Gateway trägst du darunter seine **Adresse** ein, sie gilt nach dem Neustart.
 - **Art-Net-Eingang** (Standard aus): nimmt Licht von einem anderen Lichtprogramm an. Die Sperren für Laser, Nebel und Strobe gelten weiter.
 - **Ableton Link** gibt das Tempo an Link-Geräte im Netz weiter.
 
 ### WLED und Nanoleaf
 
 - **WLED:** In WLED muss die **Übergangszeit auf 0** stehen, und Presets dürfen keinen eigenen Übergang enthalten, sonst blitzt der Streifen nicht im Takt.
-- **Nanoleaf:** Adresse und Schlüssel änderst du unter **Fixtures** → **Bearbeiten**. Kommen die Panels beim Strobe nicht mit, die **Strobe-Grenze: Nanoleaf** senken.
+- **Nanoleaf koppeln** (unter **Verbindungen**): IP eintragen, am Nanoleaf den Ein-Knopf 5 bis 7 Sekunden halten, bis die LEDs blinken, dann innerhalb von 30 Sekunden **Koppeln** tippen. Der Light-Butler holt sich den Schlüssel und liest die Panels, nach dem Neustart leuchten sie mit. Das geht auch zum neu Koppeln.
+- **Nanoleaf:** Adresse und Schlüssel änderst du auch unter **Fixtures** → **Bearbeiten**. Kommen die Panels beim Strobe nicht mit, die **Strobe-Grenze: Nanoleaf** senken.
 - **Pixel-Matrix:** Eine WLED mit 2D-Matrix (zum Beispiel 32 × 32 LEDs) zeigt eigene Muster zur Musik: Plasma, Ringe auf den Beat, Pegel, Funken, Tunnel, dazu Schlange (Tunnel mit Kurven), Raster (Kacheln blitzen im Takt), Scanner (Balken schießen durchs Bild), Explosion (Funkenring bei jedem Kick), Kaleidoskop und Glitch (Bild kurz gestört). **Auto** wechselt nach der Musik: im Aufbau Scanner, beim Drop Explosion und Raster, sonst je Phrase ein anderes Muster (alle der Reihe nach, auch der Scanner). Wirken dunkle Stellen an der Matrix heller als in der Vorschau, stellst du **Kontrast (Gamma)** höher (Standard 2,2). **Folgt Lautstärke** (Standard 70 %) macht leise Stellen dunkler und laute ganz hell, schnell wie die Musik; 0 = aus. **Liedtext** (Standard aus): Gibt es zum Lied einen Liedtext mit Zeiten (wie die Zeile im Hauptpanel), zeigt die Matrix die gesungene Zeile als Laufschrift oder Wort für Wort, nur im Refrain (Zeilen, die im Lied mehrmals vorkommen) oder immer. Unter **Einstellungen** → **Pixel-Matrix** gibst du die Adresse ein (oder **Im Netz suchen**: alle WLEDs im Netz in einer Auswahl, Matrizen zuerst, die Größe wird übernommen), siehst eine Vorschau und schaltest **Senden** ein. Mit dem **Testbild** prüfst du Drehung und Verkabelung. Läuft ein Lied, blendet die Matrix ab und zu für ein paar Sekunden das Cover, das Bild des Interpreten und das Album-Cover ein (nur was es gibt), danach kommt wieder der Effekt. Dazu läuft eine **Laufschrift** mit Interpret, Titel und Album: A eine große Zeile, B drei kleine Zeilen, C Cover mit Laufband, D Wort für Wort im Takt, **Auto** jedes Mal eine andere der vier (Wahl und Tempo auf der Seite Pixel-Matrix). Bei Stille wird die Matrix dunkel. Was mit den Bildern ist (kein Lied, geladen, kein Bild), steht auf der Seite unter der Vorschau. Standard ist aus; ohne Strobe-Erlaubnis löst die Musik höchstens zweimal pro Sekunde etwas Neues aus. Antwortet die Matrix nicht (ausgeschaltet, ausgesteckt), pausiert das Senden, bis sie wieder da ist; mit Senden aus wird sie weder geprüft noch gemeldet.
 
 ### HomeMatic (Haus)
@@ -564,7 +565,8 @@ Im Bereich **Haus** (unter **Verbindungen**) schaltest du Raumlicht und Steckdos
 - **Raumlicht** (im Panel „Wohnzimmerlicht“): Regler für die Helligkeit, **Aus** und **An**.
 - **Steckdosen:** ein Tipp schaltet um, eingeschaltete sind orange.
 - **Automatik:** Läuft länger keine Musik, dimmt der Light-Butler das Raumlicht hoch, kommt die Musik zurück, schaltet er es aus.
-- **Einstellungen: CCU und Kanäle** (unten im Bereich): Adresse eintragen, **Kanäle von der CCU holen**, mit **+ Hinzufügen** übernehmen.
+- **Einstellungen: CCU und Kanäle** (unten im Bereich): Adresse eintragen, **Kanäle von der CCU holen**, mit **+ Hinzufügen** übernehmen. Das geht auch bei einer neuen Installation ohne vorbereitete Datei, auf jedem Licht-Rechner.
+- **Aufgaben** (ebendort): wähle die **Steckdose der Nebelmaschine** und das **Wohnzimmerlicht** für die Automatik. Steht die Steckdose auf **keine**, gibt SMOKE den Nebel sofort über DMX (Maschine an der Wand eingesteckt und selbst eingeschaltet).
 - Den Nebelschub gibt es dort nie, Nebel nur über den SMOKE-Knopf.
 
 ### DMX-Monitor
@@ -772,6 +774,7 @@ Die meisten Probleme erkennst du an der Hinweiszeile und am Statusfeld. Mehr Hil
 | APC-Fader tut nichts | Fader erst bis an den aktuellen Wert heranfahren |
 | Vorhören geht nicht, roter Hinweis | Musik-Rechner und Helfer einschalten, Stick anstecken, Musikordner unter **Verbindungen** prüfen |
 | Herz oben gelb oder rot | Seite **Zustand** öffnen, dort steht, was nicht passt |
+| bei einer Ansprache springt das Licht | erkennt der Light-Butler Sprache, steht oben **🎤 Sprache**, dann läuft das Licht ruhig: keine Drops, keine Blitze, keine Szenen- oder Effektwechsel, keine Titelerkennung und kein Liedtext; sonst unter Einstellungen (Auto-Erkennung) → Phasen **Sprache: keine Drops** einschalten |
 
 ## Über Light-Butler und Lizenz
 

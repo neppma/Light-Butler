@@ -103,7 +103,7 @@ check(br.count("paused=helper_running") == 3, "Mixxx-Bruecke: APC, Lumi und Ton 
 inst = os.path.join(ROOT, "mac", "helper", "install_helper.sh")
 check(subprocess.run(["bash", "-n", inst]).returncode == 0, "install_helper.sh: Syntax in Ordnung")
 txt = open(inst).read()
-check('cp "$HERE/helper.py" "$SRC/apc_relay.py" "$SRC/audio_send.py" "$SRC/pi_addr.py" "$BASE/"' in txt, "kopiert Helfer, APC- und Ton-Teil (ohne Mixxx-Teile)")
+check('cp "$HERE/helper.py" "$SRC/apc_relay.py" "$SRC/audio_send.py" "$SRC/pi_addr.py" "$SRC/mac_audio_check.py" "$BASE/"' in txt, "kopiert Helfer, APC- und Ton-Teil (ohne Mixxx-Teile)")
 check("<key>LSUIElement</key><true/>" in txt and "NSMicrophoneUsageDescription" in txt, "App ohne Dock-Symbol, mit Mikrofon-Begruendung")
 check("MIXXX_BIN" not in txt and "--controller-debug" not in txt, "Installation braucht und startet kein Mixxx (Liedliste aus der Datenbank-Kopie)")
 check("--uninstall" in txt and "RunAtLoad" in txt, "Autostart und Entfernen moeglich")

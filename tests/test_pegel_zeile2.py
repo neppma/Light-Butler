@@ -51,4 +51,9 @@ except FileNotFoundError:
     ok = True
 os.unlink(fh.name)
 check(ok, "Panel-Skript fehlerfrei (node --check)")
+check("const meterTxt=S.bar_len===3?" in p and "S.meter_conf>=0.35" not in p, "Takt nur, wenn das Licht in Dreiergruppen zaehlt (kein graues 3/4?)")
+sh.bar_len = 3
+check(sh.takt()["quantum"] == 3, "/api/takt: quantum wie das Licht")
+sh.bar_len = 4
+check(sh.takt()["quantum"] == 4, "sonst 4")
 finish("test_pegel_zeile2")

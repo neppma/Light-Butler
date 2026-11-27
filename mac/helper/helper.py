@@ -18,8 +18,10 @@ Prozessnummer in ~/.light-butler-helfer.pid; die Mixxx-Bruecke ueberlaesst ihm d
 Aufruf:  python3 helper.py <Adresse des Pi>  [--no-apc] [--no-lumi] [--no-audio] [--no-library] [--no-analysis]
 """
 import argparse
+import json
 import os
 import signal
+import socket
 import sys
 import time
 
@@ -157,6 +159,40 @@ class LibraryPart:
             self.fw.tick()
 
 
+class AudioCheckPart:
+    """Alle CHECK_S Sekunden die Audio-Einstellungen am Mac pruefen (BlackHole 44,1 kHz, Driftkorrektur im
+    Multiausgangsgeraet) und das Ergebnis an den Pi schicken; das Panel warnt dann in der Hinweiszeile. Aendert nie etwas."""
+    CHECK_S = 60.0
+
+    def __init__(self, pi, port=9020, log=print, checker=None, sock=None, clock=time.monotonic):
+        self.pi, self.port, self.log, self.clock = pi, port, log, clock
+        self.checker = checker
+        self.sock = sock
+        self.t, self.last = None, None
+
+    def update(self):
+        now = self.clock()
+        if self.t is not None and now - self.t < self.CHECK_S:
+            return None
+        self.t = now
+        try:
+            if self.checker is None:
+                import mac_audio_check
+                self.checker = mac_audio_check.check
+            w = list(self.checker())
+            if self.sock is None:
+                self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            import mixxx_bridge
+            mixxx_bridge.send_udp(self.sock, json.dumps({"type": "macaudio", "w": w}).encode(), (self.pi, self.port))
+            if w != self.last:
+                self.log("Audio-Einstellungen: " + ("; ".join(w) if w else "in Ordnung"))
+                self.last = w
+            return w
+        except Exception as e:                             # noqa: BLE001  die Pruefung darf den Helfer nie stoeren
+            self.log("Audio-Pruefung: " + str(e)[:120])
+            return None
+
+
 class StemsPart:
     """Pegelkurven-Waechter (stems_show.py --watch --reserve) gehoert zum Helfer (Wunsch von Markus, 08.11.2026: alles, was Mixxx
     nicht braucht, macht standardmaessig der Helfer). Laeuft schon einer (von der Mixxx-App), startet er keinen zweiten und schaut
@@ -277,6 +313,9 @@ def main(argv=None):
                               background=not a.no_analysis and config_value("BACKGROUND_ANALYSIS") != "0", log=log)
         if not a.no_stems:
             stems = StemsPart(a.pi, log=log)
+        acheck = None
+        if sys.platform == "darwin":                       # Audio-Einstellungen am Mac pruefen (mac_audio_check.py, 25.11.2026)
+            acheck = AudioCheckPart(a.pi, log=log)
         names = [type(p).__name__ for p in parts] + (["LibraryPart"] if lib else []) + (["StemsPart"] if stems else [])
         log(f"Light-Butler Helfer laeuft ({', '.join(names) or 'nichts aktiv'}), Ziel {a.pi}")
         stop = []
@@ -287,6 +326,8 @@ def main(argv=None):
                     stems.update()
                 except Exception as e:                     # noqa: BLE001
                     log(f"Pegelkurven: {str(e)[:120]}")
+            if acheck is not None:
+                acheck.update()
             if lib is not None:
                 try:
                     lib.update()

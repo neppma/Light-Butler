@@ -543,7 +543,15 @@ class BtAudioIn:
 # eigene Ausgabe weiter (Kopfhoereranschluss des Pi, USB-Soundkarte ins Mischpult, HDMI), mit "aplay" (alsa-utils).
 # Dieselben Samples wie fuer die Analyse, unveraendert (Abtastrate des Handys). Aufs Licht wirkt das nie.
 CARD_RE = re.compile(r"^card (\d+): (\S+) \[(.*?)\], device (\d+): (.*?) \[(.*?)\]")
-OUT_QUEUE = 64                         # so viele Stuecke (je 4 KB, zusammen ca. 1,5 s) warten hoechstens auf die Ausgabe
+OUT_QUEUE = 400                        # so viele Stuecke warten hoechstens auf die Ausgabe (LAN: 256 Bilder, Handy: 1024)
+# Uhren-Ausgleich (Fehlerbericht 25.11.2026: Aussetzer an der JBL). Die Quelle (Mac, Handy) und die Ausgabe (Lautsprecher,
+# Soundkarte) haben je eine eigene Uhr, die minimal anders laeuft. Bisher wuchs die Warteschlange langsam, bis sie voll war,
+# dann fiel jedes Mal ein Stueck Ton weg (64 Mal in 8 Minuten). Jetzt wird die Umrechnung um hoechstens DRIFT_MAX schneller
+# oder langsamer, sodass rund FILL_TARGET_S Ton in der Warteschlange wartet (unhoerbar, 0,5 % sind weniger als 1/10 Halbton).
+FILL_TARGET_S = 0.12
+DRIFT_K = 0.05                         # je Sekunde Abweichung so viel schneller/langsamer
+DRIFT_MAX = 0.005
+DRIFT_SMOOTH = 0.02                    # Glaettung je Stueck
 OUT_RETRY_S = 2.0                      # nach einem Fehler der Ausgabe fruehestens so spaet wieder versuchen
 BT_CONNECT_S = 10.0                    # nicht verbundenen Lautsprecher hoechstens so oft anrufen
 BT_KEEP_S = 1800.0                     # Lautsprecher in Pausen so lange mit Stille verbunden halten (dann darf er schlafen)
@@ -608,8 +616,9 @@ def list_outputs(runner=run, names=None):
 
 
 def convert(data, rate, ch, prate, pch, rs):
-    """int16-Bytes (rate, ch) -> int16-Bytes (prate, pch) fuer einen Lautsprecher mit festem Format. rs: Resampler."""
-    if (rate, ch) == (prate, pch):
+    """int16-Bytes (rate, ch) -> int16-Bytes (prate, pch) fuer einen Lautsprecher mit festem Format. rs: Resampler
+    (auch bei gleicher Rate, fuer den Uhren-Ausgleich)."""
+    if (rate, ch) == (prate, pch) and rs is None:
         return data
     n = len(data) // (2 * ch)
     x = np.frombuffer(data[:n * 2 * ch], dtype="<i2").astype(np.float32).reshape(n, ch) / 32768.0
@@ -635,6 +644,8 @@ class PassThrough:
         self.conn_t = None
         self.conv = None                   # (Abtastrate, Kanaele, Resampler) des Lautsprechers
         self.idle_t = None                 # seit wann kein Ton kommt (Lautsprecher bekommt Stille)
+        self.qframes = 0                   # Bilder in der Warteschlange (fuer den Uhren-Ausgleich)
+        self.drift = 0.0                   # aktuelle Korrektur der Umrechnung (+ = schneller abspielen)
         self.dev = ""
         self.q = queue.Queue(maxsize=OUT_QUEUE)
         self.proc, self.fmt = None, None
@@ -654,7 +665,8 @@ class PassThrough:
 
     def write(self, data, rate, ch):
         if self.dev and data:
-            self._put((bytes(data), int(rate), int(ch)))
+            if self._put((bytes(data), int(rate), int(ch))):
+                self.qframes += len(data) // (2 * max(1, int(ch)))
 
     def end(self):
         """Der Ton ist vorbei (Handy getrennt): Ausgabe freigeben. Bluetooth-Lautsprecher: mit Stille verbunden halten
@@ -664,8 +676,10 @@ class PassThrough:
     def _put(self, item):
         try:
             self.q.put_nowait(item)
+            return True
         except self._queue_mod.Full:
             self.dropped += 1
+            return False
 
     def close(self):
         self._run = False
@@ -688,7 +702,8 @@ class PassThrough:
 
     def _start(self, rate, ch, now):
         """aplay auf einer Soundkarte, oder bluealsa-cli open auf einem Bluetooth-Lautsprecher ("bt:MAC")."""
-        self.conv = None
+        self.conv = (rate, ch, Resampler(rate, rate))     # Soundkarte: gleiches Format, nur Uhren-Ausgleich
+        self.drift = 0.0
         if not self.dev.startswith("bt:"):
             return self.spawn(["aplay", "-q", "-t", "raw", "-f", "S16_LE", "-r", str(rate), "-c", str(ch),
                                "-D", self.dev, "--buffer-time=150000"])
@@ -705,7 +720,7 @@ class PassThrough:
             return None
         rc, info = self.runner(["bluealsa-cli", "info", path], 4.0)
         prate, pch = pcm_format(info if rc == 0 else "")
-        self.conv = (prate, pch, Resampler(rate, prate) if prate != rate else None)
+        self.conv = (prate, pch, Resampler(rate, prate))
         return self.spawn(["bluealsa-cli", "open", path])
 
     def _dead_reason(self, p):
@@ -723,18 +738,24 @@ class PassThrough:
             except self._queue_mod.Empty:
                 self._keep_alive()
                 continue
+            self._handle(item)
+
+    def _handle(self, item):
+        """Ein Stueck aus der Warteschlange bearbeiten (eigener Faden; Tests rufen es direkt auf)."""
+        if True:
             if item is None:
                 self._kill()
-                continue
+                return
             if item == "END":
                 if self.dev.startswith("bt:") and self.proc is not None:
                     self.idle_t = self.idle_t or self.clock()
                 else:
                     self._kill()
-                continue
+                return
             data, rate, ch = item
+            self.qframes = max(0, self.qframes - len(data) // (2 * max(1, ch)))
             if not self.dev:
-                continue
+                return
             now = self.clock()
             if self.proc is not None and (self.fmt != (self.dev, rate, ch) or self.proc.poll() is not None):
                 if self.proc.poll() is not None:
@@ -742,17 +763,22 @@ class PassThrough:
                 self._kill()
             if self.proc is None:
                 if self.fail_t is not None and now - self.fail_t < OUT_RETRY_S:
-                    continue
+                    return
                 try:
                     self.proc = self._start(rate, ch, now)
                     if self.proc is None:
-                        continue
+                        return
                     self.fmt = (self.dev, rate, ch)
                 except OSError as e:
                     self.error, self.fail_t = ("Ausgabe nicht gestartet: " + str(e))[:140], now
-                    continue
+                    return
             if self.conv is not None:
                 prate, pch, rs = self.conv
+                if rs is not None:                       # Uhren-Ausgleich: Warteschlange um FILL_TARGET_S halten
+                    err = self.qframes / float(rate) - FILL_TARGET_S
+                    want = max(-DRIFT_MAX, min(DRIFT_MAX, err * DRIFT_K))
+                    self.drift += (want - self.drift) * DRIFT_SMOOTH
+                    rs.step = float(rate) / float(prate) * (1.0 + self.drift)
                 data = convert(data, rate, ch, prate, pch, rs)
             try:
                 self.proc.stdin.write(data)
@@ -785,4 +811,5 @@ class PassThrough:
 
     def status(self):
         return {"dev": self.dev, "active": self.t is not None and self.clock() - self.t < 2.0,
+                "drift": round(self.drift * 100, 3), "fill": round(self.qframes / 44100.0, 3),
                 "error": self.error, "dropped": self.dropped}
