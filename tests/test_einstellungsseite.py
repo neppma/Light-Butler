@@ -25,12 +25,12 @@ check("catch(e){const wr=document.getElementById('warnrow');if(wr){wr.dataset.h=
 check(p.index("wh=warnl.map") < p.index("wbtn('i','Antippen = Art-Net"), "fehlende Geraete zuerst, sie sind am wichtigsten")
 s = p.index('<div id="setsec">')
 sec = p[s:p.index('<div id="fxsec">')]
-check('<div class="s2lnav" data-back="/" data-cur="settings" data-title="h_setpage">' in sec and all(k in sec for k in ('id="genbox"', 'id="autobox"', 'id="fxlink"', 'href="/dmx"')),
-      "Einstellungsseite: zurueck, allgemein, Auto-Erkennung, Fixtures, DMX-Monitor")
+check('<div class="s2lnav" data-back="/" data-cur="settings" data-title="h_setpage">' in sec and all(k in sec for k in ('id="sethome"', 'id="setq"', 'id="fxlink"', 'href="/dmx"')),
+      "Einstellungsseite: zurueck, Uebersicht mit Suche, Fixtures, DMX-Monitor")
 check("#setsec{display:none}body.vset #setsec{display:block}" in p, "Hauptseite zeigt die Einstellungen nicht mehr")
 sp = webpanel.settings_page()
 check('<body class="vset">' in sp and "<title>Light-Butler - Einstellungen</title>" in sp, "Seite /settings: eigener Titel, nur Einstellungen")
-check("location.href='/settings#audio'" in p and "location.hash==='#audio'" in p, "Pegelmeter springt zur Einstellungsseite beim Audio-Eingang")
+check("location.href='/settings#audio'" in p and "if(location.hash!=='#audio')setGo('audio')" in p, "Pegelmeter springt zur Einstellungsseite beim Audio-Eingang")
 js = p.split("<script>")[-1].split("</script>")[0]
 with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as fh:
     fh.write(js)

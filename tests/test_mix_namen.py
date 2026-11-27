@@ -56,7 +56,7 @@ m = re.search(r"const MIXP=(\[.*?\]\]),", page)
 check(m is not None and json.loads(m.group(1)) == [list(x) for x in webpanel.MIX_PANEL], "Panel bekommt Kennung und beide Beschriftungen")
 check("setLang(S.lang)" in page and "function tr(k)" in page and "function tx(" not in page and "mk('speed',SPEEDS" in page and "function drawAims()" in page, "Panel schaltet die Sprache nach dem Status um")
 for k in ("h_speed", "h_mix", "h_move", "h_color", "h_aim", "sun", "bz_label", "color_hint", "auto", "black", "freeze",
-          "h_settings", "h_fixtures", "gl_btn", "m_backup", "m_midi", "m_audio"):
+          "cat_licht", "h_fixtures", "gl_btn", "m_backup", "m_midi", "m_audio"):
     check(f'data-tx="{k}"' in page, f"Text {k} im Panel umschaltbar")
 
 finish("test_mix_namen")

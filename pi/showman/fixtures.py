@@ -76,7 +76,7 @@ def move_params(fx):
 def attrs_for(fx):
     """Spuren eines Geraets: [{attr, label, kind, lo, hi}]. Kind: scalar, color oder move."""
     if fx.locked:
-        return [{"attr": A_FOG, "label": "Nebel", "kind": "fog", "lo": 0, "hi": 0}] if fx.type == "hazer" and fx.manual_ok else []
+        return [{"attr": A_FOG, "label": "Nebel", "kind": "fog", "lo": 0, "hi": 0}] if getattr(fx, "fog", False) else []
     out = []
     if fx.type == "nanoleaf_panel":
         out.append({"attr": A_NANO_FX, "label": "Effekt", "kind": "nano_fx", "lo": 0, "hi": 0})

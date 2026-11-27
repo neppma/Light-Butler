@@ -118,6 +118,9 @@ class Fixture:
         self.white_mix = bool(tdef.get("white_mix", False))
         self.manual_ok = bool(tdef.get("manual_allowed", False))   # nur der Hazer, nie die Laser
         self.manual_vals, self.manual_until = None, 0.0
+        # Nebelmaschine (27.11.2026): der Hazer und jeder Typ mit fog_machine (zum Beispiel FM-1500 mit LEDs); immer ganz gesperrt,
+        # nur der Nebel-Knopf (manual) schaltet sie, auch ihre LEDs
+        self.fog = self.manual_ok and self.locked and (ftype == "hazer" or bool(tdef.get("fog_machine")))
         # Laser-Kanaele (nur 21 Eyes, Derby): gesperrt, ausser die Show gibt sie in diesem Frame frei
         self.laser_params = set(tdef.get("laser_channels", []))
         self.laser_unlock = False
@@ -197,6 +200,8 @@ class Fixture:
             while f"uv{i}" in m:             # BUV463 hat vier, importierte Geraete auch mehr
                 zs.append({"uv": f"uv{i}"})
                 i += 1
+        elif "w" in m:  # reines Weisslicht (zum Beispiel Eurolite SMD 48): leuchtet nur bei Weiss
+            zs = [{"w": "w"}]
         else:
             zs = []
         return zs

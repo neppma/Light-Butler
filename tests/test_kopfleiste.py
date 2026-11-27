@@ -81,7 +81,9 @@ check(webpanel.nav_info(t)["texts"]["h_room"][0] == "Raum", "/api/nav: eigene Te
 p = webpanel.settings_page()
 g = p.index('data-tx="nav_devices"'); te = p.index('data-tx="nav_tech"')
 L = lambda u: p.index('class="seclink" href="' + u + '"')
-check(g < L("/fixtures") < L("/raum") < L("/apc") < L("/lumi") < te < L("/dmx") < L("/dmx-debug"), "Einstellungen: Geraete (Fixtures, Raum, APC, Lumi), Technik (DMX-Monitor, DMX-Debugger)")
+bed = p.index('data-cat="bed"')
+check(g < L("/fixtures") < L("/raum") < te < L("/dmx") < L("/dmx-debug") < bed < L("/apc") < L("/lumi"),
+      "Einstellungen: Geraete (Fixtures, Raum), Technik (DMX-Monitor, DMX-Debugger), APC und Lumi unter Bedienung")
 check('class="seclink" href="/shows"' not in p and 'class="seclink" href="/musik"' not in p and 'id="helplink"' not in p, "Showmanager, Musik und Hilfe nicht mehr in der Liste")
 
 # Editor: der Knopf fuer die linke Leiste ist kein zweites Menue-Symbol mehr

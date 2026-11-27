@@ -35,7 +35,7 @@ Light-Butler macht das Licht und auf Wunsch auch die Musik von allein. Du kümme
 - **Feine Wirkungen:** Helligkeit folgt der Lautstärke, Hi-Hat-Funkeln, Beat-Puls, Geräte der Reihe nach.
 - **40 Szenen** mit Szenen-Editor und Sofort-Knöpfe: STROBE, WOW! (aufbauender Strobo), SMOKE (Nebel), FREEZE, BLINDER, BLACKOUT und Laser. Alle außer AUTO wirken nur, solange du sie drückst.
 - **Titelerkennung** über Shazam: Titel und Interpret auch ohne DJ-Software, das Genre wählt den Licht-Stil.
-- **Liedtexte** laufen live zur Musik im Panel mit. Zeilen in anderer Schrift (arabisch, chinesisch …) blendet der Haken **Liedtext nur in lateinischer Schrift** (Einstellungen allgemein → Titelerkennung, an) aus. Mit dem Haken **Schnittstelle: nur Refrain** (dort, aus) bekommen andere Geräte nur den Refrain statt des ganzen Textes.
+- **Liedtexte** laufen live zur Musik im Panel mit. Zeilen in anderer Schrift (arabisch, chinesisch …) blendet der Haken **Liedtext nur in lateinischer Schrift** (Einstellungen → Ton und Musik → Titelerkennung, an) aus. Mit dem Haken **Schnittstelle: nur Refrain** (dort, aus) bekommen andere Geräte nur den Refrain statt des ganzen Textes.
 
 **Showmanager**
 
@@ -211,13 +211,13 @@ Es gibt 40 Standardszenen, dazu Spezialszenen wie **All off**, **RESET**, **Lase
 
 ### Szenen-Automatik
 
-Auf Wunsch wählt die Show in AUTO ab und zu selbst kurz eine Szene (**Einstellungen (Auto-Erkennung)** → **Szenen-Automatik**, Standard aus). Vorne in deiner Liste stehen ruhige, hinten wilde Szenen. Laser- und Ziel-Szenen wählt sie nie.
+Auf Wunsch wählt die Show in AUTO ab und zu selbst kurz eine Szene (**Wie das Licht reagiert** → **Szenen-Automatik**, Standard aus). Vorne in deiner Liste stehen ruhige, hinten wilde Szenen. Laser- und Ziel-Szenen wählt sie nie.
 
 ### Strobe-Erlaubnis
 
 Schnelles Blitzen kann bei empfindlichen Menschen **epileptische Anfälle** auslösen. Darum blitzt es ohne Erlaubnis höchstens 3-mal pro Sekunde, und es gibt keinen Strobo-Burst beim Drop und keinen Einzel-Strobe.
 
-- Einschalten: **⚙** → **Einstellungen (Auto-Erkennung)** → **Weiße Blitze und Strobo** → ganz oben **Strobe-Erlaubnis**.
+- Einschalten: **⚙** → **Sicherheit** → ganz oben **Strobe-Erlaubnis**.
 - Schalte sie nur ein, wenn du weißt, dass es für alle Gäste in Ordnung ist, und nimm sie danach wieder zurück.
 
 ### Laser in Kürze
@@ -288,13 +288,13 @@ Der Assistent schaltet nie eine Erlaubnis ein. Prüfe den Vorschlag vor dem erst
 
 ### Shows automatisch starten
 
-1. **⚙** → **Einstellungen allgemein** → **Ausgabe** → **Shows aus Mixxx automatisch starten** einschalten.
+1. **⚙** → **Ton und Musik** → **Showmanager** → **Shows aus Mixxx automatisch starten** einschalten.
 2. Spielst du in Mixxx ein Lied mit Show, übernimmt sie das Licht. Der Browser muss dafür nicht offen sein.
 3. Wird ein Lied nicht erkannt, wählst du im Editor bei den Eigenschaften mit **Lied wählen** das passende Lied.
 
 ### Laser und Nebel in Shows
 
-Beides geht nur mit Hakerl unter **Einstellungen allgemein** → **Ausgabe** (**Laser in Shows erlauben**, **Nebel in Shows erlauben**, Standard aus). Laser gehen bei Pause, Stop und Springen sofort aus, die Show schaltet die Nebelmaschine nie ein.
+Beides geht nur mit Hakerl unter **Sicherheit** (**Laser in Shows erlauben**, **Nebel in Shows erlauben**, Standard aus). Laser gehen bei Pause, Stop und Springen sofort aus, die Show schaltet die Nebelmaschine nie ein.
 
 ## Musik-Datenbank
 
@@ -432,10 +432,10 @@ Mit der DJ-Software **Mixxx** am Musik-Rechner kennt der Light-Butler Tempo, Bea
 1. Mixxx **immer über die App „Light-Butler Mixxx“** starten (unter Windows die gleichnamige Verknüpfung). Sie startet Mixxx und die Brücke zum Light-Butler.
 2. Lied laden und spielen. Die Mixxx-Zeile im Panel zeigt Titel, Restzeit und die nächsten Ereignisse.
 3. Fehlt die Analyse eines Liedes, rechnet die Brücke sie in wenigen Sekunden. Nach und nach analysiert sie im Hintergrund die ganze Bibliothek.
-4. Damit die Vorhersage auch das Licht steuert: **⚙** → **Einstellungen (Auto-Erkennung)** → **Mixxx-Vorhersage** → **Vorhersage fürs Licht nutzen** auf „Licht folgt“ stellen.
+4. Damit die Vorhersage auch das Licht steuert: **⚙** → **Ton und Musik** → **Mixxx-Vorhersage** → **Vorhersage fürs Licht nutzen** auf „Licht folgt“ stellen.
 
 - In der Gruppe **Mixxx-Vorhersage** steht auch die Tabelle **Genre-Stile**: Dort gibst du jedem Genre einen Licht-Stil.
-- Ohne Mixxx: Schalter **Mixxx verwenden** (**Einstellungen allgemein** → **Titelerkennung**) ausschalten. Das Panel blendet dann alles aus, was nur mit Mixxx geht.
+- Ohne Mixxx: Schalter **Mixxx verwenden** (**Ton und Musik** → **Titelerkennung**) ausschalten. Das Panel blendet dann alles aus, was nur mit Mixxx geht.
 
 ### Light-Butler Helfer
 
@@ -460,7 +460,7 @@ An einem Windows-Musik-Rechner nimmt der Helfer VB-Cable, Stereomix oder Line-In
 
 ### Titelerkennung
 
-Ohne Mixxx erkennt der Light-Butler Titel und Interpret über Shazam (nur am Raspberry Pi, braucht Internet): **Einstellungen allgemein** → **Titelerkennung** → **Titel und Interpret erkennen**. Das Genre wählt dann den Licht-Stil.
+Ohne Mixxx erkennt der Light-Butler Titel und Interpret über Shazam (nur am Raspberry Pi, braucht Internet): **Ton und Musik** → **Titelerkennung** → **Titel und Interpret erkennen**. Das Genre wählt dann den Licht-Stil.
 
 ### Installation am Musik-Rechner
 
@@ -481,7 +481,7 @@ bash install_mac.sh
 Der APC mini bedient die Show mit Pads, Tasten und Fadern. Die LEDs zeigen den Zustand, auch wenn du im Panel etwas änderst.
 
 1. Den APC per USB am Licht-Rechner anstecken, oder am Musik-Rechner (dann leitet der Helfer oder die Mixxx-App ihn weiter).
-2. Unter **⚙** → **Einstellungen allgemein** → **MIDI-Controller** muss „verbunden“ stehen.
+2. Unter **⚙** → **Bedienung** → **MIDI-Controller** muss „verbunden“ stehen.
 3. In Mixxx den APC **nicht** als Controller aktivieren, sonst reagiert auch Mixxx auf die Tasten.
 
 | Bereich | Belegung |
@@ -526,6 +526,8 @@ Die Seite **Fixtures** (**⚙** → **Fixtures**) zeigt jedes Gerät mit Name, N
 4. Für ein ganz neues Gerät: unter **+ Fixture** → **Aus der Fixture-Datenbank oder Datei …** in der freien Open Fixture Library im Internet suchen (zum Beispiel „Spot 60“) oder einen Hersteller wählen, dann Gerät und Modus oder eine Gerätedatei (.json, QLC+ .qxf) laden, dann **Als Gerätetyp übernehmen**. Oder unter **Gerätetypen** selbst einen Typ anlegen, am besten mit **Kopie von** einem ähnlichen.
 5. Name und Beschreibungen gelten sofort. Adresse, Gruppe, neue und entfernte Geräte nach einem Neustart: Tippe auf **Jetzt neu starten** (das Licht ist etwa 5 Sekunden aus).
 
+- **DIP-Schalter am Gerät:** Hat ein Gerät statt einer Anzeige kleine Tippschalter für die Startadresse, klappe beim Gerät (oder beim Anlegen unter **+ Fixture** unter der Adresse) **DIP-Schalter am Gerät** auf. Das Bild zeigt, welche Schalter auf ON müssen, beim Bearbeiten passend zur eingetippten Adresse.
+- Mitgeliefert sind unter anderem Spider, Wash, Moving Head, PAR, Derby, UV-Leiste, Laser, Hazer, ein Effektlicht mit sechs Armen und Laser (Typ „Six-armed King Kong“), ein weißer Strobe-Cluster (Typ „Eurolite SMD 48“) und eine Nebelmaschine mit farbigen LEDs (Typ „FM-1500“): ihre LEDs leuchten nur während eines Nebelschubs, in der Farbe der Show.
 - Geräte aus der Datenbank: Laser und Nebelmaschinen bleiben gesperrt, Strobe- und Programmkanäle stehen fest auf „aus“. Die Daten werden von Hand gepflegt und können Fehler haben: vor dem ersten Einsatz am Gerät prüfen.
 - **Export** (unten bei jedem aufgeklappten Gerät) speichert seinen Gerätetyp als Datei: **Light-Butler** (vollständig, lässt sich bei **Aus der Fixture-Datenbank oder Datei …** wieder einlesen, etwa auf einem zweiten Licht-Rechner), **OFL** (Open Fixture Library), **QLC+** oder **YAML**. Bei OFL und QLC+ sind die Kanäle nur grob beschrieben, Sperren und Grenzen stehen dort nur als Hinweis.
 - Die Gruppe **Ambiente** macht ein Farbgerät ruhig: weiche Übergänge, ohne Beat und ohne Blitze, zum Beispiel für ein Arbeitslicht an der Bar.
@@ -544,7 +546,7 @@ Auch die **Pixel-Matrix** und die **API-Anzeige** (ein Fernseher oder Bildschirm
 
 ### Verbindungen und Ausgänge
 
-Unter **⚙** → **Einstellungen allgemein** → **Verbindungen** siehst du alle Netzwerk-Geräte und ob sie erreichbar sind. Ein Tipp auf die Adresse öffnet ihre Weboberfläche.
+Unter **⚙** → **Geräte und Ausgänge** → **Verbindungen** siehst du alle Netzwerk-Geräte und ob sie erreichbar sind. Ein Tipp auf die Adresse öffnet ihre Weboberfläche.
 
 - Je Ausgabe (DMX, WLED, Nanoleaf) gibt es **Aus**, **An** und **Nicht vorhanden**. **Aus** ist für eine Weile gedacht (orange Erinnerung), **Nicht vorhanden** für eine Anlage ohne dieses Gerät (keine Warnung).
 - **DMX-Weg:** **Art-Net-Gateway** über das Netzwerk oder **USB-Adapter** direkt am Licht-Rechner. Beim Gateway trägst du darunter seine **Adresse** ein, sie gilt nach dem Neustart.
@@ -596,25 +598,30 @@ Das **Eichstück** (**⚙** → **Technik**) prüft, wie gut der Light-Butler Mu
 
 ## Einstellungen
 
-Das Zahnrad **⚙** oben öffnet die Seite **Einstellungen**. Sie hat zwei große aufklappbare Bereiche und darunter Links zu weiteren Seiten.
+Das Zahnrad **⚙** oben öffnet die Seite **Einstellungen**. Sie beginnt mit einem Suchfeld und sieben Bereichen. Rechts steht bei jedem Bereich kurz der Stand, zum Beispiel wie viele Geräte erreichbar sind, ob Strobe erlaubt ist oder wie viele Werte vom Standard abweichen. Ein Tipp öffnet den Bereich, **← Übersicht** führt zurück.
+
+- **Suche:** ein Wort eintippen, zum Beispiel „Stille“ oder „Nanoleaf“. Die Treffer zeigen, wo die Einstellung steht. Ein Tipp springt hin und markiert sie.
+- **Nur Geändertes:** zeigt alle Werte, die nicht auf Standard stehen.
+- **Einrichtung starten:** führt eine neue Anlage in sechs Schritten durch das Nötigste: Sprache, Ton, Licht-Ausgang, Geräte, Zusätze (HomeMatic, MIDI-Controller, überspringbar) und eine Zusammenfassung. Bei einer neuen Installation startet die Einrichtung nach dem Sicherheitshinweis von selbst, später über den Knopf auf der Startseite oder unter **System**. Sie schaltet selbst nichts ein: die DMX-Ausgabe schaltest du erst ein, wenn kein anderes Lichtprogramm gleichzeitig sendet.
 
 ### Aufbau der Seite
 
 | Bereich | Inhalt |
 | --- | --- |
-| **Einstellungen allgemein** | Verbindungen, Haus, Sicherung, MIDI-Controller, Audio-Eingang sowie Ausgabe, Nebel, Titelerkennung und Panel |
-| **Einstellungen (Auto-Erkennung)** | wie AUTO die Musik deutet: Stille, Kick und Beat, Energie, Phasen, Stufen, Strobe, Laser, Szenen-Automatik, Ambiente, Mixxx-Vorhersage |
-| **Geräte** | Fixtures, Raumplan, Pixel-Matrix, APC mini · Belegung, ROLI Lumi · Belegung |
-| **Eigene Links** | Knöpfe zu eigenen Geräten im Heimnetz, zum Beispiel einem Dashboard am Fernseher: Adresse und Port eintragen (oder eine ganze Adresse mit Pfad einfügen), **Weiter**, Namen vergeben, **Speichern**. Der Knopf öffnet die Seite in einem neuen Tab, **✕** entfernt ihn |
-| **Technik** | DMX-Monitor, DMX-Debugger, Eichstück |
-| **Software für andere Rechner** | Systemschema und Downloads der Installationspakete |
+| **Geräte und Ausgänge** | Verbindungen (DMX, Art-Net, WLED, Nanoleaf, Link), Ausgabe, Pixel-Matrix, Fixtures, Raumplan, DMX-Monitor, DMX-Debugger |
+| **Ton und Musik** | Audio-Eingang, Musikordner und NAS, Eingang und Stille, Mixxx-Vorhersage, Showmanager, Titelerkennung |
+| **Wie das Licht reagiert** | wie AUTO die Musik deutet: Kick und Beat, Energie, Farbe, Phasen, Stufen, weiße Blitze, Szenen-Automatik, Ambiente, Eichstück |
+| **Sicherheit** | Strobe-Erlaubnis, Laser und Nebel in Shows, Licht-Verzögerung, Nebel, Laser |
+| **Haus** | HomeMatic, Steckdose der Nebelmaschine, Wohnzimmerlicht |
+| **Bedienung** | MIDI-Controller, APC mini · Belegung, ROLI Lumi · Belegung, Panel (Sprache, Texte), eigene Links: Knöpfe zu eigenen Geräten im Heimnetz, zum Beispiel einem Dashboard am Fernseher: Adresse und Port eintragen (oder eine ganze Adresse mit Pfad einfügen), **Weiter**, Namen vergeben, **Speichern**. Der Knopf öffnet die Seite in einem neuen Tab, **✕** entfernt ihn |
+| **System** | Sicherung, Zustand, Software für andere Rechner (Systemschema und Downloads), Über Light-Butler, **Alle auf Standard** |
 
 - Jede Änderung wirkt sofort und bleibt gespeichert.
 - **↺** neben einem Wert stellt den Standard wieder her, **Alle auf Standard** setzt alles zurück. Die Standardwerte sind für gemischte Partymusik abgestimmt.
 
 ### Sprache und Texte
 
-- **Einstellungen allgemein** → **Panel** → **Sprache der Knöpfe**: **Deutsch** oder **English**. Das gilt sofort auf allen Geräten, auch für dieses Handbuch.
+- **Bedienung** → **Panel** → **Sprache der Knöpfe**: **Deutsch** oder **English**. Das gilt sofort auf allen Geräten, auch für dieses Handbuch.
 - **Hinweistexte im Panel anzeigen** blendet die grauen Erklärzeilen aus oder ein.
 - In der **Übersetzungstabelle** darunter gibst du jedem Knopf einen eigenen Text. **↺** setzt eine Zeile zurück, ein senkrechter Strich **|** macht einen Zeilenumbruch auf dem Knopf.
 
@@ -629,7 +636,7 @@ Die ganze Automatik hängt am Musiksignal.
 
 Verwende einen Line-Eingang, keinen Mikrofon-Eingang.
 
-**Bluetooth:** Der Licht-Rechner kann Musik auch per Bluetooth empfangen, wie ein Lautsprecher. Unter **Audio-Eingang** → **Bluetooth-Empfänger** **Sichtbar machen** drücken (3 Minuten), am Handy „Light-Butler“ koppeln und oben den Eingang **Bluetooth** wählen. Einmal vorher einrichten: der Hinweis dort nennt den Befehl. Damit die Musik vom Handy trotzdem zu hören ist, wähle darunter bei **Ton weiterleiten an** eine Ausgabe des Licht-Rechners (Kopfhörer-Anschluss oder USB-Soundkarte ins Mischpult). Dasselbe gibt es für den Ton vom Musik-Rechner: **Ton vom Musik-Rechner weiterleiten an**, falls der Musik-Rechner nicht am Mischpult hängt. Auch ein **Bluetooth-Lautsprecher** geht als Ausgabe: unter **Geräte suchen** finden, **Koppeln**, dann steht er in der Liste. Weil er etwas später spielt, lässt sich unter Einstellungen allgemein → Ausgabe die **Licht-Verzögerung** in Millisekunden einstellen (etwa 150 bis 250). Kommt der Bluetooth-Ton abgehackt und hängt der Licht-Rechner am Kabel, drücke dort **WLAN trennen** (Bluetooth und WLAN teilen sich den Funk).
+**Bluetooth:** Der Licht-Rechner kann Musik auch per Bluetooth empfangen, wie ein Lautsprecher. Unter **Audio-Eingang** → **Bluetooth-Empfänger** **Sichtbar machen** drücken (3 Minuten), am Handy „Light-Butler“ koppeln und oben den Eingang **Bluetooth** wählen. Einmal vorher einrichten: der Hinweis dort nennt den Befehl. Damit die Musik vom Handy trotzdem zu hören ist, wähle darunter bei **Ton weiterleiten an** eine Ausgabe des Licht-Rechners (Kopfhörer-Anschluss oder USB-Soundkarte ins Mischpult). Dasselbe gibt es für den Ton vom Musik-Rechner: **Ton vom Musik-Rechner weiterleiten an**, falls der Musik-Rechner nicht am Mischpult hängt. Auch ein **Bluetooth-Lautsprecher** geht als Ausgabe: unter **Geräte suchen** finden, **Koppeln**, dann steht er in der Liste. Weil er etwas später spielt, lässt sich unter Einstellungen → Sicherheit die **Licht-Verzögerung** in Millisekunden einstellen (etwa 150 bis 250). Kommt der Bluetooth-Ton abgehackt und hängt der Licht-Rechner am Kabel, drücke dort **WLAN trennen** (Bluetooth und WLAN teilen sich den Funk).
 
 ### Die wichtigsten Schalter
 
@@ -655,7 +662,7 @@ Verwende einen Line-Eingang, keinen Mikrofon-Eingang.
 
 ### Im Panel
 
-1. **⚙** → **Einstellungen allgemein** → **Sicherung** aufklappen.
+1. **⚙** → **System** → **Sicherung** aufklappen.
 2. **Jetzt sichern** macht sofort eine Sicherung.
 3. **Download** bei einer Sicherung lädt sie herunter. Heb sie zusätzlich auf einem anderen Gerät auf, zum Beispiel einem NAS, denn die nächtliche Sicherung liegt auf derselben SD-Karte.
 
@@ -774,7 +781,7 @@ Die meisten Probleme erkennst du an der Hinweiszeile und am Statusfeld. Mehr Hil
 | APC-Fader tut nichts | Fader erst bis an den aktuellen Wert heranfahren |
 | Vorhören geht nicht, roter Hinweis | Musik-Rechner und Helfer einschalten, Stick anstecken, Musikordner unter **Verbindungen** prüfen |
 | Herz oben gelb oder rot | Seite **Zustand** öffnen, dort steht, was nicht passt |
-| bei einer Ansprache springt das Licht | erkennt der Light-Butler Sprache, steht oben **🎤 Sprache**, dann läuft das Licht ruhig: keine Drops, keine Blitze, keine Szenen- oder Effektwechsel, keine Titelerkennung und kein Liedtext; sonst unter Einstellungen (Auto-Erkennung) → Phasen **Sprache: keine Drops** einschalten |
+| bei einer Ansprache springt das Licht | erkennt der Light-Butler Sprache, steht oben **🎤 Sprache**, dann läuft das Licht ruhig: keine Drops, keine Blitze, keine Szenen- oder Effektwechsel, keine Titelerkennung und kein Liedtext; sonst unter Einstellungen → Wie das Licht reagiert → Phasen **Sprache: keine Drops** einschalten |
 
 ## Über Light-Butler und Lizenz
 

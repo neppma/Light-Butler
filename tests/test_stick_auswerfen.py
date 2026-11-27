@@ -124,7 +124,7 @@ import webpanel                              # noqa: E402
 pg = webpanel.make_page()
 check("SM.ejectStick = " in core and "SM.ejectStick(music" in mj and 'id="beject"' in open(os.path.join(ROOT, "pi", "static", "sm", "music.html"), encoding="utf-8").read(),
       "Musik-Datenbank: Knopf Stick auswerfen")
-check('id="meject"' in pg and "async function ejectStick()" in pg and pg.find('id="mrootrow"') < pg.find('id="meject"') < pg.find('id="olarow"'),
+check('id="meject"' in pg and "async function ejectStick()" in pg and pg.find('id="mrootrow"') < pg.find('id="meject"') < pg.find('id="mexclrow"'),
       "Einstellungen: Knopf unter dem Musikordner")
 src = open(os.path.join(ROOT, "mac", "mixxx_bridge", "mixxx_bridge.py"), encoding="utf-8").read()
 check("def stick_pause(self)" in src and "stick_hold.tick(now)" in src, "Bruecke und Helfer halten Analyse und Messungen an")

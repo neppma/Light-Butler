@@ -35,7 +35,7 @@ Light-Butler runs the light, and if you like the music too, all by itself. You l
 - **Fine effects:** brightness follows loudness, hi-hat sparkle, beat pulse, devices one after another.
 - **40 scenes** with a scene editor, plus instant buttons: STROBE, WOW! (building strobe), SMOKE (fog), FREEZE, BLINDER, BLACKOUT and laser. All except AUTO only act while you hold them.
 - **Track recognition** via Shazam: title and artist even without DJ software, the genre picks the light style.
-- **Lyrics** run live with the music in the panel. Lines in another script (Arabic, Chinese …) are hidden by the checkbox **Liedtext nur in lateinischer Schrift** (general settings → track recognition, on). With the checkbox **Schnittstelle: nur Refrain** (there, off) other devices get only the chorus instead of the whole text.
+- **Lyrics** run live with the music in the panel. Lines in another script (Arabic, Chinese …) are hidden by the checkbox **Liedtext nur in lateinischer Schrift** (settings → sound and music → track recognition, on). With the checkbox **Schnittstelle: nur Refrain** (there, off) other devices get only the chorus instead of the whole text.
 
 **Show manager**
 
@@ -211,13 +211,13 @@ There are 40 standard scenes, plus special scenes such as **All off**, **RESET**
 
 ### Scene automation
 
-If you like, the show briefly picks a scene by itself in AUTO (**Settings (auto detection)** → **Scene automation**, default off). Calm scenes belong at the front of your list, wild ones at the back. It never picks laser or target scenes.
+If you like, the show briefly picks a scene by itself in AUTO (**How the light reacts** → **Scene automation**, default off). Calm scenes belong at the front of your list, wild ones at the back. It never picks laser or target scenes.
 
 ### Strobe permission
 
 Fast flashing can trigger **epileptic seizures** in sensitive people. That is why without permission it flashes at most 3 times per second, and there is no strobe burst at the drop and no single strobe.
 
-- Switch on: **⚙** → **Settings (auto detection)** → **White flashes and strobe** → at the very top **Strobe permission**.
+- Switch on: **⚙** → **Safety** → at the very top **Strobe permission**.
 - Only switch it on when you know it is fine for all guests, and take it back afterwards.
 
 ### Laser in brief
@@ -288,13 +288,13 @@ The assistant never switches on a permission. Check the proposal before its firs
 
 ### Starting shows automatically
 
-1. Switch on **⚙** → **General settings** → **Output** → **Start shows from Mixxx automatically**.
+1. Switch on **⚙** → **Sound and music** → **Show manager** → **Start shows from Mixxx automatically**.
 2. When you play a song with a show in Mixxx, the show takes over the light. The browser does not have to be open.
 3. If a song is not recognised, choose the matching song in the editor's properties with **Pick song** (Lied wählen).
 
 ### Laser and fog in shows
 
-Both only work with a tick under **General settings** → **Output** (**Allow laser in shows**, **Allow fog in shows**, default off). Lasers go off at once on pause, stop and jump, the show never switches the fog machine on.
+Both only work with a tick under **Safety** (**Allow laser in shows**, **Allow fog in shows**, default off). Lasers go off at once on pause, stop and jump, the show never switches the fog machine on.
 
 ## Music library
 
@@ -432,10 +432,10 @@ With the DJ software **Mixxx** on the music computer, the Light-Butler knows tem
 1. **Always start Mixxx via the app "Light-Butler Mixxx"** (on Windows the shortcut of the same name). It starts Mixxx plus the bridge to the Light-Butler.
 2. Load and play a song. The Mixxx row in the panel shows title, remaining time and the next events.
 3. If the analysis of a song is missing, the bridge calculates it in a few seconds. Bit by bit it analyses the whole library in the background.
-4. So that the prediction also drives the light: set **⚙** → **Settings (auto detection)** → **Mixxx prediction** → **Use the prediction for the light** to "light follows".
+4. So that the prediction also drives the light: set **⚙** → **Sound and music** → **Mixxx prediction** → **Use the prediction for the light** to "light follows".
 
 - The group **Mixxx prediction** also holds the table **Genre styles**: there you give every genre a light style.
-- Without Mixxx: switch off **Use Mixxx** (**General settings** → **Track recognition**). The panel then hides everything that only works with Mixxx.
+- Without Mixxx: switch off **Use Mixxx** (**Sound and music** → **Track recognition**). The panel then hides everything that only works with Mixxx.
 
 ### Light-Butler Helper
 
@@ -460,7 +460,7 @@ On a Windows music computer the Helper uses VB-Cable, Stereo Mix or line in.
 
 ### Track recognition
 
-Without Mixxx the Light-Butler recognises title and artist via Shazam (Raspberry Pi only, needs internet): **General settings** → **Track recognition** → **Recognise title and artist**. The genre then picks the light style.
+Without Mixxx the Light-Butler recognises title and artist via Shazam (Raspberry Pi only, needs internet): **Sound and music** → **Track recognition** → **Recognise title and artist**. The genre then picks the light style.
 
 ### Installation on the music computer
 
@@ -481,7 +481,7 @@ bash install_mac.sh
 The APC mini operates the show with pads, keys and faders. The LEDs show the state, even when you change something in the panel.
 
 1. Plug the APC into the lighting computer via USB, or into the music computer (then the Helper or the Mixxx app forwards it).
-2. Under **⚙** → **General settings** → **MIDI controller** it must say "connected".
+2. Under **⚙** → **Controls** → **MIDI controller** it must say "connected".
 3. Do **not** activate the APC as a controller in Mixxx, otherwise Mixxx also reacts to the keys.
 
 | Area | Assignment |
@@ -526,6 +526,8 @@ The page **Fixtures** (**⚙** → **Fixtures**) shows every device with name, n
 4. For a completely new device: under **+ Fixture** → the button **… Fixture-Datenbank …** (fixture database or file) search the free Open Fixture Library on the internet (for example "Spot 60") or pick a manufacturer, then device and mode or load a device file (.json, QLC+ .qxf), then **Als Gerätetyp übernehmen** (use as device type). Or create a type yourself under **Device types**, ideally with **Copy of** a similar one.
 5. Name and descriptions apply at once. Address, group, new and removed devices after a restart: tap **Restart now** (the light is off for about 5 seconds).
 
+- **DIP switches on the device:** if a device has small DIP switches for the start address instead of a display, expand **DIP switches on the device** at the device (or when adding one under **+ Fixture**, below the address). The picture shows which switches must be ON, while editing matching the address you type.
+- Supplied are among others spider, wash, moving head, PAR, derby, UV bar, laser, hazer, an effect light with six arms plus lasers (type “Six-armed King Kong”), a white strobe cluster (type “Eurolite SMD 48”) and a fog machine with coloured LEDs (type “FM-1500”): its LEDs light up only during a fog burst, in the colour of the show.
 - Devices from the database: lasers and fog machines stay locked, strobe and program channels are fixed to "off". The data is maintained by hand and may contain errors: check it on the device before the first use.
 - **Export** (at the bottom of every expanded device) saves its device type as a file: **Light-Butler** (complete, can be read in again with **… Fixture-Datenbank …**, for example on a second light computer), **OFL** (Open Fixture Library), **QLC+** or **YAML**. With OFL and QLC+ the channels are described only roughly; locks and limits appear there only as a note.
 - The group **Ambience** makes a colour device calm: soft transitions, without beat and without flashes, for example for a work light at the bar.
@@ -544,7 +546,7 @@ You can also place the **pixel matrix** and the **API display** (a TV or screen 
 
 ### Connections and outputs
 
-Under **⚙** → **General settings** → **Connections** you see all network devices and whether they are reachable. A tap on the address opens their web interface.
+Under **⚙** → **Devices and outputs** → **Connections** you see all network devices and whether they are reachable. A tap on the address opens their web interface.
 
 - Per output (DMX, WLED, Nanoleaf) there is **Off**, **On** and **Not present**. **Off** is meant for a while (orange reminder), **Not present** for a rig without this device (no warning).
 - **DMX route:** **Art-Net gateway** over the network or **USB adapter** directly on the lighting computer. For the gateway you enter its **address** below; it applies after the restart.
@@ -596,25 +598,30 @@ The **test piece** (**⚙** → **Tools**) checks how well the Light-Butler dete
 
 ## Settings
 
-The gear **⚙** at the top opens the page **Settings**. It has two large expandable sections and below them links to further pages.
+The gear **⚙** at the top opens the page **Settings**. It starts with a search field and seven sections. On the right of each section a short status shows, for example how many devices are reachable, whether strobe is allowed or how many values differ from the default. A tap opens the section, **← Overview** leads back.
+
+- **Search:** type a word, for example “silence” or “Nanoleaf”. The results show where the setting is. A tap jumps there and marks it.
+- **Changed only:** shows all values that are not at their default.
+- **Start setup:** leads a new installation through the essentials in six steps: language, sound, light output, devices, extras (HomeMatic, MIDI controller, can be skipped) plus a summary. On a new installation the setup starts by itself after the safety notice, later via the button on the start page or under **System**. It switches nothing on by itself: switch the DMX output on only when no other lighting program sends at the same time.
 
 ### Layout of the page
 
 | Section | Content |
 | --- | --- |
-| **General settings** | connections, home, backup, MIDI controller, audio input plus output, fog, track recognition and panel |
-| **Settings (auto detection)** | how AUTO reads the music: silence, kick and beat, energy, phases, levels, strobe, laser, scene automation, ambience, Mixxx prediction |
-| **Devices** | Fixtures, room plan, pixel matrix, APC mini · Mapping, ROLI Lumi · Mapping |
-| **Own links** | buttons to your own devices in the home network, for example a dashboard on the TV: enter address and port (or paste a whole address with a path), **Next**, give it a name, **Save**. The button opens the page in a new tab, **✕** removes it |
-| **Tools** | DMX monitor, DMX debugger, test piece |
-| **Software for other computers** | system diagram and downloads of the installation packages |
+| **Devices and outputs** | connections (DMX, Art-Net, WLED, Nanoleaf, Link), output, pixel matrix, fixtures, room plan, DMX monitor, DMX debugger |
+| **Sound and music** | audio input, music folder plus NAS, input plus silence, Mixxx prediction, show manager, track recognition |
+| **How the light reacts** | how AUTO reads the music: kick plus beat, energy, colour, phases, levels, white flashes, scene automation, ambience, test piece |
+| **Safety** | strobe permission, laser plus fog in shows, light delay, fog, laser |
+| **Home** | HomeMatic, fog machine socket, living room light |
+| **Controls** | MIDI controller, APC mini · Mapping, ROLI Lumi · Mapping, panel (language, texts), own links: buttons to your own devices in the home network, for example a dashboard on the TV: enter address plus port (or paste a whole address with a path), **Next**, give it a name, **Save**. The button opens the page in a new tab, **✕** removes it |
+| **System** | backup, health, software for other computers (system diagram plus downloads), about Light-Butler, **All to default** |
 
 - Every change takes effect at once and is saved.
 - **↺** next to a value restores the default, **All to default** resets everything. The defaults are tuned for mixed party music.
 
 ### Language and texts
 
-- **General settings** → **Panel** → **Language of the buttons**: **Deutsch** or **English**. This applies at once on all devices, also for this manual.
+- **Controls** → **Panel** → **Language of the buttons**: **Deutsch** or **English**. This applies at once on all devices, also for this manual.
 - **Show hint texts in the panel** hides or shows the grey explanation lines.
 - In the **translation table** below you give every button your own text. **↺** resets a row, a vertical bar **|** makes a line break on the button.
 
@@ -629,7 +636,7 @@ All the automation depends on the music signal.
 
 Use a line input, never a microphone input.
 
-**Bluetooth:** The lighting computer can also receive music via Bluetooth, like a speaker. Under **Audio input** → **Bluetooth-Empfänger** press **Sichtbar machen** (make visible, 3 minutes), pair "Light-Butler" on the phone and choose the input **Bluetooth** at the top. Set it up once before: the hint there names the command. So that the music from the phone can still be heard, choose an output of the lighting computer below at **Ton weiterleiten an** (forward sound to: headphone socket or USB sound card into the mixer). The same exists for the sound from the music computer: **Ton vom Musik-Rechner weiterleiten an**, in case the music computer is away from the mixer. A **Bluetooth speaker** also works as output: find it with **Geräte suchen** (search devices), **Koppeln** (pair), then it appears in the list. Since it plays a little later, the **light delay** in milliseconds can be set under general settings → output (about 150 to 250). If the Bluetooth sound stutters while the lighting computer is on a cable, press **WLAN trennen** (disconnect Wi-Fi) there (Bluetooth shares the radio with Wi-Fi).
+**Bluetooth:** The lighting computer can also receive music via Bluetooth, like a speaker. Under **Audio input** → **Bluetooth-Empfänger** press **Sichtbar machen** (make visible, 3 minutes), pair "Light-Butler" on the phone and choose the input **Bluetooth** at the top. Set it up once before: the hint there names the command. So that the music from the phone can still be heard, choose an output of the lighting computer below at **Ton weiterleiten an** (forward sound to: headphone socket or USB sound card into the mixer). The same exists for the sound from the music computer: **Ton vom Musik-Rechner weiterleiten an**, in case the music computer is away from the mixer. A **Bluetooth speaker** also works as output: find it with **Geräte suchen** (search devices), **Koppeln** (pair), then it appears in the list. Since it plays a little later, the **light delay** in milliseconds can be set under settings → safety (about 150 to 250). If the Bluetooth sound stutters while the lighting computer is on a cable, press **WLAN trennen** (disconnect Wi-Fi) there (Bluetooth shares the radio with Wi-Fi).
 
 ### The most important switches
 
@@ -655,7 +662,7 @@ Use a line input, never a microphone input.
 
 ### In the panel
 
-1. Expand **⚙** → **General settings** → **Backup**.
+1. Expand **⚙** → **System** → **Backup**.
 2. **Back up now** makes a backup right away.
 3. **Download** next to a backup downloads it. Keep it on another device too, for example a NAS, because the nightly backup lies on the same SD card.
 
@@ -774,7 +781,7 @@ You recognise most problems from the notice line and the status field. More help
 | APC fader does nothing | first move the fader up to the current value |
 | preview fails, red notice | switch on music computer plus Helper, plug in the stick, check the music folder under **Connections** |
 | heart at the top yellow or red | open the page **Health**, it says what is wrong |
-| the light jumps during a speech | if the Light-Butler detects speech, the top shows **🎤 Speech**, then the light runs calmly: no drops, no flashes, no scene or effect changes, no song recognition, no lyrics; otherwise switch on **Sprache: keine Drops** (speech: no drops) under settings (auto detection) → phases |
+| the light jumps during a speech | if the Light-Butler detects speech, the top shows **🎤 Speech**, then the light runs calmly: no drops, no flashes, no scene or effect changes, no song recognition, no lyrics; otherwise switch on **Sprache: keine Drops** (speech: no drops) under settings → how the light reacts → phases |
 
 ## About Light-Butler and licence
 

@@ -499,9 +499,9 @@ check("function topPrefix(paths, root)" in js and "d.root || ''" in js, "Spalte 
 h = H("/api/musik/conf")
 check(sm_api.handle_get(h, mgr) and h.out[0] == 200 and json.loads(h.out[1]) == {"root": "/x", "excl": [], "ew": False, "kw": False, "rw": False, "ce": False, "cw": False, "libh": "", "mx": True}, "API /api/musik/conf fuer die Bruecke")
 pg = webpanel.make_page()
-check('id="mexcl"' in pg and "op:'music_excl_save'" in pg and pg.find('id="mrootrow"') < pg.find('id="mexclrow"') < pg.find('id="olarow"'),
+check('id="mexcl"' in pg and "op:'music_excl_save'" in pg and pg.find('id="musbox"') < pg.find('id="mrootrow"') < pg.find('id="mexclrow"'),
       "Feld ausgeschlossene Ordner unter dem Musikordner")
-check('id="mroot"' in pg and "op:'music_root_save'" in pg and pg.find('id="mrootrow"') < pg.find('id="olarow"'), "Feld Musikordner in den Verbindungen der Einstellungen")
+check('id="mroot"' in pg and "op:'music_root_save'" in pg and pg.find('data-cat="ton"') < pg.find('id="mrootrow"') < pg.find('data-cat="licht"'), "Feld Musikordner unter Ton und Musik in den Einstellungen")
 inst_ = open(os.path.join(ROOT, "mac", "mixxx_bridge", "mixxx_bridge.py"), encoding="utf-8").read()
 check("/api/musik/conf" in inst_ and "--pi-web" in inst_, "Bruecke fragt den Pi nach dem Musikordner")
 p = webpanel.make_page()

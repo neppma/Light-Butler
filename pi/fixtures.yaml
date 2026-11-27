@@ -289,6 +289,87 @@ types:
     safe_limits: {auto: [0, 50]}
     rows: [uv1, uv2, uv3, uv4]
 
+  kingkong_6arm:                 # Six-armed King Kong, 26 Kanaele (Anleitung vom Nutzer, 27.11.2026), enthaelt Laser
+    channels: 26
+    label: Six-armed King Kong (26 Kanäle)
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      axis_x: X-Achse, 0 bis 255 = 0 bis 540 Grad Drehung
+      axis_x_speed: Geschwindigkeit der X-Achse, 0 schnell bis 255 langsam
+      axis_z: Z-Motor, 0 bis 10 aus, 11 bis 255 Drehung langsam bis schnell
+      tilt1: Arm 1, 0 bis 255 = 0 bis 180 Grad
+      tilt2: Arm 2, 0 bis 255 = 0 bis 180 Grad
+      tilt3: Arm 3, 0 bis 255 = 0 bis 180 Grad
+      tilt4: Arm 4, 0 bis 255 = 0 bis 180 Grad
+      tilt5: Arm 5, 0 bis 255 = 0 bis 180 Grad
+      tilt6: Arm 6, 0 bis 255 = 0 bis 180 Grad
+      dimmer: Gesamthelligkeit 0 bis 255
+      strobe: Strobo, 0 bis 10 aus, 11 bis 255 langsam bis schnell
+      r: Rot
+      g: Grün
+      b: Blau
+      w: Weiß
+      center_beam: Beam (Funktion am Gerät noch nicht geprüft, bleibt 0)
+      motif: Motiv (Funktion am Gerät noch nicht geprüft, bleibt 0)
+      laser_red: Laser Rot (gesperrt, nur in der Szene Laser)
+      laser_green: Laser Grün (gesperrt, nur in der Szene Laser)
+      strobe_a: Strobo 1, 0 bis 10 aus, 11 bis 255 langsam bis schnell
+      strobe_b: Strobo 2, 0 bis 10 aus, 11 bis 255 langsam bis schnell
+      strip1: LED-Streifen 1, 0 bis 9 aus, darüber Effektwechsel (eigene Programme). Grenze 9
+      strip1_speed: Tempo LED-Streifen 1
+      strip2: LED-Streifen 2, 0 bis 9 aus, darüber Effektwechsel (eigene Programme). Grenze 9
+      strip2_speed: Tempo LED-Streifen 2
+      mode: Makro, 0 bis 50 DMX (Kanäle 1 bis 25), 51 bis 150 Zufall, 151 bis 250 Ton, 251 bis 255 Reset (nie). Grenze 50, Ton und Zufall nur in der Szene Laser
+    map: {axis_x: 1, axis_x_speed: 2, axis_z: 3, tilt1: 4, tilt2: 5, tilt3: 6, tilt4: 7, tilt5: 8, tilt6: 9,
+          dimmer: 10, strobe: 11, r: 12, g: 13, b: 14, w: 15, center_beam: 16, motif: 17,
+          laser_red: 18, laser_green: 19, strobe_a: 20, strobe_b: 21,
+          strip1: 22, strip1_speed: 23, strip2: 24, strip2_speed: 25, mode: 26}
+    defaults: {axis_x: 128, axis_x_speed: 128, axis_z: 0, tilt1: 127, tilt2: 127, tilt3: 127, tilt4: 127, tilt5: 127, tilt6: 127,
+               dimmer: 255, strobe: 0, center_beam: 0, motif: 0, strobe_a: 0, strobe_b: 0,
+               strip1: 0, strip1_speed: 0, strip2: 0, strip2_speed: 0, mode: 0}
+    # Arme: wie die Spider (Gruppe bars) bewegt, Arme 1, 3, 5 wie tilt1 und 2, 4, 6 wie tilt2 (Show._set_tilts).
+    # SICHERHEIT: Kanal 18 und 19 sind LASER (LS) -> immer 0, nur in der Szene Laser freigegeben.
+    # mode (CH26): 251-255 = 3 s Reset -> nie; 0-50 = DMX. LED-Streifen-Effekte (CH22, CH24) bleiben aus.
+    safe_limits: {mode: [0, 50], strip1: [0, 9], strip2: [0, 9]}
+    locked_channels: [laser_red, laser_green]
+    laser_channels: [laser_red, laser_green]   # nur in der Szene Laser freigegeben
+    sound_mode: 151        # Sprachaktiviert, selbstfahrend (eigenes Mikrofon)
+    auto_mode: 51          # Zufaellig selbstfahrend
+
+  eurolite_smd48:                # Eurolite LED Mini Strobe Cluster SMD 48, 3 Kanaele (Anleitung vom Nutzer, 27.11.2026)
+    channels: 3
+    label: Eurolite LED Mini Strobe Cluster SMD 48 (3 Kanäle)
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      w: Helligkeit (Dimmer) des weißen Lichts 0 bis 100 Prozent
+      strobe: Strobe-Effekt mit zunehmender Geschwindigkeit (ob 0 ganz aus ist, am Gerät prüfen)
+      effect: Strobe-Effekte, 0 bis 36 Strobe, darüber Pulsen, Zufall und Musiksteuerung. Grenze 36
+    map: {w: 1, strobe: 2, effect: 3}
+    defaults: {w: 0, strobe: 0, effect: 0}
+    # Reines Weisslicht: blitzt bei weissen Blitzen und weissen Farben mit, bei bunten Farben bleibt es dunkel.
+    # effect (CH3): 0-36 Strobe, 37-253 eigene Programme, 254-255 Musik -> muss 0-36 bleiben.
+    safe_limits: {effect: [0, 36]}
+
+  fog_fm1500:                    # FM-1500 Fog Machine mit RGB-LEDs, 7 Kanaele (Anleitung vom Nutzer, 27.11.2026)
+    channels: 7
+    label: FM-1500 Nebelmaschine mit LEDs (7 Kanäle)
+    desc:                        # Kanalbeschreibung (im Panel bearbeitbar)
+      pump: Nebel (Spray the fog), nur über den Nebel-Knopf
+      r: LED Rot, leuchtet nur während eines Nebelschubs (Farbe der Show)
+      g: LED Grün, nur während eines Nebelschubs
+      b: LED Blau, nur während eines Nebelschubs
+      strobe: Strobe der LEDs, bleibt 0
+      led_mode: LED-Programme, 10 bis 99 Farbverlauf, 100 bis 199 Sprung, 200 bis 255 Puls; bleibt 0
+      led_speed: Tempo der LED-Programme, bleibt 0
+    map: {pump: 1, r: 2, g: 3, b: 4, strobe: 5, led_mode: 6, led_speed: 7}
+    locked: true
+    manual_allowed: true
+    fog_machine: true
+    dip: 9                       # Startadresse ueber 9 Tippschalter (1, 2, 4 ... 256), im Panel als Bild
+    defaults: {pump: 0, r: 0, g: 0, b: 0, strobe: 0, led_mode: 0, led_speed: 0}
+    # NIE automatisch, wie der Hazer: das ganze Geraet ist gesperrt, nur der Nebel-Knopf (Show._fog_fire) schaltet es,
+    # hoechstens 10 s, Mindestpause. Waehrend des Schubs leuchten die LEDs in der ersten Farbe der Show (color: true).
+    # Vorsicht Rauchmelder! Werte bitte am Geraet pruefen.
+    burst: {pump: 255, seconds: 3, cooldown: 20, color: true}
+
   hazer:                         # 2 Kanaele, NIE automatisch; nur Nebelschub per Knopfdruck im Panel
     channels: 2
     desc:                        # Kanalbeschreibung (im Panel bearbeitbar)

@@ -1996,8 +1996,7 @@ class Show:
                     st = self.mv.setdefault(fx.name, {})
                     st["t1"] = slew(st.get("t1", 127.0), pair[0], 60.0, dt)
                     st["t2"] = slew(st.get("t2", 127.0), pair[1], 60.0, dt)
-                    fx.set("tilt1", st["t1"])
-                    fx.set("tilt2", st["t2"])
+                    self._set_tilts(fx, st["t1"], st["t2"])
                     continue
                 if self.mo is not None:
                     if self.mo.get("hold") or self.mo.get("stop"):
@@ -2018,8 +2017,17 @@ class Show:
                 st = self.mv.setdefault(fx.name, {})
                 st["t1"] = slew(st.get("t1", 127.0), t1, rate, dt)
                 st["t2"] = slew(st.get("t2", 127.0), t2, rate, dt)
-                fx.set("tilt1", st["t1"])
-                fx.set("tilt2", st["t2"])
+                self._set_tilts(fx, st["t1"], st["t2"])
+
+    @staticmethod
+    def _set_tilts(fx, t1, t2):
+        """Neigung der Arme: tilt1/tilt2 wie bei der Spider. Mehr Arme (King Kong: tilt1 bis tilt6) abwechselnd wie tilt1 und tilt2."""
+        fx.set("tilt1", t1)
+        fx.set("tilt2", t2)
+        i = 3
+        while f"tilt{i}" in fx.map:
+            fx.set(f"tilt{i}", t1 if i % 2 else t2)
+            i += 1
 
     def _blitz_skip(self, fx, hz):
         """Strobe schneller als fuer die Gruppe eingestellt (Einstellung "Strobe: ... blitzt bis")? Dann bleibt sie dunkel."""
@@ -2381,7 +2389,8 @@ class Show:
         Ausgeloest ueber DMX (Hazer) oder den HomeMatic-Schalter Nebelschub (Einstellung fog_via, mit ON_TIME-Sicherung).
         hold=None: fester Schub (Einstellung seconds); True: laeuft, solange gehalten (max. 10 s); False: sofort aus."""
         now = self._fog_clock()
-        hz = next((fx for fx in self.rig.fixtures if fx.type == "hazer" and fx.manual_ok), None)
+        hzs = self._fog_fixtures()
+        hz = hzs[0] if hzs else None
         if hold is False:
             self._fog_stop(now)
             return
@@ -2402,11 +2411,24 @@ class Show:
             return
         cfg = hz.tdef.get("burst", {}) if hz is not None else {}
         secs = 10.0 if hold else max(0.5, min(10.0, float(cfg.get("seconds", 3.0))))
-        if self._fog_fire(now, secs, hz, cfg):
+        if self._fog_fire(now, secs, hzs):
             self.note = "Nebel, solange gedrueckt (hoechstens 10 s)" if hold else f"Nebelschub {secs:.0f} s"
 
-    def _fog_fire(self, now, secs, hz, cfg):
-        """Nebelschub ausloesen: ueber DMX oder den HomeMatic-Schalter (mit ON_TIME). Immer mit allen Grenzen geprueft vom Aufrufer."""
+    def _fog_fixtures(self):
+        """Alle Nebelmaschinen am DMX (Hazer und Typen mit fog_machine), nur die mit Handbetrieb (Nebel-Knopf)."""
+        return [fx for fx in self.rig.fixtures if fx.fog]
+
+    def _fog_rgb(self):
+        """Farbe fuer die LEDs einer Nebelmaschine (burst color: true): die erste Farbe des Lichts gerade, nur gelesen."""
+        try:
+            h = self._takt_colors()[0]
+            return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
+        except Exception:                                  # noqa: BLE001
+            return (255, 255, 255)
+
+    def _fog_fire(self, now, secs, hzs):
+        """Nebelschub ausloesen: ueber DMX oder den HomeMatic-Schalter (mit ON_TIME). Immer mit allen Grenzen geprueft vom Aufrufer.
+        Ueber DMX alle Nebelmaschinen, jede mit ihren Werten (burst); mit color: true leuchten ihre LEDs in der Farbe der Show."""
         if self.cfg["fog_via"] > 0.5:                           # ueber den HomeMatic-Schalter Nebelschub
             if self.home is None or not self.home.fog_trigger:
                 self.note = "Nebel ueber HomeMatic: keine CCU bzw. kein Schalter Nebelschub"
@@ -2421,10 +2443,17 @@ class Show:
                 return False
             self.fog_hm_on = True
         else:
-            if hz is None:
-                self.note = "Kein Hazer konfiguriert"
+            if not hzs:
+                self.note = "Keine Nebelmaschine konfiguriert"
                 return False
-            if not hz.manual({"pump": cfg.get("pump", 150), "fan": cfg.get("fan", 100)}, secs):
+            ok = False
+            for hz in hzs:
+                cfg = hz.tdef.get("burst", {})
+                vals = {"pump": cfg.get("pump", 150), "fan": cfg.get("fan", 100)}
+                if cfg.get("color"):
+                    vals.update(zip(("r", "g", "b"), self._fog_rgb()))
+                ok = hz.manual(vals, secs) or ok
+            if not ok:
                 return False
         self.fog_last, self.fog_end, self.fog_used_t = now, now + secs, now
         return True
@@ -2442,9 +2471,7 @@ class Show:
         if not ready:
             self.note = f"Nebel aus der Show entfaellt: Nebelmaschine {'heizt noch' if why == 'heizt' else 'nicht bereit'}"
             return False
-        hz = next((fx for fx in self.rig.fixtures if fx.type == "hazer" and fx.manual_ok), None)
-        cfg = hz.tdef.get("burst", {}) if hz is not None else {}
-        return self._fog_fire(now, max(1.0, min(10.0, secs)), hz, cfg)
+        return self._fog_fire(now, max(1.0, min(10.0, secs)), self._fog_fixtures())
 
     def _fog_power_on(self, now):
         """Steckdose der Nebelmaschine einschalten (Aufheizen beginnt). Im Panel erst nach der Rueckfrage zu den Rauchmeldern."""
@@ -2486,7 +2513,7 @@ class Show:
     def _fog_stop(self, now):
         """Nebel sofort aus (DMX und HomeMatic), die Pause beginnt jetzt."""
         for fx in self.rig.fixtures:
-            if fx.type == "hazer" and fx.manual_ok:
+            if fx.fog:
                 fx.manual_vals = None
         if self.fog_hm_on:
             self.fog_hm_on = False
@@ -3814,7 +3841,7 @@ class Show:
 
     def _fog_cool(self):
         for fx in self.rig.fixtures:
-            if fx.type == "hazer":
+            if fx.fog:
                 return float(fx.tdef.get("burst", {}).get("cooldown", 20.0))
         return 20.0
 

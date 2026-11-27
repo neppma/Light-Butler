@@ -133,6 +133,8 @@ def allowed_groups(tname, tdef):
         return ["uv"]
     if "r1" in m or "led_r" in m or "r" in m:
         return ["wash", "bar", "fx", "ambient"]          # ambient: ruhig wie Theke und Couchtisch
+    if "w" in m:
+        return ["fx", "wash", "bar"]                     # reines Weisslicht (Strobe-Cluster): blitzt mit, Farben dunkel
     return ["locked"]
 
 
@@ -144,7 +146,8 @@ def type_summary(c):
             continue
         out.append({"name": t, "channels": d["channels"], "custom": bool(d.get("custom")), "label": d.get("label", ""),
                     "groups": allowed_groups(t, d), "map": d["map"], "desc": d.get("desc", {}),
-                    "defaults": d.get("defaults", {}), "limits": d.get("safe_limits", {})})
+                    "defaults": d.get("defaults", {}), "limits": d.get("safe_limits", {}),
+                    "dip": int(d.get("dip", 0) or 0), "dip_offset": int(d.get("dip_offset", 0) or 0)})
     return out
 
 

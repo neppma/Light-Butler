@@ -1,5 +1,5 @@
-"""Panel-Aufbau: Einstellungen allgemein (mit der Gruppe Panel) und Einstellungen (Auto-Erkennung) als zwei
-Aufklapp-Bereiche, die Fixtures auf eigener Seite /fixtures (wie DMX-Monitor und Hilfe)."""
+"""Panel-Aufbau: Einstellungsseite in sieben Bereichen (seit 27.11.2026, vorher allgemein und Auto-Erkennung), die
+Fixtures auf eigener Seite /fixtures (wie DMX-Monitor und Hilfe)."""
 import os
 import subprocess
 import tempfile
@@ -9,14 +9,12 @@ from _common import check, finish
 import webpanel
 
 p = webpanel.make_page()
-gen, auto, fxl, fxs = (p.find('<details id="genbox"'), p.find('<details id="autobox"'), p.find('id="fxlink"'), p.find('<div id="fxsec">'))
-check(min(gen, auto, fxl, fxs) > 0 and gen < auto < fxl < fxs, "Reihenfolge: allgemein, Auto-Erkennung, Link Fixtures, Fixtures-Bereich")
-blk = p[gen:auto]
-check(all(i in blk for i in ('id="sysbox"', 'id="homebox"', 'id="bkbox"', 'id="midibox"', 'id="audiobox"', 'id="genset"')),
-      "allgemein: Verbindungen, Haus, Sicherung, MIDI, Audio und Platz fuer die Gruppe Panel")
-check('id="setlist"' in p[auto:fxl], "Auto-Erkennung: Liste der Einstellungen im zweiten Bereich")
-check("(GEN_GROUPS.includes(g.group)&&gen?gen:box).appendChild(d)" in p and "const GEN_GROUPS=['Ausgabe','Haus','Nebel','Titelerkennung','Panel','Pixel-Matrix'];" in p,
-      "Gruppen Ausgabe, Haus, Nebel, Titelerkennung und Panel stehen unter den allgemeinen Einstellungen")
+sec = p[p.index('<div id="setsec">'):p.index('<div id="fxsec">')]
+cats = {k: sec.index('data-cat="%s"' % k) for k in ("dev", "ton", "licht", "sicher", "haus", "bed", "sys")}
+check(list(cats) == sorted(cats, key=cats.get), "Einstellungen in sieben Bereichen (27.11.2026)")
+check(all(i in sec for i in ('id="sysbox"', 'id="homebox"', 'id="bkbox"', 'id="midibox"', 'id="audiobox"', 'id="musbox"', 'class="catset"')),
+      "Verbindungen, Haus, Sicherung, MIDI, Audio, Musikordner und Platz fuer die Gruppen aus settings.py")
+check("const SETCAT_G={'Ausgabe':'dev','Pixel-Matrix':'dev'" in p and "'Haus':'haus','Panel':'bed'" in p, "Gruppen aus settings.py stehen in ihrem Bereich")
 import settings
 groups = {getattr(settings, n) for n in ("G_OUT", "G_HOME", "G_FOG", "G_PANEL")}
 check(groups == {"Ausgabe", "Haus", "Nebel", "Panel"}, "Gruppennamen passen zu settings.py")
